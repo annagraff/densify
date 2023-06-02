@@ -9,6 +9,7 @@
 densify_prep <- function(original_data) {
   # Replace NAs by 0 (no data available) and non-NA entries by 1 (data available)
   full_matrix <- as.matrix(original_data)
+  full_matrix <- full_matrix[full_matrix=="?"] <- NA
   full_matrix[!is.na(full_matrix)] <- 1
   full_matrix[is.na(full_matrix)] <- 0
 
