@@ -414,8 +414,8 @@ pruning_steps <- function(original_data, max_steps, mean_type, taxonomy, origina
 #
 ######################################################
 
-pruning_score <- function(documentation, exponent_prop_coded_data, exponent_available_data_points){
-  quality <- as.numeric(documentation$prop_coded_data)^exponent_prop_coded_data*as.numeric(documentation$available_data_points)^exponent_available_data_points
+pruning_score <- function(documentation, exponent_prop_coded_data, exponent_available_data_points,exponent_lowest_language_score){
+  quality <- as.numeric(documentation$prop_coded_data)^exponent_prop_coded_data*as.numeric(documentation$available_data_points)^exponent_available_data_points*as.numeric(documentation$worst_lg_abs_coding_density)^exponent_lowest_language_score
   plot(quality,xlab="iteration",ylab="quality score")
   optimum <- which(quality==max(na.omit(quality)))
   return(optimum)
@@ -522,7 +522,7 @@ documentation_1049 <- pruning_steps(original_data, max_steps, mean_type, taxonom
   
 # test F3
 
-optimum <- pruning_score(documentation_1049,exponent_prop_coded_data=1, exponent_available_data_points=1)
+optimum <- pruning_score(documentation_1049,exponent_prop_coded_data=1, exponent_available_data_points=1, exponent_lowest_language_score=1)
 
 
 # test F4
@@ -571,7 +571,7 @@ original_register <- original_register
 documentation_gb1416 <- pruning_steps(original_data, max_steps, mean_type, taxonomy, original_register, tax_weight_factor, coding_weight_factor)
 
 # test F3
-optimum <- pruning_score(documentation_gb1416,exponent_prop_coded_data=1, exponent_available_data_points=1)
+optimum <- pruning_score(documentation_gb1416,exponent_prop_coded_data=1, exponent_available_data_points=1, exponent_lowest_language_score=1)
 
 # test F4
 # these two are equivalent
@@ -621,7 +621,7 @@ original_register <- original_register
 documentation_zhm1744 <- pruning_steps(original_data, max_steps, mean_type, taxonomy, original_register, tax_weight_factor, coding_weight_factor)
 
 # test F3
-optimum <- pruning_score(documentation_zhm1744,exponent_prop_coded_data=1, exponent_available_data_points=1)
+optimum <- pruning_score(documentation_zhm1744,exponent_prop_coded_data=1, exponent_available_data_points=1, exponent_lowest_language_score=0)
 
 # test F4
 # these two are equivalent
