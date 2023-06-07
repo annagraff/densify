@@ -8,6 +8,7 @@ Authors@R:
 Description: This package provides a function for pre-processing linguistic input data frames. The densify_prep function replaces NAs with 0 (indicating no data available) and non-NA entries with 1 (indicating data available). It also converts the dataframe entries to numeric format.
 License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
     license
+Imports: magrittr, dplyr
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
