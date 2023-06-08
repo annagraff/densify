@@ -256,6 +256,8 @@ pruning_steps <- function(original_data, max_steps, mean_type, taxonomy, origina
       mn<-((apply(weight_collection["weighted_coding_score"],1,qlogis))+(apply(weight_collection["abs_prop_non_NA"],1,qlogis))+(apply(weight_collection["taxonomic_weight"],1,qlogis)))/3
       weight_collection$mean_score<-(exp(mn)/(1+exp(mn)))
     } else if (mean_type == "log_odds" & taxonomy == F) { # log odds mean if taxonomy not considered
+      weight_collection$abs_prop_non_NA <- weight_collection$abs_prop_non_NA*coding_weight_factor # multiply all weights by coding_weight_factor
+      weight_collection$weighted_coding_score <- weight_collection$weighted_coding_score*coding_weight_factor # multiply all weights by coding_weight_factor
       mn<-((apply(weight_collection["weighted_coding_score"],1,qlogis))+(apply(weight_collection["abs_prop_non_NA"],1,qlogis)))/2
       weight_collection$mean_score<-(exp(mn)/(1+exp(mn)))
     }
@@ -268,8 +270,8 @@ pruning_steps <- function(original_data, max_steps, mean_type, taxonomy, origina
     cat("Identifying languages and variables with lowest score:", rownames(worstlg), "and", worstvar ,"\n")
     
     
-    # remove language if the worst language is currently worse than the worst variable(s)
-    if(worstlg$mean_score < min(c_weights_updated)){
+    # remove language if the worst language is currently worse than or equally bad as the worst variable(s)
+    if(worstlg$mean_score <= min(c_weights_updated)){
       cat("Remove the language with lowest coding score:",rownames(worstlg),"\n")
       
       # track this language will be removed; track no variable will be removed
@@ -286,8 +288,7 @@ pruning_steps <- function(original_data, max_steps, mean_type, taxonomy, origina
       cat("Trimming aborted - there are no more languages left.")
       break
     }
-    
-    
+
     # remove variable if the worst variable is currently worse than the worst language(s)
     if(worstlg$mean_score > min(c_weights_updated)){
       cat("Remove the variable with the lowest coding score:", worstvar,"\n")
@@ -514,21 +515,21 @@ if (sum(nrlevels$count_second_largest_variable_state%in%c(NA,1,2))!=0){ # only a
 max_steps = nrow(original_data)+ncol(original_data)
 mean_type = "log_odds"
 taxonomy = T
-tax_weight_factor <- 0.99 # we must multiply all taxonomic weights by a number below (but close to) 1, because if tax_weight ever reaches 1, the odds mean will be undefined!
-coding_weight_factor <- 0.99 # we should also multiply all non-taxonomic weights by a factor (identical to the tax_weight_factor) to not privilege coding over taxonomy!
+tax_weight_factor <- 0.95 # we must multiply all taxonomic weights by a number below (but close to) 1, because if tax_weight ever reaches 1, the odds mean will be undefined!
+coding_weight_factor <- 0.95 # we should also multiply all non-taxonomic weights by a factor (identical to the tax_weight_factor) to not privilege coding over taxonomy!
 original_register <- original_register
 
-documentation_1049 <- pruning_steps(original_data, max_steps, mean_type, taxonomy, original_register, tax_weight_factor, coding_weight_factor)
+documentation_1004_8jun_0999 <- pruning_steps(original_data, max_steps, mean_type, taxonomy, original_register, tax_weight_factor, coding_weight_factor)
   
 # test F3
 
-optimum <- pruning_score(documentation_1049,exponent_prop_coded_data=1, exponent_available_data_points=1, exponent_lowest_language_score=1)
+optimum <- pruning_score(documentation_1004_8jun_0999,exponent_prop_coded_data=1, exponent_available_data_points=1, exponent_lowest_language_score=0)
 
 
 # test F4
 # these two are equivalent
-pruned_matrix <- densify_prune(original_data, documentation, optimum)
-pruned_matrix <- densify_prune(original_data, documentation, pruning_score(documentation,exponent_prop_coded_data=1, exponent_available_data_points=1))
+pruned_matrix <- densify_prune(original_data, documentation_1004_8jun_0999, optimum)
+pruned_matrix <- densify_prune(original_data, documentation_1004_8jun_0999, pruning_score(documentation_1004_8jun_0999,exponent_prop_coded_data=1, exponent_available_data_points=))
 
 
 ##################################################################################################################################
@@ -571,7 +572,7 @@ original_register <- original_register
 documentation_gb1416 <- pruning_steps(original_data, max_steps, mean_type, taxonomy, original_register, tax_weight_factor, coding_weight_factor)
 
 # test F3
-optimum <- pruning_score(documentation_gb1416,exponent_prop_coded_data=1, exponent_available_data_points=1, exponent_lowest_language_score=1)
+optimum <- pruning_score(documentation_gb1416,exponent_prop_coded_data=1, exponent_available_data_points=1, exponent_lowest_language_score=0)
 
 # test F4
 # these two are equivalent
@@ -621,7 +622,7 @@ original_register <- original_register
 documentation_zhm1744 <- pruning_steps(original_data, max_steps, mean_type, taxonomy, original_register, tax_weight_factor, coding_weight_factor)
 
 # test F3
-optimum <- pruning_score(documentation_zhm1744,exponent_prop_coded_data=1, exponent_available_data_points=1, exponent_lowest_language_score=0)
+optimum <- pruning_score(documentation_zhm1744,exponent_prop_coded_data=1, exponent_available_data_points=1, exponent_lowest_language_score=0.5)
 
 # test F4
 # these two are equivalent
@@ -629,16 +630,18 @@ pruned_matrix <- densify_prune(original_data, documentation_zhm1744, optimum)
 pruned_matrix <- densify_prune(original_data, documentation_zhm1744, pruning_score(documentation_zhm1744,exponent_prop_coded_data=1, exponent_available_data_points=1))
 
 
-
-
 ######### some plots
 hist(apply(pruned_matrix,1,function(x)(length(na.omit(x))))/ncol(pruned_matrix),col = "cadetblue2",xlab="coding density per language", ylab="frequency")
 
 # absolute number coded languages
-length(!is.na(pruned_matrix))
+sum(!is.na(pruned_matrix))
+sum(!is.na(pruned_matrix))/(ncol(pruned_matrix)*nrow(pruned_matrix))
 
 # histogram original matrix
 hist(apply(original_data,1,function(x)(length(na.omit(x))))/ncol(original_data),col = "cadetblue2",xlab="coding density per language", ylab="frequency")
+sum(!is.na(original_data))
+sum(!is.na(original_data))/(ncol(original_data)*nrow(original_data))
+
 
 # number of families
 register <- filter(original_register, glottocode %in% rownames(pruned_matrix))
