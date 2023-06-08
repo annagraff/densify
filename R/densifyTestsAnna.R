@@ -300,7 +300,7 @@ pruning_steps <- function(original_data, max_steps, mean_type, taxonomy, origina
         c_weights_updated <- c_weights_updated[-(which(colnames(c_weights_updated)==worstvar))] # update weights by pruning away worst variable
       }
       
-      if (ncol(updated_matrix)==0){
+      if (!is.matrix(updated_matrix)){
         cat("Trimming aborted - there are no more variables left.")
         break
       }
@@ -322,7 +322,7 @@ pruning_steps <- function(original_data, max_steps, mean_type, taxonomy, origina
         cat("; remove the following uninformative variables", uninformative_variables,"\n")
       }
       
-      if (ncol(updated_matrix)==0){
+      if (!is.matrix(updated_matrix)){
         cat("Trimming aborted - there are no variables left.")
         break
       }
@@ -400,252 +400,269 @@ pruning_steps <- function(original_data, max_steps, mean_type, taxonomy, origina
       weight_collection$abs_prop_non_NA <- abs_prop_non_NA
       weight_collection$weighted_coding_score <- signif(r_weights_updated$weighted_coding_score,digits=7)
     }
-    return(documentation)
-  }
+  return(documentation)
+}
   
-  ##################################################################################################################################
-  ##################################################################################################################################
+##################################################################################################################################
+##################################################################################################################################
   
-  ######################################################
-  # F3
-  #
-  # Function to define a quality score for each iteration as documented in the output created in F2 and identify the optimal number of iterations post-hoc. Exponents can be modified.
-  # The function also yields a plot of the quality score at each iteration.
-  #
-  ######################################################
+######################################################
+# F3
+#
+# Function to define a quality score for each iteration as documented in the output created in F2 and identify the optimal number of iterations post-hoc. Exponents can be modified.
+# The function also yields a plot of the quality score at each iteration.
+#
+######################################################
   
-  pruning_score <- function(documentation, exponent_prop_coded_data, exponent_available_data_points,exponent_lowest_language_score){
-    quality <- as.numeric(documentation$prop_coded_data)^exponent_prop_coded_data*as.numeric(documentation$available_data_points)^exponent_available_data_points*as.numeric(documentation$worst_lg_abs_coding_density)^exponent_lowest_language_score
-    plot(quality,xlab="iteration",ylab="quality score")
-    optimum <- which(quality==max(na.omit(quality)))
-    return(optimum)
-  }
+pruning_score <- function(documentation, exponent_prop_coded_data, exponent_available_data_points,exponent_lowest_language_score){
+  quality <- as.numeric(documentation$prop_coded_data)^exponent_prop_coded_data*as.numeric(documentation$available_data_points)^exponent_available_data_points*as.numeric(documentation$worst_lg_abs_coding_density)^exponent_lowest_language_score
+  plot(quality,xlab="iteration",ylab="quality score")
+  optimum <- which(quality==max(na.omit(quality)))
+  return(optimum)
+}
   
-  ##################################################################################################################################
-  ##################################################################################################################################
+##################################################################################################################################
+##################################################################################################################################
   
-  ######################################################
-  # F4
-  #
-  # Function to actually densify the original input matrix, given the optimum quality score.
-  #
-  ######################################################
+######################################################
+# F4
+#
+# Function to actually densify the original input matrix, given the optimum quality score.
+#
+######################################################
+
+densify_prune <- function(original_data, documentation, optimum){
+  documentation <- slice(documentation, 1:optimum)
+  prune_lgs <- unique(unlist(strsplit(documentation$removed_lg,";")))[unique(unlist(strsplit(documentation$removed_lg,";")))!="NA"]
+  prune_vars <- unique(unlist(strsplit(documentation$removed_var,";")))[unique(unlist(strsplit(documentation$removed_var,";")))!="NA"]
+  pruned_matrix <- original_data[which(rownames(original_data)%in%prune_lgs==F),which(colnames(original_data)%in%prune_vars==F)]
+  return(pruned_matrix)
+}
   
-  densify_prune <- function(original_data, documentation, optimum){
-    documentation <- slice(documentation, 1:optimum)
-    prune_lgs <- unique(unlist(strsplit(documentation$removed_lg,";")))[unique(unlist(strsplit(documentation$removed_lg,";")))!="NA"]
-    prune_vars <- unique(unlist(strsplit(documentation$removed_var,";")))[unique(unlist(strsplit(documentation$removed_var,";")))!="NA"]
-    pruned_matrix <- original_data[which(rownames(original_data)%in%prune_lgs==F),which(colnames(original_data)%in%prune_vars==F)]
-    return(pruned_matrix)
-  }
-  
-  ##################################################################################################################################
-  ##################################################################################################################################
-  ##################################################################################################################################
-  ##################################################################################################################################
-  ##################################################################################################################################
-  ##################################################################################################################################
-  
-  
-  ########
-  # WALS data (dummy)
-  ########
-  
-  ### create WALS dataframe (wals_data)
-  download.file("https://cdstar.shh.mpg.de/bitstreams/EAEA0-7269-77E5-3E10-0/wals_dataset.cldf.zip",
-                destfile = "wals_dataset.cldf.zip")
-  
-  # Read language and value information from the ZIP file:
-  wals_languages <- read.csv(unz("wals_dataset.cldf.zip", "languages.csv"),
-                             header=TRUE, sep=",")
-  wals_values <- read.csv(unz("wals_dataset.cldf.zip", "values.csv"),header=TRUE, sep=",")
-  wals_parameters <- read.csv(unz("wals_dataset.cldf.zip", "parameters.csv"),header=TRUE, sep=",")
-  
-  wals_parameters$Feature <- apply(wals_parameters, 1, function(x) paste("WALS_",x[1]," ",x[2],sep=""))
-  wals_parameters <- wals_parameters %>% select(c("ID","Feature"))
-  
-  names(wals_languages)[1]<-"Language_ID"
-  names(wals_parameters)[1]<-"Parameter_ID"
-  
-  wals_merged <- wals_languages %>% merge(wals_values, by = "Language_ID", all = TRUE) %>%
-    merge(wals_parameters, by = "Parameter_ID", all = TRUE) %>%
-    filter(Glottocode!="") %>%
-    select(c("Glottocode","Feature","Value")) %>% na.omit()
-  
-  wals_data<-pivot_wider(wals_merged,
-                         names_from = Feature,
-                         values_from = Value,
-                         values_fill = "?",
-                         values_fn = function(x){if (length(unique(x))==1){unique(x)} else ("?")})
-  
-  lgs <- wals_data$Glottocode
-  wals_data <- as.data.frame(select(wals_data, -Glottocode))
-  rownames(wals_data) <- lgs
-  
-  ##################################################################################################################################
-  ##################################################################################################################################
-  ##################################################################################################################################
-  ##################################################################################################################################
-  ##################################################################################################################################
-  ##################################################################################################################################
-  
-  ####### Testing the functions with the dummy data (WALS)
-  
-  # test F1
-  original_register <- glottocode_taxonomy(path_to_file="glottolog_4.7_languoid/languoid.csv")
-  
-  # test F2
-  # original_data must be a data frame with the glottocodes as row names and variable names as column names. any question marks, empty entries, "NA"s must be NAs
-  original_data <- wals_data
-  original_data[original_data=="?"] <- NA
-  original_data[original_data=="NA"] <- NA
-  
-  # make sure that all variables are/remain sufficiently variable --> the second-most-frequent variable state must contain at least 3 languages
-  # if any variables are not/no longer sufficiently variable for our areal analysis, remove them
-  nrlevels <- data.frame(variable=colnames(original_data),
-                         number_of_variable_states=apply(original_data,2,function(x)length(table(as.factor(x)))),
-                         count_second_largest_variable_state=apply(original_data,2,function(x)sort(table(as.factor(x)),decreasing=T)[2]))
-  
-  if (sum(nrlevels$count_second_largest_variable_state%in%c(NA,1,2))!=0){ # only act if there is a variable that needs removal
-    uninformative_variables <- rownames(filter(nrlevels,count_second_largest_variable_state%in%c(NA,1,2)))
-    original_data <- original_data[,-which(colnames(original_data)%in%uninformative_variables)] # update matrix by pruning away uninformative variables
-  }
-  
-  max_steps = nrow(original_data)+ncol(original_data)
-  mean_type = "log_odds"
-  taxonomy = T
-  tax_weight_factor <- 0.95 # we must multiply all taxonomic weights by a number below (but close to) 1, because if tax_weight ever reaches 1, the odds mean will be undefined!
-  coding_weight_factor <- 0.95 # we should also multiply all non-taxonomic weights by a factor (identical to the tax_weight_factor) to not privilege coding over taxonomy!
-  original_register <- original_register
-  
-  documentation_1004_8jun_0999 <- pruning_steps(original_data, max_steps, mean_type, taxonomy, original_register, tax_weight_factor, coding_weight_factor)
- # test F3
-  
-  optimum <- pruning_score(documentation_1004_8jun_0999,exponent_prop_coded_data=1, exponent_available_data_points=1, exponent_lowest_language_score=0)
+##################################################################################################################################
+##################################################################################################################################
+##################################################################################################################################
+##################################################################################################################################
+##################################################################################################################################
+##################################################################################################################################
   
   
-  # test F4
-  # these two are equivalent
-  pruned_matrix <- densify_prune(original_data, documentation_1004_8jun_0999, optimum)
-  pruned_matrix <- densify_prune(original_data, documentation_1004_8jun_0999, pruning_score(documentation_1004_8jun_0999,exponent_prop_coded_data=1, exponent_available_data_points=))
+########
+# WALS data (dummy)
+########
   
+### create WALS dataframe (wals_data)
+download.file("https://cdstar.shh.mpg.de/bitstreams/EAEA0-7269-77E5-3E10-0/wals_dataset.cldf.zip",
+              destfile = "wals_dataset.cldf.zip")
+
+# Read language and value information from the ZIP file:
+wals_languages <- read.csv(unz("wals_dataset.cldf.zip", "languages.csv"),
+                           header=TRUE, sep=",")
+wals_values <- read.csv(unz("wals_dataset.cldf.zip", "values.csv"),header=TRUE, sep=",")
+wals_parameters <- read.csv(unz("wals_dataset.cldf.zip", "parameters.csv"),header=TRUE, sep=",")
+
+wals_parameters$Feature <- apply(wals_parameters, 1, function(x) paste("WALS_",x[1]," ",x[2],sep=""))
+wals_parameters <- wals_parameters %>% select(c("ID","Feature"))
+
+names(wals_languages)[1]<-"Language_ID"
+names(wals_parameters)[1]<-"Parameter_ID"
+
+wals_merged <- wals_languages %>% merge(wals_values, by = "Language_ID", all = TRUE) %>%
+  merge(wals_parameters, by = "Parameter_ID", all = TRUE) %>%
+  filter(Glottocode!="") %>%
+  select(c("Glottocode","Feature","Value")) %>% na.omit()
+
+wals_data<-pivot_wider(wals_merged,
+                       names_from = Feature,
+                       values_from = Value,
+                       values_fill = "?",
+                       values_fn = function(x){if (length(unique(x))==1){unique(x)} else ("?")})
+
+lgs <- wals_data$Glottocode
+wals_data <- as.data.frame(select(wals_data, -Glottocode))
+rownames(wals_data) <- lgs
   
-  ##################################################################################################################################
-  ##################################################################################################################################
-  ##################################################################################################################################
-  ##################################################################################################################################
-  ##################################################################################################################################
-  ##################################################################################################################################
+##################################################################################################################################
+##################################################################################################################################
+##################################################################################################################################
+##################################################################################################################################
+##################################################################################################################################
+##################################################################################################################################
   
-  ####### Testing the functions with the Grambank data (Grambank statistical)
-  gbstat_original_data <- read.csv("GBM-matrix-design_logic_and_statistical-1-june-2023.csv",row.names = "glottocode") %>% select(-X)
+####### Testing the functions with the dummy data (WALS)
   
-  # test F1
-  original_register <- glottocode_taxonomy(path_to_file="glottolog_4.7_languoid/languoid.csv")
+# test F1
+original_register <- glottocode_taxonomy(path_to_file="glottolog_4.7_languoid/languoid.csv")
+
+# test F2
+# original_data must be a data frame with the glottocodes as row names and variable names as column names. any question marks, empty entries, "NA"s must be NAs
+original_data <- wals_data
+original_data[original_data=="?"] <- NA
+original_data[original_data=="NA"] <- NA
+
+# make sure that all variables are/remain sufficiently variable --> the second-most-frequent variable state must contain at least 3 languages
+# if any variables are not/no longer sufficiently variable for our areal analysis, remove them
+nrlevels <- data.frame(variable=colnames(original_data),
+                       number_of_variable_states=apply(original_data,2,function(x)length(table(as.factor(x)))),
+                       count_second_largest_variable_state=apply(original_data,2,function(x)sort(table(as.factor(x)),decreasing=T)[2]))
+
+if (sum(nrlevels$count_second_largest_variable_state%in%c(NA,1,2))!=0){ # only act if there is a variable that needs removal
+  uninformative_variables <- rownames(filter(nrlevels,count_second_largest_variable_state%in%c(NA,1,2)))
+  original_data <- original_data[,-which(colnames(original_data)%in%uninformative_variables)] # update matrix by pruning away uninformative variables
+}
+    
+max_steps = nrow(original_data)+ncol(original_data)
+mean_type = "arithmetic"
+taxonomy = T
+tax_weight_factor <- NA # we must multiply all taxonomic weights by a number below (but close to) 1, because if tax_weight ever reaches 1, the odds mean will be undefined!
+coding_weight_factor <- NA # we should also multiply all non-taxonomic weights by a factor (identical to the tax_weight_factor) to not privilege coding over taxonomy!
+original_register <- original_register
   
-  # test F2
-  # original_data must be a data frame with the glottocodes as row names and variable names as column names. any question marks, empty entries, "NA"s must be NAs
-  original_data <- gbstat_original_data
-  original_data[original_data=="?"] <- NA
-  original_data[original_data=="NA"] <- NA
+set.seed(4321)
+documentation_A_T_4321 <- pruning_steps(original_data, max_steps, mean_type, taxonomy, original_register, tax_weight_factor, coding_weight_factor)
+
+write.csv(documentation_A_T_4321,"documentation files/documentation_A_T_4321.csv")
+ 
+# test F3
+
+exponent_prop_coded_data <- 0.5
+exponent_available_data_points <- 1
+exponent_lowest_language_score <- 0.5
+
+optimum <- pruning_score(documentation_A_T_2023,exponent_prop_coded_data=exponent_prop_coded_data, exponent_available_data_points=exponent_available_data_points, exponent_lowest_language_score=exponent_lowest_language_score)
   
-  # make sure that all variables are/remain sufficiently variable --> the second-most-frequent variable state must contain at least 3 languages
-  # if any variables are not/no longer sufficiently variable for our areal analysis, remove them
-  nrlevels <- data.frame(variable=colnames(original_data),
-                         number_of_variable_states=apply(original_data,2,function(x)length(table(as.factor(x)))),
-                         count_second_largest_variable_state=apply(original_data,2,function(x)sort(table(as.factor(x)),decreasing=T)[2]))
+# test F4
+# pruned_matrix_2023 <- densify_prune(original_data, documentation_L_T_099_099_2023, optimum)
+# pruned_matrix_1234 <- densify_prune(original_data, documentation_L_T_099_099_1234, optimum)
+pruned_matrix <- densify_prune(original_data, documentation_A_T_2023, optimum)
+
+######### some plots
+hist(apply(pruned_matrix,1,function(x)(length(na.omit(x))))/ncol(pruned_matrix),col = "cadetblue2",xlab="coding density per language", ylab="frequency")
+
+# proportion coded languages
+sum(!is.na(pruned_matrix))/(ncol(pruned_matrix)*nrow(pruned_matrix))
+nrow(pruned_matrix)
+register_pruned <- filter(original_register, glottocode %in% rownames(pruned_matrix))
+length(unique(register_pruned$glottolog.node1))
+ncol(pruned_matrix)
+rm(pruned_matrix)
+
+
+####
+
+# histogram original matrix
+hist(apply(original_data,1,function(x)(length(na.omit(x))))/ncol(original_data),col = "cadetblue2",xlab="coding density per language", ylab="frequency")
+sum(!is.na(original_data))/(ncol(original_data)*nrow(original_data))
+
+nrow(original_data)
+register_original <- filter(original_register, glottocode %in% rownames(original_data))
+length(unique(register_original$glottolog.node1))
+ncol(original_data)
+
+# number of families
+register <- filter(original_register, glottocode %in% rownames(original_data))
+register <- register[match(rownames(original_data),register$glottocode),]
+length(unique(register$glottolog.node1))
+
   
-  if (sum(nrlevels$count_second_largest_variable_state%in%c(NA,1,2))!=0){ # only act if there is a variable that needs removal
-    uninformative_variables <- rownames(filter(nrlevels,count_second_largest_variable_state%in%c(NA,1,2)))
-    original_data <- original_data[,-which(colnames(original_data)%in%uninformative_variables)] # update matrix by pruning away uninformative variables
-  }
-  
-  max_steps = nrow(original_data)+ncol(original_data)
-  mean_type = "log_odds"
-  taxonomy = T
-  tax_weight_factor <- 0.99 # we must multiply all taxonomic weights by a number below (but close to) 1, because if tax_weight ever reaches 1, the odds mean will be undefined!
-  coding_weight_factor <- 0.99 # we should also multiply all non-taxonomic weights by a factor (identical to the tax_weight_factor) to not privilege coding over taxonomy!
-  original_register <- original_register
-  
-  documentation_gb1416 <- pruning_steps(original_data, max_steps, mean_type, taxonomy, original_register, tax_weight_factor, coding_weight_factor)
-  
-  # test F3
-  optimum <- pruning_score(documentation_gb1416,exponent_prop_coded_data=1, exponent_available_data_points=1, exponent_lowest_language_score=0)
-  
-  # test F4
-  # these two are equivalent
-  pruned_matrix <- densify_prune(original_data, documentation_gb1416, optimum)
-  pruned_matrix <- densify_prune(original_data, documentation_gb1416, pruning_score(documentation_gb1416,exponent_prop_coded_data=1, exponent_available_data_points=1))
-  
-  ##################################################################################################################################
-  ##################################################################################################################################
-  ##################################################################################################################################
-  ##################################################################################################################################
-  ##################################################################################################################################
-  ##################################################################################################################################
-  
-  ####### Testing the functions with the Mega-Merge data (ZHM statistical)
-  zhmstat_original_data <- read.csv("ZHM-matrix-design_logic_and_statistical-6-june-2023.csv",row.names = "glottocode") %>% select(-X)
-  
-  # test F1
-  original_register <- glottocode_taxonomy(path_to_file="glottolog_4.7_languoid/languoid.csv")
-  
-  # test F2
-  # original_data must be a data frame with the glottocodes as row names and variable names as column names. any question marks, empty entries, "NA"s must be NAs
-  original_data <- zhmstat_original_data
-  original_data[original_data=="?"] <- NA
-  original_data[original_data=="NA"] <- NA
-  
-  # make sure that all variables are/remain sufficiently variable --> the second-most-frequent variable state must contain at least 3 languages
-  # if any variables are not/no longer sufficiently variable for our areal analysis, remove them
-  nrlevels <- data.frame(variable=colnames(original_data),
-                         number_of_variable_states=apply(original_data,2,function(x)length(table(as.factor(x)))),
-                         count_second_largest_variable_state=apply(original_data,2,function(x)sort(table(as.factor(x)),decreasing=T)[2]))
-  
-  if (sum(nrlevels$count_second_largest_variable_state%in%c(NA,1,2))!=0){ # only act if there is a variable that needs removal
-    uninformative_variables <- rownames(filter(nrlevels,count_second_largest_variable_state%in%c(NA,1,2)))
-    original_data <- original_data[,-which(colnames(original_data)%in%uninformative_variables)] # update matrix by pruning away uninformative variables
-  }
-  
-  non_NA_counts <- apply(original_data,1,function(x)sum(!is.na(x)))
-  original_data <- original_data[which(non_NA_counts!=0),]
-  
-  max_steps = nrow(original_data)+ncol(original_data)
-  mean_type = "log_odds"
-  taxonomy = T
-  tax_weight_factor <- 0.99 # we must multiply all taxonomic weights by a number below (but close to) 1, because if tax_weight ever reaches 1, the odds mean will be undefined!
-  coding_weight_factor <- 0.99 # we should also multiply all non-taxonomic weights by a factor (identical to the tax_weight_factor) to not privilege coding over taxonomy!
-  original_register <- original_register
-  
-  documentation_zhm1744 <- pruning_steps(original_data, max_steps, mean_type, taxonomy, original_register, tax_weight_factor, coding_weight_factor)
-  
-  # test F3
-  optimum <- pruning_score(documentation_zhm1744,exponent_prop_coded_data=1, exponent_available_data_points=1, exponent_lowest_language_score=0.5)
-  
-  # test F4
-  # these two are equivalent
-  pruned_matrix <- densify_prune(original_data, documentation_zhm1744, optimum)
-  pruned_matrix <- densify_prune(original_data, documentation_zhm1744, pruning_score(documentation_zhm1744,exponent_prop_coded_data=1, exponent_available_data_points=1))
-  
-  
-  ######### some plots
-  hist(apply(pruned_matrix,1,function(x)(length(na.omit(x))))/ncol(pruned_matrix),col = "cadetblue2",xlab="coding density per language", ylab="frequency")
-  
-  # absolute number coded languages
-  sum(!is.na(pruned_matrix))
-  sum(!is.na(pruned_matrix))/(ncol(pruned_matrix)*nrow(pruned_matrix))
-  
-  # histogram original matrix
-  hist(apply(original_data,1,function(x)(length(na.omit(x))))/ncol(original_data),col = "cadetblue2",xlab="coding density per language", ylab="frequency")
-  sum(!is.na(original_data))
-  sum(!is.na(original_data))/(ncol(original_data)*nrow(original_data))
-  
-  
-  # number of families
-  register <- filter(original_register, glottocode %in% rownames(pruned_matrix))
-  register <- register[match(rownames(pruned_matrix),register$glottocode),]
-  length(unique(register$glottolog.node1))
-  
+# ##################################################################################################################################
+# ##################################################################################################################################
+# ##################################################################################################################################
+# ##################################################################################################################################
+# ##################################################################################################################################
+  # ##################################################################################################################################
+  # 
+  # ####### Testing the functions with the Grambank data (Grambank statistical)
+  # gbstat_original_data <- read.csv("GBM-matrix-design_logic_and_statistical-1-june-2023.csv",row.names = "glottocode") %>% select(-X)
+  # 
+  # # test F1
+  # original_register <- glottocode_taxonomy(path_to_file="glottolog_4.7_languoid/languoid.csv")
+  # 
+  # # test F2
+  # # original_data must be a data frame with the glottocodes as row names and variable names as column names. any question marks, empty entries, "NA"s must be NAs
+  # original_data <- gbstat_original_data
+  # original_data[original_data=="?"] <- NA
+  # original_data[original_data=="NA"] <- NA
+  # 
+  # # make sure that all variables are/remain sufficiently variable --> the second-most-frequent variable state must contain at least 3 languages
+  # # if any variables are not/no longer sufficiently variable for our areal analysis, remove them
+  # nrlevels <- data.frame(variable=colnames(original_data),
+  #                        number_of_variable_states=apply(original_data,2,function(x)length(table(as.factor(x)))),
+  #                        count_second_largest_variable_state=apply(original_data,2,function(x)sort(table(as.factor(x)),decreasing=T)[2]))
+  # 
+  # if (sum(nrlevels$count_second_largest_variable_state%in%c(NA,1,2))!=0){ # only act if there is a variable that needs removal
+  #   uninformative_variables <- rownames(filter(nrlevels,count_second_largest_variable_state%in%c(NA,1,2)))
+  #   original_data <- original_data[,-which(colnames(original_data)%in%uninformative_variables)] # update matrix by pruning away uninformative variables
+  # }
+  # 
+  # max_steps = nrow(original_data)+ncol(original_data)
+  # mean_type = "log_odds"
+  # taxonomy = T
+  # tax_weight_factor <- 0.99 # we must multiply all taxonomic weights by a number below (but close to) 1, because if tax_weight ever reaches 1, the odds mean will be undefined!
+  # coding_weight_factor <- 0.99 # we should also multiply all non-taxonomic weights by a factor (identical to the tax_weight_factor) to not privilege coding over taxonomy!
+  # original_register <- original_register
+  # 
+  # documentation_gb1416 <- pruning_steps(original_data, max_steps, mean_type, taxonomy, original_register, tax_weight_factor, coding_weight_factor)
+  # 
+  # # test F3
+  # optimum <- pruning_score(documentation_gb1416,exponent_prop_coded_data=1, exponent_available_data_points=1, exponent_lowest_language_score=0)
+  # 
+  # # test F4
+  # # these two are equivalent
+  # pruned_matrix <- densify_prune(original_data, documentation_gb1416, optimum)
+  # pruned_matrix <- densify_prune(original_data, documentation_gb1416, pruning_score(documentation_gb1416,exponent_prop_coded_data=1, exponent_available_data_points=1))
+  # 
+  # ##################################################################################################################################
+  # ##################################################################################################################################
+  # ##################################################################################################################################
+  # ##################################################################################################################################
+  # ##################################################################################################################################
+  # ##################################################################################################################################
+  # 
+  # ####### Testing the functions with the Mega-Merge data (ZHM statistical)
+  # zhmstat_original_data <- read.csv("ZHM-matrix-design_logic_and_statistical-6-june-2023.csv",row.names = "glottocode") %>% select(-X)
+  # 
+  # # test F1
+  # original_register <- glottocode_taxonomy(path_to_file="glottolog_4.7_languoid/languoid.csv")
+  # 
+  # # test F2
+  # # original_data must be a data frame with the glottocodes as row names and variable names as column names. any question marks, empty entries, "NA"s must be NAs
+  # original_data <- zhmstat_original_data
+  # original_data[original_data=="?"] <- NA
+  # original_data[original_data=="NA"] <- NA
+  # 
+  # # make sure that all variables are/remain sufficiently variable --> the second-most-frequent variable state must contain at least 3 languages
+  # # if any variables are not/no longer sufficiently variable for our areal analysis, remove them
+  # nrlevels <- data.frame(variable=colnames(original_data),
+  #                        number_of_variable_states=apply(original_data,2,function(x)length(table(as.factor(x)))),
+  #                        count_second_largest_variable_state=apply(original_data,2,function(x)sort(table(as.factor(x)),decreasing=T)[2]))
+  # 
+  # if (sum(nrlevels$count_second_largest_variable_state%in%c(NA,1,2))!=0){ # only act if there is a variable that needs removal
+  #   uninformative_variables <- rownames(filter(nrlevels,count_second_largest_variable_state%in%c(NA,1,2)))
+  #   original_data <- original_data[,-which(colnames(original_data)%in%uninformative_variables)] # update matrix by pruning away uninformative variables
+  # }
+  # 
+  # non_NA_counts <- apply(original_data,1,function(x)sum(!is.na(x)))
+  # original_data <- original_data[which(non_NA_counts!=0),]
+  # 
+  # max_steps = nrow(original_data)+ncol(original_data)
+  # mean_type = "log_odds"
+  # taxonomy = T
+  # tax_weight_factor <- 0.99 # we must multiply all taxonomic weights by a number below (but close to) 1, because if tax_weight ever reaches 1, the odds mean will be undefined!
+  # coding_weight_factor <- 0.99 # we should also multiply all non-taxonomic weights by a factor (identical to the tax_weight_factor) to not privilege coding over taxonomy!
+  # original_register <- original_register
+  # 
+  # documentation_zhm1744 <- pruning_steps(original_data, max_steps, mean_type, taxonomy, original_register, tax_weight_factor, coding_weight_factor)
+  # 
+  # # test F3
+  # optimum <- pruning_score(documentation_zhm1744,exponent_prop_coded_data=1, exponent_available_data_points=1, exponent_lowest_language_score=0.5)
+  # 
+  # # test F4
+  # # these two are equivalent
+  # pruned_matrix <- densify_prune(original_data, documentation_zhm1744, optimum)
+  # pruned_matrix <- densify_prune(original_data, documentation_zhm1744, pruning_score(documentation_zhm1744,exponent_prop_coded_data=1, exponent_available_data_points=1))
+  # 
+  # 
   
   
   
