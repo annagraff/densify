@@ -512,29 +512,26 @@ if (sum(nrlevels$count_second_largest_variable_state%in%c(NA,1,2))!=0){ # only a
 }
     
 max_steps = nrow(original_data)+ncol(original_data)
-mean_type = "arithmetic"
+mean_type = "log_odds"
 taxonomy = T
-tax_weight_factor <- NA # we must multiply all taxonomic weights by a number below (but close to) 1, because if tax_weight ever reaches 1, the odds mean will be undefined!
-coding_weight_factor <- NA # we should also multiply all non-taxonomic weights by a factor (identical to the tax_weight_factor) to not privilege coding over taxonomy!
+tax_weight_factor <- 0.95 # we must multiply all taxonomic weights by a number below (but close to) 1, because if tax_weight ever reaches 1, the odds mean will be undefined!
+coding_weight_factor <- 0.99 # we should also multiply all non-taxonomic weights by a factor (identical to the tax_weight_factor) to not privilege coding over taxonomy!
 original_register <- original_register
   
-set.seed(4321)
-documentation_A_T_4321 <- pruning_steps(original_data, max_steps, mean_type, taxonomy, original_register, tax_weight_factor, coding_weight_factor)
+set.seed(2023)
+documentation_L_T_095_099_2023 <- pruning_steps(original_data, max_steps, mean_type, taxonomy, original_register, tax_weight_factor, coding_weight_factor)
 
-write.csv(documentation_A_T_4321,"documentation files/documentation_A_T_4321.csv")
+write.csv(documentation_L_T_095_099_2023,"documentation files/documentation_L_T_095_099_2023.csv")
  
 # test F3
-
-exponent_prop_coded_data <- 0.5
+exponent_prop_coded_data <- 1
 exponent_available_data_points <- 1
-exponent_lowest_language_score <- 0.5
+exponent_lowest_language_score <- 0
 
-optimum <- pruning_score(documentation_A_T_2023,exponent_prop_coded_data=exponent_prop_coded_data, exponent_available_data_points=exponent_available_data_points, exponent_lowest_language_score=exponent_lowest_language_score)
+optimum <- pruning_score(documentation_L_T_095_099_2023,exponent_prop_coded_data=exponent_prop_coded_data, exponent_available_data_points=exponent_available_data_points, exponent_lowest_language_score=exponent_lowest_language_score)
   
 # test F4
-# pruned_matrix_2023 <- densify_prune(original_data, documentation_L_T_099_099_2023, optimum)
-# pruned_matrix_1234 <- densify_prune(original_data, documentation_L_T_099_099_1234, optimum)
-pruned_matrix <- densify_prune(original_data, documentation_A_T_2023, optimum)
+pruned_matrix <- densify_prune(original_data, documentation_L_T_095_099_2023, optimum)
 
 ######### some plots
 hist(apply(pruned_matrix,1,function(x)(length(na.omit(x))))/ncol(pruned_matrix),col = "cadetblue2",xlab="coding density per language", ylab="frequency")
