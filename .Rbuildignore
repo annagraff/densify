@@ -3,4 +3,5 @@
 ^rstudio
 ^.*\.zip
 ^.*
+!^DESCRIPTION$
 !^R/densify_prep\.R$
