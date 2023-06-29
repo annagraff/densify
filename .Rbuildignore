@@ -2,5 +2,5 @@
 ^\.Rproj\.user$
 ^rstudio
 ^.*\.zip
-*
-!R/densify_prep.R
+^.*
+!^R/densify_prep\.R$
