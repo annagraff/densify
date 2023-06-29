@@ -1,6 +1,6 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
-R/matoptFunctions.R
-denifyFunctions.R
 ^rstudio
 ^.*\.zip
+*
+!R/densify_prep.R
