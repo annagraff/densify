@@ -1,4 +1,4 @@
-Package: densify
+Package: uniquenamedensify
 Title: Pre-processing Linguistic Input Data Frame
 Version: 0.0.0.9000
 Authors@R: 
