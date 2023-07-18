@@ -15,12 +15,12 @@
 # tax_weight_factor: must be between (not including) 0 and 1 and determines the relative weight given to taxonomy in language pruning; must be specified if taxonomy = T and if mean_type = log_odds
 # coding_weight_factor: must be between (not including) 0 and 1 and determines the relative weight given to coding quality (absolute coding score and weighted coding score) in language pruning; must be specified if taxonomy = T and if mean_type = log_odds
 
-pruning_steps <- function(original_data, max_steps, mean_type, taxonomy, original_register, tax_weight_factor, coding_weight_factor){
+densify_steps <- function(original_data, max_steps, mean_type, taxonomy, original_register, tax_weight_factor, coding_weight_factor){
   library(vegan)
 
   # prepare original_data and original_register, if applicable:
 
-  pruning_prep <- function(original_data) {
+  densify_prep <- function(original_data) {
     # save row names for later
     languages <- rownames(original_data)
     # replace NAs by 0 (no data available) and non-NA entries by 1 (data available)
@@ -34,7 +34,7 @@ pruning_steps <- function(original_data, max_steps, mean_type, taxonomy, origina
     return(full_matrix)
   }
 
-  full_matrix <- pruning_prep(original_data)
+  full_matrix <- densify_prep(original_data)
 
   if(taxonomy == T){
     # reduce both the matrix and the register to the glottocodes present in both files
@@ -80,7 +80,7 @@ pruning_steps <- function(original_data, max_steps, mean_type, taxonomy, origina
   # create a data frame collecting different kinds of weights per language
   weight_collection<-r_weights_updated
 
-  # initialise iterative pruning procedure
+  # initialise iterative densifying procedure
   for (iterations in 1:max_steps){
 
     cat("Iteration number",iterations,"\n")
@@ -291,6 +291,3 @@ pruning_steps <- function(original_data, max_steps, mean_type, taxonomy, origina
   }
   return(documentation)
 }
-
-##################################################################################################################################
-##################################################################################################################################
