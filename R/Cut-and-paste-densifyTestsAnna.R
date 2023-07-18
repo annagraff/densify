@@ -1,6 +1,6 @@
 # rm(list=ls())   # ...clears the global environment, but it's unnecessary in a package where you want to encapsulate your functions. You can safely remove this line.
-library(tidyverse)
-library(plyr)
+# library(tidyverse)
+# library(plyr)   # Instead of having these lines at the beginning of each function, you can add them to the NAMESPACE file of your package.
 
 
 
