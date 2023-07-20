@@ -4,20 +4,7 @@
 
 
 
-######################################################
-# F3
-#
-# Function to define a quality score for each iteration as documented in the output created in F2 and identify the optimal number of iterations post-hoc. Exponents can be modified.
-# The function also yields a plot of the quality score at each iteration.
-#
-######################################################
 
-pruning_score <- function(documentation, exponent_prop_coded_data, exponent_available_data_points, exponent_lowest_language_score, exponent_taxonomic_diversity){
-  quality <- as.numeric(documentation$prop_coded_data)^exponent_prop_coded_data*as.numeric(documentation$available_data_points)^exponent_available_data_points*as.numeric(documentation$worst_lg_abs_coding_density)^exponent_lowest_language_score*as.numeric(documentation$taxonomic_index)^exponent_taxonomic_diversity
-  plot(quality,xlab="iteration",ylab="quality score")
-  optimum <- which(quality==max(na.omit(quality)))
-  return(optimum)
-}
 
 ##################################################################################################################################
 ##################################################################################################################################
