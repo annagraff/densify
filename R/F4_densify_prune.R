@@ -5,7 +5,7 @@
 #
 ######################################################
 
-densify_prune <- function(original_data, documentation, optimum) {
+densify_prune <- function(original_data, documentation, optimum = 1) {
   # Validate inputs
   if (!is.data.frame(original_data)) {
     stop("The 'original_data' parameter must be a data frame.")
@@ -13,8 +13,15 @@ densify_prune <- function(original_data, documentation, optimum) {
   if (!is.data.frame(documentation)) {
     stop("The 'documentation' parameter must be a data frame.")
   }
-  if (!is.numeric(optimum)) {
-    stop("The 'optimum' parameter must be numeric.")
+  if (!is.integer(optimum) || optimum < 1) {
+    stop("The 'optimum' parameter must be a strictly positive integer.")
+  }
+
+  # Ensure 'optimum' is not greater than the number of iterations in 'documentation'
+  num_iterations <- nrow(documentation)
+  if (optimum > num_iterations) {
+    warning("The 'optimum' value is larger than the number of iterations in documentation.")
+    optimum <- num_iterations
   }
 
   # Extract relevant documentation up to the optimum iteration
