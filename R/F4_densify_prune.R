@@ -20,7 +20,7 @@ densify_prune <- function(original_data, documentation, optimum = 1) {
   # Ensure 'optimum' is not greater than the number of iterations in 'documentation':
   num_iterations <- nrow(documentation)
   if (optimum > num_iterations) {
-    warning("The 'optimum' value is larger than the number of iterations in documentation.")
+    warning("The 'optimum' value was larger than the number of iterations in documentation.")
     optimum <- num_iterations
   }
 
