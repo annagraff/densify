@@ -15,7 +15,7 @@
 # tax_weight_factor: must be between (not including) 0 and 1 and determines the relative weight given to taxonomy in language pruning; must be specified if taxonomy = T and if mean_type = log_odds
 # coding_weight_factor: must be between (not including) 0 and 1 and determines the relative weight given to coding quality (absolute coding score and weighted coding score) in language pruning; must be specified if taxonomy = T and if mean_type = log_odds
 
-densify_steps <- function(original_data, max_steps, mean_type, taxonomy, original_register, tax_weight_factor, coding_weight_factor){
+densify_steps <- function(original_data, max_steps = 1, mean_type = "log_odds", taxonomy = F, original_register, tax_weight_factor = 0.99, coding_weight_factor = 0.99){
   library(vegan)
 
   # prepare original_data and original_register, if applicable:
