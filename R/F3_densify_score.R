@@ -6,6 +6,25 @@
 #
 ######################################################
 
+#' densify_score
+#'
+#' Function to define a quality score for each iteration as documented in the output created in F2 and identify the optimal number of iterations post-hoc. Exponents can be modified.
+#'
+#' @param documentation A data frame containing the output documentation from the `densify_steps` function.
+#'
+#' @param exponent_prop_coded_data Exponent for the proportion of coded data. Default is 1.
+#' @param exponent_available_data_points Exponent for the number of available data points. Default is 1.
+#' @param exponent_lowest_language_score Exponent for the lowest language score. Default is 1.
+#' @param exponent_taxonomic_diversity Exponent for the taxonomic diversity index. Default is 1.
+#'
+#' @return The optimal number of iterations with the highest quality score.
+#'
+#' @examples
+#' # Assuming `documentation` is a data frame generated from `densify_steps` function
+#' densify_score(documentation)
+#'
+#' @export
+
 densify_score <- function(documentation, exponent_prop_coded_data = 1, exponent_available_data_points = 1, exponent_lowest_language_score = 1, exponent_taxonomic_diversity = 1) {
   # Validate input parameters:
   if (!is.numeric(exponent_prop_coded_data) ||
