@@ -101,7 +101,7 @@ densify_steps <- function(original_data, max_steps = 1, mean_type = "log_odds", 
     if (iterations==1 & taxonomy==T){
       cat("Computing initial taxonomic weights.\n")
       families <- unique(register$glottolog.node1)
-      for (f in 1:length(families)){ # filling up this matrix with taxonomic_weight measures takes about 33 seconds
+      for (f in 1:length(families)){
         lgs <- filter(register, glottolog.node1%in%families[f])$glottocode
         if(length(lgs)==1){ # if lg is sole representative of its family, --> weight 1
           weight_collection[lgs,"taxonomic_weight"] <- 1

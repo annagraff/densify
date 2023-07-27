@@ -6,7 +6,7 @@
 # Our goal is to flatten out the glottolog tree for every languoid (glottocode) in the
 # database and represent the node as linear levels. Here, the top-level items
 # (roots of the glottolog tree) get mapped to node level 1 and the bottom-level items
-# (leafs) are mapped to last node. Intermediate dummy nodes are created in between
+# (leaves) are mapped to last node. Intermediate dummy nodes are created in between
 # and filled with NA if necessary
 #
 # For true singletons (leaves which are also roots), a virtual root is created during
@@ -27,7 +27,7 @@ glottocode_taxonomy <- function(path_to_file){
     expect_false(any(duplicated(languoids$id)), info="Glottolog contains duplicate nodes")
     expect_false(any(duplicated(languoids$glottocode)), info="Glottolog contains duplicate glottocodes")
 
-    # identify roots and leafs
+    # identify roots and leaves
     languoids <- mutate(languoids, is_root = is.na(parent_id), is_leaf = id %in% setdiff(id, parent_id))
 
     # the tree is described in the table as an adjacency list

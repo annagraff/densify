@@ -132,6 +132,7 @@ glottocode_taxonomy <- function(path_to_file){
 # coding_weight_factor: must be between (not including) 0 and 1 and determines the relative weight given to coding quality (absolute coding score and weighted coding score) in language pruning; must be specified if taxonomy = T and if mean_type = log_odds
 
 pruning_steps <- function(original_data, max_steps, mean_type, taxonomy, original_register, tax_weight_factor, coding_weight_factor){
+  library(vegan)
   
   # prepare original_data and original_register, if applicable:
   
@@ -178,7 +179,9 @@ pruning_steps <- function(original_data, max_steps, mean_type, taxonomy, origina
                               worst_var_abs = paste(names(colSums(full_matrix))[which(colSums(full_matrix)==min(colSums(full_matrix)))],collapse=";"),
                               worst_var_abs_coding_density = min(colSums(full_matrix)/nrow(full_matrix)),
                               removed_lg = "NA",
-                              removed_var = "NA")
+                              removed_var = "NA",
+                              taxonomic_index = vegan::diversity(table(register$glottolog.node1)),
+                              na_distribution_index = sqrt(var(rowSums(full_matrix)/ncol(full_matrix))+var(colSums(full_matrix)/nrow(full_matrix))))
   
   # determine weighted row and column scores (r_weights and c_weights)
   cross_prod = crossprod(full_matrix)
@@ -382,7 +385,9 @@ pruning_steps <- function(original_data, max_steps, mean_type, taxonomy, origina
                            paste(names(colSums(updated_matrix))[which(colSums(updated_matrix)==min(colSums(updated_matrix)))],collapse=";"),
                            min(colSums(updated_matrix)/nrow(updated_matrix)),
                            paste(removed_lgs,collapse=";"),
-                           paste(removed_vars,collapse=";")))
+                           paste(removed_vars,collapse=";"),
+                           vegan::diversity(table(register$glottolog.node1)),
+                           sqrt(var(rowSums(updated_matrix)/ncol(updated_matrix))+var(colSums(updated_matrix)/nrow(updated_matrix)))))
     
     cat("Recomupting weighted means.\n\n")
     
@@ -414,12 +419,13 @@ pruning_steps <- function(original_data, max_steps, mean_type, taxonomy, origina
 #
 ######################################################
 
-pruning_score <- function(documentation, exponent_prop_coded_data, exponent_available_data_points,exponent_lowest_language_score){
-  quality <- as.numeric(documentation$prop_coded_data)^exponent_prop_coded_data*as.numeric(documentation$available_data_points)^exponent_available_data_points*as.numeric(documentation$worst_lg_abs_coding_density)^exponent_lowest_language_score
+pruning_score <- function(documentation, exponent_prop_coded_data, exponent_available_data_points, exponent_lowest_language_score, exponent_taxonomic_diversity){
+  quality <- as.numeric(documentation$prop_coded_data)^exponent_prop_coded_data*as.numeric(documentation$available_data_points)^exponent_available_data_points*as.numeric(documentation$worst_lg_abs_coding_density)^exponent_lowest_language_score*as.numeric(documentation$taxonomic_index)^exponent_taxonomic_diversity
   plot(quality,xlab="iteration",ylab="quality score")
   optimum <- which(quality==max(na.omit(quality)))
   return(optimum)
 }
+
 
 ##################################################################################################################################
 ##################################################################################################################################
