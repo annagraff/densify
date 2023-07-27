@@ -1,0 +1,14 @@
+Package: densifyprep
+Title: Pre-processing Linguistic Input Data Frame
+Version: 0.0.0.9000
+Authors@R: 
+    person("Anna", "Graff", , "anna.graff@uzh.ch", role = c("aut", "cre"),
+    comment = c(ORCID = "YOUR-ORCID-ID"))
+    person("Marc", "Lischka", , "marc.lischka@math.uzh.ch", role = c("aut", "cre"))
+Description: This package provides a function for pre-processing linguistic input data frames. The densify_prep function replaces NAs with 0 (indicating no data available) and non-NA entries with 1 (indicating data available). It also converts the dataframe entries to numeric format.
+License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
+    license
+Imports: magrittr, dplyr
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.3
