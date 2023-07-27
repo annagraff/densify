@@ -6,10 +6,10 @@ Authors@R:
     comment = c(ORCID = "YOUR-ORCID-ID"))
     person("Marc", "Lischka", , "marc.lischka@math.uzh.ch", role = c("aut", "cre"))
 Description: This package provides a function to calculate a quality score 
-for each iteration based on the output created in F2 and identifies 
-the optimal number of iterations post-hoc. Exponents can be modified 
-in the function to customize the quality score calculation. 
-The function also generates a plot of the quality score at each iteration.
+  for each iteration based on the output created in F2 and identifies 
+  the optimal number of iterations post-hoc. Exponents can be modified 
+  in the function to customize the quality score calculation. 
+  The function also generates a plot of the quality score at each iteration.
 License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a license
 Imports: magrittr, dplyr
 Encoding: UTF-8
