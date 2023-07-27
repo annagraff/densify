@@ -1,16 +1,44 @@
 ######################################################
 # F1
 #
-# Prepare glottolog info for all languages
-#
-# Our goal is to flatten out the glottolog tree for every languoid (glottocode) in the
-# database and represent the node as linear levels. Here, the top-level items
-# (roots of the glottolog tree) get mapped to node level 1 and the bottom-level items
-# (leaves) are mapped to last node. Intermediate dummy nodes are created in between
-# and filled with NA if necessary
-#
-# For true singletons (leaves which are also roots), a virtual root is created during
-# the flattening process, e.g. Basque -> Basque
+#' glottocode_taxonomy
+#'
+#' Prepare glottolog info for all languages.
+#'
+#' Our goal is to flatten out the glottolog tree for every languoid (glottocode) in the
+#' database and represent the node as linear levels. Here, the top-level items
+#' (roots of the glottolog tree) get mapped to node level 1 and the bottom-level items
+#' (leaves) are mapped to the last node. Intermediate dummy nodes are created in between
+#' and filled with NA if necessary.
+#'
+#' For true singletons (leaves which are also roots), a virtual root is created during
+#' the flattening process, e.g. Basque -> Basque
+#'
+#' @param path_to_file The path to the input CSV file containing glottolog information.
+#'
+#' @return A data frame with the flattened glottolog tree for each languoid, including node levels.
+#'
+#' @examples
+#' # Assuming `path_to_file` is the path to the glottolog CSV file
+#' glottocode_taxonomy(path_to_file)
+#'
+#' @import phytools
+#' @import tidyverse
+#' @import testthat
+#' @import GetoptLong
+#' @import readr
+#' @importFrom dplyr select mutate filter
+#'
+#' @export
+#'
+#' @seealso \code{\link{phytools}}, \code{\link{tidyverse}}, \code{\link{testthat}},
+#' \code{\link{GetoptLong}}, \code{\link{readr}}
+#'
+#' @references Add references here (if available).
+#'
+#' @keywords glottolog, taxonomy, flattening, nodes, leaves, data frame
+#'
+#' @family Linguistic Data Processing
 ######################################################
 
 glottocode_taxonomy <- function(path_to_file){
