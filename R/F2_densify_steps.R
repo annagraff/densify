@@ -1,10 +1,41 @@
 ######################################################
 # F2
 #
-# Iterative matrix densification according to specified criteria.
-#
-# The output of this densification is a log-file, which specifies details about the matrix after
-# each iteration.
+#' Iterative matrix densification according to specified criteria.
+#'
+#' The output of this densification is a log-file, which specifies details about the matrix after
+#' each iteration.
+#'
+#' @param original_data A data frame with the glottocodes as row names and variable names as column names.
+#'   Any question marks, empty entries, or "NA"s must be represented as NAs.
+#'
+#' @param max_steps An optional integer specifying the maximum number of iterations attempted during densification.
+#'   Default is 1.
+#'
+#' @param mean_type A character string specifying the type of mean to be used for calculating the final weights.
+#'   Possible values are "arithmetic", "geometric", or "log_odds". Default is "log_odds".
+#'
+#' @param taxonomy A logical indicating whether taxonomic diversity should be factored in for language pruning/retention.
+#'   If `TRUE`, taxonomic diversity is considered; if `FALSE`, it is not. Default is `FALSE`.
+#'
+#' @param original_register A data frame containing the register retrieved from the `glottocode_taxonomy` function.
+#'   This parameter must be specified if `taxonomy = TRUE`.
+#'
+#' @param tax_weight_factor A numeric value between 0 and 1 that determines the relative weight given to taxonomy in language pruning.
+#'   This parameter must be specified if `taxonomy = TRUE` and `mean_type = "log_odds"`.
+#'
+#' @param coding_weight_factor A numeric value between 0 and 1 that determines the relative weight given to coding quality
+#'   (absolute coding score and weighted coding score) in language pruning. This parameter must be specified if `taxonomy = TRUE`
+#'   and `mean_type = "log_odds"`.
+#'
+#' @return A data frame with details about the matrix after each iteration of densification.
+#'
+#' @examples
+#' # Assuming `original_data` and `original_register` are appropriate data frames
+#' densify_steps(original_data, max_steps = 3, mean_type = "log_odds", taxonomy = TRUE, original_register, tax_weight_factor = 0.99, coding_weight_factor = 0.99)
+#'
+#' @import vegan
+#' @export
 ######################################################
 
 # original_data: must be a data frame with the glottocodes as row names and variable names as column names. any question marks, empty entries, "NA"s must be NAs
