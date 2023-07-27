@@ -117,7 +117,7 @@ densify_steps <- function(original_data, max_steps = 1, mean_type = "log_odds", 
     cat("Iteration number",iterations,"\n")
 
     if (min(c_weights)==0|min(weight_collection$weighted_coding_score)==0){
-      stop("Trimming aborted - the lowest weighted row or column mean is 0: min(r_weights) =", min(weight_collection$weighted_coding_score), "; min(c_weights) =", min(c_weights_updated))
+      stop("Trimming aborted - the lowest weighted row or column mean is 0: min(r_weights) = ", min(weight_collection$weighted_coding_score), "; min(c_weights) = ", min(c_weights_updated))
       break
     }
     if (mean_type %in% c("arithmetic","geometric","log_odds") == F){
@@ -166,7 +166,7 @@ densify_steps <- function(original_data, max_steps = 1, mean_type = "log_odds", 
     if (mean_type == "arithmetic"){ # arithmetic mean
       weight_collection$mean_score <- apply(weight_collection,1,mean)
     } else if (mean_type == "geometric"){ # geometric mean
-      weight_collection$mean_score <- apply(weight_collection,1,function(x) exp(mean(log(x))))
+      weight_collection$mean_score <- apply(weight_collection,1,function(x) prod(x) ** (1/length(x)))
     } else if (mean_type == "log_odds" & taxonomy == T) { # log odds mean if taxonomy considered
       weight_collection$abs_prop_non_NA <- weight_collection$abs_prop_non_NA*coding_weight_factor # multiply all weights by coding_weight_factor
       weight_collection$weighted_coding_score <- weight_collection$weighted_coding_score*coding_weight_factor # multiply all weights by coding_weight_factor
