@@ -116,10 +116,12 @@ densify_steps <- function(original_data, max_steps = 1, mean_type = "log_odds", 
 
     cat("Iteration number",iterations,"\n")
 
-    if (min(c_weights)==0|min(weight_collection$weighted_coding_score)==0){
-      stop("Trimming aborted - the lowest weighted row or column mean is 0: min(r_weights) = ", min(weight_collection$weighted_coding_score), "; min(c_weights) = ", min(c_weights_updated))
-      break
-    }
+    # We stopped checking the following, because our code can handle cases with zero
+    # and it handles them in a sensible way.
+
+    # if (min(c_weights)==0|min(weight_collection$weighted_coding_score)==0){
+    #   warning("The lowest weighted row or column mean is 0: min(r_weights) = ", min(weight_collection$weighted_coding_score), "; min(c_weights) = ", min(c_weights_updated))
+    # }
     if (mean_type %in% c("arithmetic","geometric","log_odds") == F){
       stop("Mean type must be arithmetic, geometric or log_odds.")
       break
@@ -171,13 +173,13 @@ densify_steps <- function(original_data, max_steps = 1, mean_type = "log_odds", 
       weight_collection$abs_prop_non_NA <- weight_collection$abs_prop_non_NA*coding_weight_factor # multiply all weights by coding_weight_factor
       weight_collection$weighted_coding_score <- weight_collection$weighted_coding_score*coding_weight_factor # multiply all weights by coding_weight_factor
       weight_collection$taxonomic_weight <- weight_collection$taxonomic_weight*tax_weight_factor # multiply all weights by tax_weight_factor so that no values are equal to 1 (which would make computing the log-odds impossible)
-      mn<-((apply(weight_collection["weighted_coding_score"],1,qlogis))+(apply(weight_collection["abs_prop_non_NA"],1,qlogis))+(apply(weight_collection["taxonomic_weight"],1,qlogis)))/3
-      weight_collection$mean_score<-(exp(mn)/(1+exp(mn)))
+      mn<-apply(weight_collection["weighted_coding_score"],1,qlogis)+apply(weight_collection["abs_prop_non_NA"],1,qlogis)+apply(weight_collection["taxonomic_weight"],1,qlogis)/3
+      weight_collection$mean_score<-exp(mn)/(1+exp(mn))
     } else if (mean_type == "log_odds" & taxonomy == F) { # log odds mean if taxonomy not considered
       weight_collection$abs_prop_non_NA <- weight_collection$abs_prop_non_NA*coding_weight_factor # multiply all weights by coding_weight_factor
       weight_collection$weighted_coding_score <- weight_collection$weighted_coding_score*coding_weight_factor # multiply all weights by coding_weight_factor
-      mn<-((apply(weight_collection["weighted_coding_score"],1,qlogis))+(apply(weight_collection["abs_prop_non_NA"],1,qlogis)))/2
-      weight_collection$mean_score<-(exp(mn)/(1+exp(mn)))
+      mn<-apply(weight_collection["weighted_coding_score"],1,qlogis)+apply(weight_collection["abs_prop_non_NA"],1,qlogis)/2
+      weight_collection$mean_score<-exp(mn)/(1+exp(mn))
     }
 
     # identify the worst language, family and variable; there may be ties among the worst languages/variables, thus randomly sample which to remove at such an iteration
@@ -201,9 +203,9 @@ densify_steps <- function(original_data, max_steps = 1, mean_type = "log_odds", 
 
     }
 
-    if (nrow(updated_matrix)==0){
-      cat("Trimming aborted - there are no more languages left.")
-      break
+    if ((is.data.frame(updated_matrix))){
+      if (nrow(updated_matrix)==0) { cat("Trimming aborted - there are no more languages left.")
+        break }
     }
 
     # remove variable if the worst variable is currently worse than the worst language(s)
