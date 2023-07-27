@@ -125,7 +125,7 @@ densify_steps <- function(original_data, max_steps = 1, mean_type = "log_odds", 
       break
     }
     if (taxonomy == F){
-      cat("Attention, taxonomy disregarded.\n")
+      warning("Attention, taxonomy disregarded.\n")
     }
 
     # fill up current matrix with taxonomic_weight measures entirely only in the first iteration!
