@@ -117,11 +117,11 @@ densify_steps <- function(original_data, max_steps = 1, mean_type = "log_odds", 
     cat("Iteration number",iterations,"\n")
 
     if (min(c_weights)==0|min(weight_collection$weighted_coding_score)==0){
-      cat("Trimming aborted - the lowest weighted row or column mean is 0: min(r_weights) =", min(weight_collection$weighted_coding_score), "; min(c_weights) =", min(c_weights_updated))
+      stop("Trimming aborted - the lowest weighted row or column mean is 0: min(r_weights) =", min(weight_collection$weighted_coding_score), "; min(c_weights) =", min(c_weights_updated))
       break
     }
     if (mean_type %in% c("arithmetic","geometric","log_odds") == F){
-      cat("Mean type not specified, must be arithmetic, geometric or log_odds.")
+      stop("Mean type must be arithmetic, geometric or log_odds.")
       break
     }
     if (taxonomy == F){
