@@ -1,8 +1,9 @@
-
-
 ########
 # WALS data (dummy)
 ########
+
+library(dplyr)  # needed for %>% e.g.
+library(tidyr)  # needed for pivot_wider e.g.
 
 ### create WALS dataframe (wals_data)
 download.file("https://cdstar.shh.mpg.de/bitstreams/EAEA0-7269-77E5-3E10-0/wals_dataset.cldf.zip",
@@ -35,17 +36,12 @@ lgs <- wals_data$Glottocode
 wals_data <- as.data.frame(select(wals_data, -Glottocode))
 rownames(wals_data) <- lgs
 
-##################################################################################################################################
-##################################################################################################################################
-##################################################################################################################################
-##################################################################################################################################
-##################################################################################################################################
-##################################################################################################################################
+############################################################################################################
 
 ####### Testing the functions with the dummy data (WALS)
 
 # test F1
-original_register <- glottocode_taxonomy(path_to_file="glottolog_4.7_languoid/languoid.csv")
+original_register <- glottocode_taxonomy(path_to_file="data/glottolog_languoid_v4.8/languoid.csv")
 
 # test F2
 # original_data must be a data frame with the glottocodes as row names and variable names as column names. any question marks, empty entries, "NA"s must be NAs
