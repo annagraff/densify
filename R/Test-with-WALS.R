@@ -61,8 +61,8 @@ if (sum(nrlevels$count_second_largest_variable_state%in%c(NA,1,2))!=0){ # only a
 }
 
 max_steps = nrow(original_data)+ncol(original_data)
-mean_type = "log_odds"
-taxonomy = T
+mean_type = "arithmetic"
+taxonomy = F
 tax_weight_factor <- 0.99 # we must multiply all taxonomic weights by a number below (but close to) 1, because if tax_weight ever reaches 1, the odds mean will be undefined!
 coding_weight_factor <- 0.999 # we should also multiply all non-taxonomic weights by a factor (identical to the tax_weight_factor) to not privilege coding over taxonomy!
 original_register <- original_register
