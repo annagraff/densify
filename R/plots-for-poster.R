@@ -28,3 +28,25 @@ ggplot(col_densities_df, aes(x = seq_along(Density), y = Density)) +
   labs(title = "Sorted Column Densities", x = "Column", y = "Density") +
   theme_minimal() +
   theme(axis.text.x = element_blank())
+
+
+#######################
+# Create a data frame with original and pruned densities
+densities_df <- data.frame(
+  Language = rownames(full_matrix),
+  Original_Density = rowMeans(full_matrix),
+  Pruned_Density = rowMeans(pruned_matrix)
+)
+
+# Sort the data frame by original density
+densities_df <- densities_df[order(densities_df$Original_Density, decreasing = TRUE), ]
+
+# Plot densities before and after pruning
+ggplot(densities_df, aes(x = reorder(Language, Original_Density), y = Original_Density)) +
+  geom_point(aes(color = "Original Density"), size = 1) +
+  geom_point(aes(x = reorder(Language, Original_Density), y = Pruned_Density, color = "Pruned Density"), size = 1) +
+  labs(title = "Density Before and After Pruning", x = "Language", y = "Density") +
+  scale_color_manual(values = c("Original Density" = set1_colors[1], "Pruned Density" = set1_colors[2])) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
