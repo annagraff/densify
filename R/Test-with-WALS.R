@@ -68,7 +68,7 @@ coding_weight_factor <- 0.999 # we should also multiply all non-taxonomic weight
 original_register <- original_register
 
 set.seed(2023)
-documentation_L_T_2023_0990_0999 <- pruning_steps(original_data, max_steps, mean_type, taxonomy, original_register, tax_weight_factor, coding_weight_factor)
+documentation_A_F_2023 <- pruning_steps(original_data, max_steps, mean_type, taxonomy, original_register, tax_weight_factor, coding_weight_factor)
 
 write.csv(documentation_L_T_2023_0990_0999,"documentation files/documentation_L_T_2023_0990_0999.csv")
 
