@@ -306,7 +306,7 @@ densify_steps <- function(original_data, max_steps = 1, mean_type = "log_odds", 
                            vegan::diversity(table(register$glottolog.node1)),
                            sqrt(var(rowSums(updated_matrix)/ncol(updated_matrix))+var(colSums(updated_matrix)/nrow(updated_matrix)))))
 
-    cat("Recomupting weighted means.\n\n")
+    cat("Recomputing weighted means.\n\n")
 
     # update the absolute coding proportion of each langauge
     abs_prop_non_NA<-(rowSums(updated_matrix)/ncol(updated_matrix))
