@@ -78,12 +78,12 @@ documentation_A_F_2023 <- read.csv("R/documentation files/documentation_A_F_2023
 # test F3
 exponent_prop_coded_data <- 1
 exponent_available_data_points <- 1
-exponent_lowest_language_score <- 1
+exponent_lowest_language_score <- 0
 
-optimum <- pruning_score(documentation_L_T_2023_0990_0999,exponent_prop_coded_data=exponent_prop_coded_data, exponent_available_data_points=exponent_available_data_points, exponent_lowest_language_score=exponent_lowest_language_score)
+optimum <- densify_score(documentation_A_F_2023,exponent_prop_coded_data=exponent_prop_coded_data, exponent_available_data_points=exponent_available_data_points, exponent_lowest_language_score=exponent_lowest_language_score)
 
 # test F4
-pruned_matrix <- densify_prune(original_data, documentation_L_T_2023_0990_0999, optimum)
+pruned_matrix <- densify_prune(original_data, documentation_A_F_2023, optimum)
 
 ######### some plots
 hist(apply(pruned_matrix,1,function(x)(length(na.omit(x))))/ncol(pruned_matrix),col = "cadetblue2",xlab="coding density per language", ylab="frequency")
