@@ -31,22 +31,30 @@ ggplot(col_densities_df, aes(x = seq_along(Density), y = Density)) +
 
 
 #######################
-# Create a data frame with original and pruned densities
-densities_df <- data.frame(
-  Language = rownames(full_matrix),
-  Original_Density = rowMeans(full_matrix),
-  Pruned_Density = rowMeans(pruned_matrix)
-)
+# Calculate densities for the matrices separately
+original_densities <- rowMeans(full_matrix)
+pruned_densities <- rowMeans(pruned_matrix)
+
+# Merge the matrices based on the common languages
+merged_densities <- merge(original_densities, pruned_densities, by = "row.names", all = TRUE)
+
+# Rename the columns
+colnames(merged_densities) <- c("Language", "Original_Density", "Pruned_Density")
+
+# Create the densities data frame
+densities_df <- data.frame(merged_densities)
 
 # Sort the data frame by original density
 densities_df <- densities_df[order(densities_df$Original_Density, decreasing = TRUE), ]
 
 # Plot densities before and after pruning
-ggplot(densities_df, aes(x = reorder(Language, Original_Density), y = Original_Density)) +
+ggplot(densities_df, aes(x = reorder(Language, -Original_Density), y = Original_Density)) +
   geom_point(aes(color = "Original Density"), size = 1) +
-  geom_point(aes(x = reorder(Language, Original_Density), y = Pruned_Density, color = "Pruned Density"), size = 1) +
+  geom_point(data = densities_df[!is.na(densities_df$Pruned_Density), ],
+             aes(x = reorder(Language, -Original_Density), y = Pruned_Density, color = "Pruned Density"), size = 1) +
   labs(title = "Density Before and After Pruning", x = "Language", y = "Density") +
   scale_color_manual(values = c("Original Density" = set1_colors[1], "Pruned Density" = set1_colors[2])) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_blank())
+
 
