@@ -79,23 +79,40 @@ documentation_A_F_2023 <- read.csv("R/documentation files/documentation_A_F_2023
 exponent_prop_coded_data <- 1
 exponent_available_data_points <- 1
 exponent_lowest_language_score <- 0
+exponent_taxonomic_diversity <- 0
 
 optimum <- densify_score(documentation_A_F_2023,exponent_prop_coded_data=exponent_prop_coded_data, exponent_available_data_points=exponent_available_data_points, exponent_lowest_language_score=exponent_lowest_language_score)
 
 # test F4
-pruned_matrix <- densify_prune(original_data, documentation_A_F_2023, optimum)
+pruned_df <- densify_prune(original_data, documentation_A_F_2023, optimum)
 
 ######### some plots
-hist(apply(pruned_matrix,1,function(x)(length(na.omit(x))))/ncol(pruned_matrix),col = "cadetblue2",xlab="coding density per language", ylab="frequency")
+hist(apply(pruned_df,1,function(x)(length(na.omit(x))))/ncol(pruned_df),col = "cadetblue2",xlab="coding density per language", ylab="frequency")
 
 # proportion coded languages
-sum(!is.na(pruned_matrix))/(ncol(pruned_matrix)*nrow(pruned_matrix))
-nrow(pruned_matrix)
-register_pruned <- filter(original_register, glottocode %in% rownames(pruned_matrix))
+sum(!is.na(pruned_df))/(ncol(pruned_df)*nrow(pruned_df))
+nrow(pruned_df)
+register_pruned <- filter(original_register, glottocode %in% rownames(pruned_df))
 length(unique(register_pruned$glottolog.node1))
-ncol(pruned_matrix)
-rm(pruned_matrix)
+ncol(pruned_df)
+# rm(pruned_df)
 
+# Also prep the pruned matrix:
+densify_prep <- function(original_data) {
+  # save row names for later
+  languages <- rownames(original_data)
+  # replace NAs by 0 (no data available) and non-NA entries by 1 (data available)
+  full_matrix <- as.matrix(original_data)
+  full_matrix[!is.na(full_matrix)] <- 1
+  full_matrix[is.na(full_matrix)] <- 0
+  # convert dataframe entries to numeric
+  full_matrix <- apply(full_matrix, 2, as.numeric)
+  # rename row names
+  rownames(full_matrix) <- languages
+  return(full_matrix)
+}
+
+pruned_matrix = densify_prep(pruned_df)
 
 ####
 
