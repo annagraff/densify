@@ -86,18 +86,40 @@ quality_df <- data.frame(
   Quality = quality
 )
 
+# # Create the plot with geom_line
+# ggplot(quality_df, aes(x = Iteration)) +
+#   geom_line(aes(y = Scaled_Data_Points, color = "Available Data Points (% of total)"), size = 1) +
+#   geom_line(aes(y = Coding_Density, color = "Coding Density"), size = 1) +
+#   geom_line(aes(y = Quality, color = "Quality"), size = 1) +
+#   labs(title = "Effect of Pruning on Scaled Data Points, Coding Density, and Quality",
+#        x = "Iteration",
+#        y = NULL,
+#        color = "Metric") +
+#   scale_color_manual(values = c("Available Data Points (% of total)" = "blue",
+#                                 "Coding Density" = "green",
+#                                 "Quality" = "red")) +
+#   theme_minimal() +
+#   theme(legend.position = "top")
+
+# Get ColorBrewer Set1 colors
+set1_colors <- brewer.pal(9, "Set1")
+
 # Create the plot with geom_line
 ggplot(quality_df, aes(x = Iteration)) +
-  geom_line(aes(y = Scaled_Data_Points, color = "Available Data Points (% of total)"), size = 1) +
-  geom_line(aes(y = Coding_Density, color = "Coding Density"), size = 1) +
+  geom_line(aes(y = Scaled_Data_Points, color = "Available Data Points "), size = 1) +
+  geom_line(aes(y = Coding_Density, color = "Coding Density "), size = 1) +
   geom_line(aes(y = Quality, color = "Quality"), size = 1) +
-  labs(title = "Effect of Pruning on Scaled Data Points, Coding Density, and Quality",
-       x = "Iteration",
+  labs(x = "Iteration",
        y = NULL,
        color = "Metric") +
-  scale_color_manual(values = c("Available Data Points (% of total)" = "blue",
-                                "Coding Density" = "green",
-                                "Quality" = "red")) +
+  scale_color_manual(values = c("Available Data Points " = set1_colors[1],
+                                "Coding Density " = set1_colors[2],
+                                "Quality" = set1_colors[3])) +
+  scale_x_continuous(breaks = seq(0, max(quality_df$Iteration), by = 500)) +  # Set breaks in steps of 500
   theme_minimal() +
-  theme(legend.position = "top")
+  theme(legend.position = "top",  # Adjust legend position.
+        legend.box = "horizontal",
+        legend.title = element_blank(),
+        legend.text = element_text(size = 12, margin = margin(r = 10)),
+        panel.background = element_rect(fill = rgb(0.92, 0.92, 0.92), color = NA))
 
