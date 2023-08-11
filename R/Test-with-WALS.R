@@ -81,12 +81,12 @@ exponent_available_data_points <- 1
 exponent_lowest_language_score <- 0
 exponent_taxonomic_diversity <- 0
 
-documentation = documentation_A_T_2023
+documentation = documentation_A_F_2023
 
 optimum <- densify_score(documentation,exponent_prop_coded_data=exponent_prop_coded_data, exponent_available_data_points=exponent_available_data_points, exponent_lowest_language_score=exponent_lowest_language_score)
 
 # test F4
-pruned_df <- densify_prune(original_data, documentation_A_T_2023, optimum)
+pruned_df <- densify_prune(original_data, documentation_A_F_2023, optimum)
 
 ######### some plots
 hist(apply(pruned_df,1,function(x)(length(na.omit(x))))/ncol(pruned_df),col = "cadetblue2",xlab="coding density per language", ylab="frequency")

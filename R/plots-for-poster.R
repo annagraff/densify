@@ -49,12 +49,18 @@ densities_df <- densities_df[order(densities_df$Original_Density, decreasing = T
 
 # Plot densities before and after pruning
 ggplot(densities_df, aes(x = reorder(Language, -Original_Density), y = Original_Density)) +
-  geom_point(aes(color = "Original Density"), size = 1) +
+  geom_point(aes(color = "Coding Densities Original Matrix"), size = 0.1) +
   geom_point(data = densities_df[!is.na(densities_df$Pruned_Density), ],
-             aes(x = reorder(Language, -Original_Density), y = Pruned_Density, color = "Pruned Density"), size = 1) +
-  labs(title = "Density Before and After Pruning", x = "Language", y = "Density") +
-  scale_color_manual(values = c("Original Density" = set1_colors[1], "Pruned Density" = set1_colors[2])) +
+             aes(x = reorder(Language, -Original_Density), y = Pruned_Density, color = "Coding Densities Pruned Matrix"), size = 0.1) +
+  labs(title = NULL, x = "Language", y = "Density") +
+  scale_color_manual(values = c("Coding Densities Original Matrix" = set1_colors[1], "Coding Densities Pruned Matrix" = set1_colors[2])) +
   theme_minimal() +
-  theme(axis.text.x = element_blank())
-
+  theme(axis.text.x = element_blank(),
+        legend.position = c(0.65, 0.9),  # Adjust legend position.
+        legend.box = "horizontal",
+        legend.title = element_blank(),
+        legend.text = element_text(size = 12),  # Adjust legend text size.
+        # legend.key.size = unit(1.5, "lines"),  # Adjust size of legend symbols.
+        plot.margin = margin(t = 10, r = 10, b = 10, l = 10, unit = "pt")) +
+  guides(color = guide_legend(override.aes = list(size = 2)))  # Adjust size of legend symbols.
 
