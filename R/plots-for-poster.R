@@ -64,3 +64,40 @@ ggplot(densities_df, aes(x = reorder(Language, -Original_Density), y = Original_
         plot.margin = margin(t = 10, r = 10, b = 10, l = 10, unit = "pt")) +
   guides(color = guide_legend(override.aes = list(size = 2)))  # Adjust size of legend symbols.
 
+
+
+
+
+# Calculate a simplified quality score for each iteration:
+scaled_data_points = documentation$available_data_points/max(documentation$available_data_points)
+coding_density = documentation$prop_coded_data
+
+quality <- scaled_data_points * coding_density
+
+# Plot the quality scores:
+plot(quality, xlab = "Iteration", ylab = "Quality Score", main = "Quality Score at Each Iteration")
+legend("topright", legend = "Quality Score", col = "black", lty = 1, cex = 0.8)
+
+# Create a data frame with the calculated variables
+quality_df <- data.frame(
+  Iteration = as.numeric(gsub("\\D", "", documentation$iteration)),
+  Scaled_Data_Points = scaled_data_points,
+  Coding_Density = coding_density,
+  Quality = quality
+)
+
+# Create the plot with geom_line
+ggplot(quality_df, aes(x = Iteration)) +
+  geom_line(aes(y = Scaled_Data_Points, color = "Available Data Points (% of total)"), size = 1) +
+  geom_line(aes(y = Coding_Density, color = "Coding Density"), size = 1) +
+  geom_line(aes(y = Quality, color = "Quality"), size = 1) +
+  labs(title = "Effect of Pruning on Scaled Data Points, Coding Density, and Quality",
+       x = "Iteration",
+       y = NULL,
+       color = "Metric") +
+  scale_color_manual(values = c("Available Data Points (% of total)" = "blue",
+                                "Coding Density" = "green",
+                                "Quality" = "red")) +
+  theme_minimal() +
+  theme(legend.position = "top")
+
