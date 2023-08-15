@@ -5,6 +5,24 @@
 #
 ######################################################
 
+#' Function to densify and prune the original input matrix
+#'
+#' This function takes the original data matrix and the documentation generated from the densification process. It densifies the matrix based on the optimum quality score and removes languages and variables that were pruned during the iterative process.
+#'
+#' @param original_data A data frame with the glottocodes as row names and variable names as column names.
+#' @param documentation A data frame containing the documentation generated during the densification process.
+#' @param optimum The iteration number representing the optimum quality score. The function will densify the matrix and prune languages/variables up to this iteration.
+#'
+#' @return A pruned and densified data frame.
+#'
+#' @seealso \code{\link{densify_steps}}
+#'
+#' @examples
+#' # Assuming 'original_data' and 'documentation' are prepared
+#' pruned_densified <- densify_prune(original_data, documentation, optimum = 2)
+#'
+#' @export
+
 densify_prune <- function(original_data, documentation, optimum = 1) {
   # Validate inputs:
   if (!is.data.frame(original_data)) {
