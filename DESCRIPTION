@@ -2,10 +2,8 @@ Package: densify
 Title: Densifying Linguistic Input Data Frame
 Version: 0.0.0.9000
 Authors@R: 
-    person(given = "Anna", family = "Graff", email = "anna.graff@uzh.ch", \
-    role = c("aut", "cre"), comment = c(ORCID = "YOUR-ORCID-ID")),
-    person(given = "Marc", family = "Lischka", email = "marc.lischka@math.uzh.ch", \
-    role = c("aut", "cre"))
+    person(given = "Anna", family = "Graff", email = "anna.graff@uzh.ch", role = c("aut", "cre")) 
+    person(given = "Marc", family = "Lischka", email = "marc.lischka@math.uzh.ch", role = c("aut", "cre"))
 Description: This package provides functions to densify linguistic data frames 
              with NAs.
 License: MIT + file LICENSE
