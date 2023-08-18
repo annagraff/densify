@@ -67,8 +67,8 @@ glottocode_taxonomy <- function(path_to_file){
       # identify the table row
       node_row <- match(node_id, languoids$id)
 
-      expect(!is.na(node_row), qq("Node @{node_id} is absent from the table"))
-      expect(identical(languoids$path[[node_row]], integer()), qq("Node @{node_id} already visited!"))
+      expect(!is.na(node_row), GetoptLong::qq("Node @{node_id} is absent from the table"))
+      expect(identical(languoids$path[[node_row]], integer()), GetoptLong::qq("Node @{node_id} already visited!"))
 
       # construct and record the path
       path <- c(path, node_id)
@@ -80,7 +80,7 @@ glottocode_taxonomy <- function(path_to_file){
       # visit all the children
       child_ids <- filter(languoids, parent_id ==node_id)$id
 
-      expect_true(length(child_ids)>0, info=qq("Intermediate node @{node_id} must have at least one child"))
+      expect_true(length(child_ids)>0, info=GetoptLong::qq("Intermediate node @{node_id} must have at least one child"))
 
       # and apply tree construction recursively
       for(child_id in child_ids) visit_node_constructing_paths(child_id, path)
