@@ -6,8 +6,8 @@
 #' The output of this densification is a log-file, which specifies details about the matrix after
 #' each iteration.
 #'
-#' @param original_data A data frame with the glottocodes as row names and variable names as column names.
-#'   Any question marks, empty entries, or "NA"s must be represented as NAs.
+#' @param original_data A data frame with the taxa (e.g. languages, as glottocodes) as row names and variable names as column names.
+#'   Any question marks, empty entries, or "NA"s must be represented as NAs. Default is the data from WALS.
 #'
 #' @param max_steps An optional integer specifying the maximum number of iterations attempted during densification.
 #'   Default is 1.
@@ -15,24 +15,24 @@
 #' @param mean_type A character string specifying the type of mean to be used for calculating the final weights.
 #'   Possible values are "arithmetic", "geometric", or "log_odds". Default is "log_odds".
 #'
-#' @param taxonomy A logical indicating whether taxonomic diversity should be factored in for language pruning/retention.
+#' @param taxonomy A logical indicating whether taxonomic diversity should be factored in for the pruning/retention of rows.
 #'   If `TRUE`, taxonomic diversity is considered; if `FALSE`, it is not. Default is `FALSE`.
 #'
-#' @param original_register A data frame containing the register retrieved from the `glottocode_taxonomy` function.
-#'   This parameter must be specified if `taxonomy = TRUE`.
+#' @param taxonomy_matrix A data frame containing a taxonomy matrix, which can be retrieved from the `glottocode_taxonomy` function or provided directly.
+#'   This parameter must be specified if `taxonomy = TRUE`. Default is the taxonomy matrix for glottolog version 4.8.
 #'
 #' @param tax_weight_factor A numeric value between 0 and 1 that determines the relative weight given to taxonomy in language pruning.
-#'   This parameter must be specified if `taxonomy = TRUE` and `mean_type = "log_odds"`.
+#'   This parameter must be specified if `taxonomy = TRUE` and `mean_type = "log_odds"`. Default is 0.99.
 #'
 #' @param coding_weight_factor A numeric value between 0 and 1 that determines the relative weight given to coding quality
 #'   (absolute coding score and weighted coding score) in language pruning. This parameter must be specified if `taxonomy = TRUE`
-#'   and `mean_type = "log_odds"`.
+#'   and `mean_type = "log_odds"`. Default is 0.99.
 #'
 #' @return A data frame with details about the matrix after each iteration of densification.
 #'
 #' @examples
-#' # Assuming `original_data` and `original_register` are appropriate data frames
-#' densify_steps(original_data, max_steps = 3, mean_type = "log_odds", taxonomy = TRUE, original_register, tax_weight_factor = 0.99, coding_weight_factor = 0.99)
+#' # Assuming `original_data` and `taxonomy_matrix` are appropriate data frames
+#' densify_steps(original_data, max_steps = 3, mean_type = "log_odds", taxonomy = TRUE, taxonomy_matrix, tax_weight_factor = 0.99, coding_weight_factor = 0.99)
 #'
 #' @import vegan
 #' @export
@@ -42,14 +42,14 @@
 # max_steps: can be specified at will, defines how many iterations are attempted
 # mean_type: "arithmetic", "geometric" or "log_odds"
 # taxonomy: T or F; if T, taxonomic diversity is factored in for language pruning/retention, if F it is not
-# original_register: register retrieved from F1; must be specified if taxonomy = T
+# taxonomy_matrix: register retrieved from F1; must be specified if taxonomy = T
 # tax_weight_factor: must be between (not including) 0 and 1 and determines the relative weight given to taxonomy in language pruning; must be specified if taxonomy = T and if mean_type = log_odds
 # coding_weight_factor: must be between (not including) 0 and 1 and determines the relative weight given to coding quality (absolute coding score and weighted coding score) in language pruning; must be specified if taxonomy = T and if mean_type = log_odds
 
-densify_steps <- function(original_data, max_steps = 1, mean_type = "log_odds", taxonomy = F, original_register, tax_weight_factor = 0.99, coding_weight_factor = 0.99){
+densify_steps <- function(original_data, max_steps = 1, mean_type = "log_odds", taxonomy = F, taxonomy_matrix, tax_weight_factor = 0.99, coding_weight_factor = 0.99){
   library(vegan)
 
-  # prepare original_data and original_register, if applicable:
+  # prepare original_data and taxonomy_matrix, if applicable:
 
   densify_prep <- function(original_data) {
     # save row names for later
@@ -69,10 +69,10 @@ densify_steps <- function(original_data, max_steps = 1, mean_type = "log_odds", 
 
   if(taxonomy == T){
     # reduce both the matrix and the register to the glottocodes present in both files
-    full_matrix <- full_matrix[which(rownames(full_matrix)%in%original_register$glottocode),]
+    full_matrix <- full_matrix[which(rownames(full_matrix)%in%taxonomy_matrix$glottocode),]
 
     # reorganise register: trim it to the languages in the initial matrix in the corresponding order; reorganise it so that each tip is not listed in the last column but at whatever node appropriate for that tip
-    register <- original_register %>% filter(glottocode %in% rownames(full_matrix)) %>% select(-c(glottolog.name,longitude,latitude))
+    register <- taxonomy_matrix %>% filter(glottocode %in% rownames(full_matrix)) %>% select(-c(glottolog.name,longitude,latitude))
     register <- register[match(rownames(full_matrix),register$glottocode),]
     for(i in 1:nrow(register)){
       register[i,sum(!is.na(register[i,2:ncol(register)]))+1]<-register$glottocode[i] # the 2nd column lists the first node (hence 2; 1)
@@ -265,7 +265,7 @@ densify_steps <- function(original_data, max_steps = 1, mean_type = "log_odds", 
     # if any languages were removed, the phylogenetic weights for remaining languages of their families must be updated!
     if ((length(removed_lgs))!=0 & taxonomy==T){
       cat("There are phylogenetic weights to be updated.\n")
-      fams_for_tax_weight_update <- unique(filter(original_register,glottocode%in%removed_lgs)$glottolog.node1)
+      fams_for_tax_weight_update <- unique(filter(taxonomy_matrix,glottocode%in%removed_lgs)$glottolog.node1)
       for (fam in fams_for_tax_weight_update){ # proceed family-wise
         node_freq_count <- filter(register,glottolog.node1%in%fam) # filter out remaining languages of this family
         if(nrow(node_freq_count)==0){} else if(nrow(node_freq_count)==1){ # if lg is sole representative of its family, --> weight 1
