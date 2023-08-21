@@ -19,7 +19,7 @@
 #'   If `TRUE`, taxonomic diversity is considered; if `FALSE`, it is not. Default is `FALSE`.
 #'
 #' @param taxonomy_matrix A data frame containing a taxonomy matrix, which can be retrieved from the `glottocode_taxonomy` function or provided directly.
-#'   This parameter must be specified if `taxonomy = TRUE`. Default is the taxonomy matrix for glottolog version 4.8.
+#'   This parameter must be specified if `taxonomy = TRUE` and is optional otherwise (if specified, taxonomic index is computed for each iteration). 
 #'
 #' @param tax_weight_factor A numeric value between 0 and 1 that determines the relative weight given to taxonomy in language pruning.
 #'   This parameter must be specified if `taxonomy = TRUE` and `mean_type = "log_odds"`. Default is 0.99.
@@ -38,19 +38,10 @@
 #' @export
 ######################################################
 
-# original_data: must be a data frame with the glottocodes as row names and variable names as column names. any question marks, empty entries, "NA"s must be NAs
-# max_steps: can be specified at will, defines how many iterations are attempted
-# mean_type: "arithmetic", "geometric" or "log_odds"
-# taxonomy: T or F; if T, taxonomic diversity is factored in for language pruning/retention, if F it is not
-# taxonomy_matrix: register retrieved from F1; must be specified if taxonomy = T
-# tax_weight_factor: must be between (not including) 0 and 1 and determines the relative weight given to taxonomy in language pruning; must be specified if taxonomy = T and if mean_type = log_odds
-# coding_weight_factor: must be between (not including) 0 and 1 and determines the relative weight given to coding quality (absolute coding score and weighted coding score) in language pruning; must be specified if taxonomy = T and if mean_type = log_odds
-
 densify_steps <- function(original_data, max_steps = 1, mean_type = "log_odds", taxonomy = F, taxonomy_matrix, tax_weight_factor = 0.99, coding_weight_factor = 0.99){
   library(vegan)
 
   # prepare original_data and taxonomy_matrix, if applicable:
-
   densify_prep <- function(original_data) {
     # save row names for later
     languages <- rownames(original_data)
@@ -68,17 +59,17 @@ densify_steps <- function(original_data, max_steps = 1, mean_type = "log_odds", 
   full_matrix <- densify_prep(original_data)
 
   if(taxonomy == T){
-    # reduce both the matrix and the register to the glottocodes present in both files
+    # reduce both the matrix and the taxonomy to the glottocodes present in both files
     full_matrix <- full_matrix[which(rownames(full_matrix)%in%taxonomy_matrix$glottocode),]
 
-    # reorganise register: trim it to the languages in the initial matrix in the corresponding order; reorganise it so that each tip is not listed in the last column but at whatever node appropriate for that tip
-    register <- taxonomy_matrix %>% filter(glottocode %in% rownames(full_matrix)) %>% select(-c(glottolog.name,longitude,latitude))
-    register <- register[match(rownames(full_matrix),register$glottocode),]
-    for(i in 1:nrow(register)){
-      register[i,sum(!is.na(register[i,2:ncol(register)]))+1]<-register$glottocode[i] # the 2nd column lists the first node (hence 2; 1)
+    # reorganise taxonomy_matrix: trim it to the languages in the initial matrix in the corresponding order; reorganise it so that each tip is not listed in the last column but at whatever node appropriate for that tip
+    taxonomy_reorganised <- taxonomy_matrix %>% filter(glottocode %in% rownames(full_matrix)) %>% select(-c(glottolog.name,longitude,latitude))
+    taxonomy_reorganised <- taxonomy_reorganised[match(rownames(full_matrix),taxonomy_reorganised$glottocode),]
+    for(i in 1:nrow(taxonomy_reorganised)){
+      taxonomy_reorganised[i,sum(!is.na(taxonomy_reorganised[i,2:ncol(taxonomy_reorganised)]))+1]<-taxonomy_reorganised$glottocode[i] # the 2nd column lists the first node (hence 2; 1)
     }
-    register <- select(register,-ncol(register)) # delete the last column of register
-    max_node_nr <- ncol(register)-1
+    taxonomy_reorganised <- select(taxonomy_reorganised,-ncol(taxonomy_reorganised)) # delete the last column of taxonomy_reorganised
+    max_node_nr <- ncol(taxonomy_reorganised)-1
   }
 
   # prepare iterative coding scheme:
@@ -95,9 +86,13 @@ densify_steps <- function(original_data, max_steps = 1, mean_type = "log_odds", 
                               worst_var_abs_coding_density = min(colSums(full_matrix)/nrow(full_matrix)),
                               removed_lg = "NA",
                               removed_var = "NA",
-                              taxonomic_index = vegan::diversity(table(register$glottolog.node1)),
                               na_distribution_index = sqrt(var(rowSums(full_matrix)/ncol(full_matrix))+var(colSums(full_matrix)/nrow(full_matrix))))
 
+  if(exists("taxonomy_matrix")){
+    documentation <- cbind(documentation, taxonomic_index = vegan::diversity(table(taxonomy_reorganised$glottolog.node1)))
+  }
+  
+  
   # determine weighted row and column scores (r_weights and c_weights)
   cross_prod = crossprod(full_matrix)
   ev_cross_prod = eigen(cross_prod)$vectors[,1]
@@ -133,16 +128,16 @@ densify_steps <- function(original_data, max_steps = 1, mean_type = "log_odds", 
     # fill up current matrix with taxonomic_weight measures entirely only in the first iteration!
     if (iterations==1 & taxonomy==T){
       cat("Computing initial taxonomic weights.\n")
-      families <- unique(register$glottolog.node1)
+      families <- unique(taxonomy_reorganised$glottolog.node1)
       for (f in 1:length(families)){
-        lgs <- filter(register, glottolog.node1%in%families[f])$glottocode
+        lgs <- filter(taxonomy_reorganised, glottolog.node1%in%families[f])$glottocode
         if(length(lgs)==1){ # if lg is sole representative of its family, --> weight 1
           weight_collection[lgs,"taxonomic_weight"] <- 1
         }
         else{
           # rather than listing the identity of each node, list how often this node appears within the sample. these counts are needed to derive a taxonomic diversity measure
           # where the taxonomy is exhausted (nodes start appearing as NA) --> record 1 rather than NA (this is to make languages with different taxonomic depth comparable by the measure we employ)
-          node_freq_count <- register %>% filter(glottolog.node1==families[f])
+          node_freq_count <- taxonomy_reorganised %>% filter(glottolog.node1==families[f])
           for (node_level in 2:(max_node_nr+1)){ # transform node columns as described above
             node_freq_count[is.na(node_freq_count[,node_level]),node_level] <- "none"
             count_table <- table(node_freq_count[,node_level])
@@ -199,7 +194,7 @@ densify_steps <- function(original_data, max_steps = 1, mean_type = "log_odds", 
 
       updated_matrix <- updated_matrix[-which(rownames(updated_matrix)==removed_lgs),] # update matrix by pruning away worst lg
       weight_collection <- weight_collection[-which(rownames(weight_collection)==removed_lgs),] # update weight collection by pruning away worst lg
-      if(taxonomy==T){register <- register[register$glottocode%in%removed_lgs==F,]} # update register by pruning away worst lg
+      if(taxonomy==T){taxonomy_reorganised <- taxonomy_reorganised[taxonomy_reorganised$glottocode%in%removed_lgs==F,]} # update taxonomy_reorganised by pruning away worst lg
 
     }
 
@@ -253,7 +248,7 @@ densify_steps <- function(original_data, max_steps = 1, mean_type = "log_odds", 
       removed_lgs <- c(removed_lgs,uninformative_languages)[-which(is.na(c(removed_lgs,uninformative_languages)))]
       updated_matrix <- updated_matrix[-which(rownames(updated_matrix)%in%uninformative_languages),] # update matrix by pruning away worst lg
       weight_collection <- weight_collection[-which(rownames(weight_collection)%in%uninformative_languages),] # update weight collection by pruning away worst lg
-      if (taxonomy==T){register <- register[register$glottocode%in%uninformative_languages==F,]} # update register by pruning away worst lg
+      if (taxonomy==T){taxonomy_reorganised <- taxonomy_reorganised[taxonomy_reorganised$glottocode%in%uninformative_languages==F,]} # update taxonomy_reorganised by pruning away worst lg
       cat("Remove the following uninformative languages:", uninformative_languages,"\n")
     }
 
@@ -267,7 +262,7 @@ densify_steps <- function(original_data, max_steps = 1, mean_type = "log_odds", 
       cat("There are phylogenetic weights to be updated.\n")
       fams_for_tax_weight_update <- unique(filter(taxonomy_matrix,glottocode%in%removed_lgs)$glottolog.node1)
       for (fam in fams_for_tax_weight_update){ # proceed family-wise
-        node_freq_count <- filter(register,glottolog.node1%in%fam) # filter out remaining languages of this family
+        node_freq_count <- filter(taxonomy_reorganised,glottolog.node1%in%fam) # filter out remaining languages of this family
         if(nrow(node_freq_count)==0){} else if(nrow(node_freq_count)==1){ # if lg is sole representative of its family, --> weight 1
           weight_collection[node_freq_count$glottocode,"taxonomic_weight"] <- 1
         } else { # if lg is one of several lgs from the same family in the current sample, the other langauages from that family need to be updated
@@ -291,20 +286,36 @@ densify_steps <- function(original_data, max_steps = 1, mean_type = "log_odds", 
     }
 
     # update documentation
-    documentation<-rbind(documentation,
-                         c(iterations,
-                           sum(updated_matrix),
-                           sum(updated_matrix)/(nrow(updated_matrix)*ncol(updated_matrix)),
-                           nrow(updated_matrix),
-                           ncol(updated_matrix),
-                           paste(names(rowSums(updated_matrix))[which(rowSums(updated_matrix)==min(rowSums(updated_matrix)))],collapse=";"),
-                           min(rowSums(updated_matrix)/ncol(updated_matrix)),
-                           paste(names(colSums(updated_matrix))[which(colSums(updated_matrix)==min(colSums(updated_matrix)))],collapse=";"),
-                           min(colSums(updated_matrix)/nrow(updated_matrix)),
-                           paste(removed_lgs,collapse=";"),
-                           paste(removed_vars,collapse=";"),
-                           vegan::diversity(table(register$glottolog.node1)),
-                           sqrt(var(rowSums(updated_matrix)/ncol(updated_matrix))+var(colSums(updated_matrix)/nrow(updated_matrix)))))
+    if(exists("taxonomy_matrix")){
+      documentation<-rbind(documentation,
+                           c(iterations,
+                             sum(updated_matrix),
+                             sum(updated_matrix)/(nrow(updated_matrix)*ncol(updated_matrix)),
+                             nrow(updated_matrix),
+                             ncol(updated_matrix),
+                             paste(names(rowSums(updated_matrix))[which(rowSums(updated_matrix)==min(rowSums(updated_matrix)))],collapse=";"),
+                             min(rowSums(updated_matrix)/ncol(updated_matrix)),
+                             paste(names(colSums(updated_matrix))[which(colSums(updated_matrix)==min(colSums(updated_matrix)))],collapse=";"),
+                             min(colSums(updated_matrix)/nrow(updated_matrix)),
+                             paste(removed_lgs,collapse=";"),
+                             paste(removed_vars,collapse=";"),
+                             sqrt(var(rowSums(updated_matrix)/ncol(updated_matrix))+var(colSums(updated_matrix)/nrow(updated_matrix)))),
+                           vegan::diversity(table(taxonomy_reorganised$glottolog.node1)))
+          } else{
+            documentation<-rbind(documentation,
+                                 c(iterations,
+                                   sum(updated_matrix),
+                                   sum(updated_matrix)/(nrow(updated_matrix)*ncol(updated_matrix)),
+                                   nrow(updated_matrix),
+                                   ncol(updated_matrix),
+                                   paste(names(rowSums(updated_matrix))[which(rowSums(updated_matrix)==min(rowSums(updated_matrix)))],collapse=";"),
+                                   min(rowSums(updated_matrix)/ncol(updated_matrix)),
+                                   paste(names(colSums(updated_matrix))[which(colSums(updated_matrix)==min(colSums(updated_matrix)))],collapse=";"),
+                                   min(colSums(updated_matrix)/nrow(updated_matrix)),
+                                   paste(removed_lgs,collapse=";"),
+                                   paste(removed_vars,collapse=";"),
+                                   sqrt(var(rowSums(updated_matrix)/ncol(updated_matrix))+var(colSums(updated_matrix)/nrow(updated_matrix)))))
+    }
 
     cat("Recomputing weighted means.\n\n")
 

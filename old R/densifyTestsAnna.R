@@ -110,7 +110,7 @@ glottocode_taxonomy <- function(path_to_file){
 }
 
 ### Test for F1
-# original_register <- glottocode_taxonomy(path_to_file="glottolog_4.7_languoid/languoid.csv")
+# original_register <- glottocode_taxonomy(path_to_file="glottolog_4.8_languoid/languoid.csv")
 
 ##################################################################################################################################
 ##################################################################################################################################
@@ -579,7 +579,7 @@ densify_prune <- function(original_data, documentation, optimum){
   # ##################################################################################################################################
 
   ####### Testing the functions with the Grambank data (Grambank statistical)
-  gb_original_data <- read.csv("GBM-matrix-design_logic_and_statistical-1-june-2023.csv",row.names = "glottocode") %>% select(-X)
+  gb_original_data <- read.csv("GBM-matrix-design_logic_only-1-june-2023.csv",row.names = "glottocode") %>% select(-X)
 
   # test F1
   original_register <- glottocode_taxonomy(path_to_file="glottolog_4.7_languoid/languoid.csv")
@@ -609,16 +609,19 @@ densify_prune <- function(original_data, documentation, optimum){
   original_register <- original_register
 
   set.seed(2023)
-  documentation_L_T_2023_0999_099 <- pruning_steps(original_data, max_steps, mean_type, taxonomy, original_register, tax_weight_factor, coding_weight_factor)
+  documentation_L_T_2023_0999_099 <- densify_steps(original_data, max_steps, mean_type, taxonomy, original_register, tax_weight_factor, coding_weight_factor)
   write.csv(documentation_L_T_2023_0999_099,"documentation files/documentation_L_T_2023_0999_099.csv")
+  
+  documentation_L_T_2023_0999_099<-read.csv("documentation files/documentation_L_T_2023_0999_099.csv")
+  
   
   # test F3
   exponent_prop_coded_data <- 1
   exponent_available_data_points <-1
-  exponent_lowest_language_score <- 0.5
+  exponent_lowest_language_score <- 1
   exponent_taxonomic_diversity <- 1
   
-  optimum <- pruning_score(documentation_L_T_2023_0999_099,exponent_prop_coded_data=exponent_prop_coded_data, exponent_available_data_points=exponent_available_data_points, exponent_lowest_language_score=exponent_lowest_language_score, exponent_taxonomic_diversity=exponent_taxonomic_diversity)
+  optimum <- densify_score(documentation_L_T_2023_0999_099,exponent_prop_coded_data=exponent_prop_coded_data, exponent_available_data_points=exponent_available_data_points, exponent_lowest_language_score=exponent_lowest_language_score, exponent_taxonomic_diversity=exponent_taxonomic_diversity)
 
   # test F4
   # these two are equivalent
