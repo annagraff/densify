@@ -19,6 +19,9 @@ authors:
   - name: Taras Zakharko
     orcid: XXXXX
     affiliation: "1, 3"
+  - name: Reinhard Furrer
+    orcid: XXXXX
+    affiliation: "3, 4"
   - name: Balthasar Bickel
     orcid: XXXXX
     affiliation: "1, 3"
@@ -119,7 +122,6 @@ optimum <- densify_score(documentation = documentation,
 The R package ``densifieR`` provides users a flexible and explicit method to generate sub-matrices from an input matrix in a mathematically principled way. This paper shows a case example using a standard sparse linguistic dataset (WALS) and the standard linguistic taxonomy provided by Glottolog. More examples and usage details are hosted in the software repository on GitHub.
 
 # Acknowledgements
-We thank Reinhard Furrer for his input on several package functions and usability.
 FINANCIAL SUPPORT??
 The authors declare that there are no conflicts of interest.
 
