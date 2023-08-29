@@ -32,8 +32,8 @@ affiliations:
    index: 3
  - name: 'University of Zurich, Institute of Mathematics'
    index: 4
-citation_author: Graff et al et. al.
-date: 25 August 2023
+citation_author: Graff et al.
+date: 29 August 2023
 year: 2023
 bibliography: sources.bib
 output: rticles::joss_article
@@ -48,26 +48,23 @@ The R package ``densifieR`` takes a data frame as an input, and generates a prun
 
 # Statement of Need
 
-While the software will run on any data frame (with rows representing any entities with or without taxonomic structure), we believe it will be particularly useful for handling data frames of typological linguistic data. Linguistic data is increasingly available in large-scale databases, and many analyses that aim at testing hypotheses at global scales, for which data collection may not be feasible, resort to such databases. Some of these resources have complete or near-complete variable coding density for all languages data is available for, but may be too large for certain computationally intensive analyses (e.g. PHOIBLE, Grambank). Other databases (e.g. WALS, AUTOTYP, Lexibank) exhibit variables that are coded for very different sets of languages, resulting in sparse or even extremely sparse language-variable matrices. Combining data from various databases via language identifiers like glottocodes usually results in further sparsity. Such sparse matrices may lack power for statistical analyses. In either case, researchers might be particularly interested in maintaining taxonomic diversity in the languages represented in a sub-matrix, penalizing the removal of language isolates or members of small language families more strongly than languages belonging to clades represented by many other languages in the matrix.
+While the software will run on any data frame (with rows representing any entities with or without taxonomic structure), we believe it will be particularly useful for handling data frames of typological linguistic data. Linguistic data is increasingly available in large-scale databases, and many analyses that aim at testing hypotheses at global scales, for which data collection may not be feasible, resort to such databases. Some of these resources have complete or near-complete variable coding density for all languages data is available for, but may be too large for certain computationally intensive analyses (e.g. PHOIBLE [@phoible], Grambank [@grambank]) Other databases (e.g. WALS [@wals], AUTOTYP [@AUTOTYP], Lexibank [@Lexibank]) exhibit variables that are coded for very different sets of languages, resulting in sparse or even extremely sparse language-variable matrices. Combining data from various databases via language identifiers like glottocodes usually results in further sparsity. Although there are methods available to operate on such matrices (e.g. ``Matrix`` [@R-Matrix], ``MatrixExtra`` [@R-MatrixExtra]), sparse matrices may lack power for certain research questions and prefer to operate on a subset of the data represented in a denser matrix. In either case, researchers might be particularly interested in maintaining taxonomic diversity in the languages represented in a sub-matrix, penalizing the removal of language isolates or members of small language families more strongly than languages belonging to clades represented by many other languages in the matrix.
 
-To the best of our knowledge, there do not yet exist any principled approaches to generate sub-matrices from sparse input matrices.
-
-
-Many contemporary applications and software packages are optimized for large-scale networks. For example, ``igraph`` [@R-igraph], ``network`` [@R-networkpkg], and ``sna`` [@R-sna] were developed to analyze social media networks [@Jones_2017], epidemiological networks [@Christakis_2011], and political networks [@Hobbs_2016], respectively. In contrast, discourse networks in educational contexts are substantially smaller, typically with only 3-8 students [@Wagner_2018]. Consequently, certain parameters that are relevant for these larger networks are not necessarily applicable, and analysis of discourse networks demands additional parameters beyond what is available in graph theory [@Lou_2001; @Chai_2019].
+While certain packages exist to generate sub-matrices from varying input matrices according to principled criteria (e.g. ``admmDensestSubmatrix`` [@R-admmDensestSubmatrix], which identifies the densest sub-matrix of an input graph; or ``FSelector`` [@R-FSelector], which performs attribute subset selection based on various tests and entropy measures to identify the most relevant attributes of a data input), ``densifieR`` provides a flexible, explicit and taxonomy-sensitive pruning algorithm that focuses both on the removal of rows and columns.
 
 # Usage
 
-``densifieR`` provides the data from The World Atlas of Language Strucutres (WALS; CITATION) and the language taxonomy provided by Glottolog v. 4.8 (CITATION) as example data. This data is used to demonstrate the utility and flexibility of ``densifieR`` to subsample an input matrix according to varying needs.
+``densifieR`` provides the data from The World Atlas of Language Strucutres (WALS [@wals]) and the language taxonomy provided by Glottolog v. 4.8 [@glottolog] as example data. This data is used to demonstrate the utility and flexibility of ``densifieR`` to subsample an input matrix according to varying needs.
 
 ## Preparing input
 
-An ``igraph`` object is the core input to many of the modular analytical functions offered in ``discourseGT``. Prior to generating an ``igraph`` object, a weighted edge list needs to be generated from imported raw data, structured as two columns containing sequential nodes or individual students who start or continue a discussion episode (@Chai_2019). This is addressed by the `tabulate_edges` function. By default, the weight of an edge is defined as the number of times an edge has occurred between two nodes. Weights can be redefined based on other available criteria, but this must be done manually. 
+``densifieR`` requires the input data frame to be a data frame with taxon names as row names and variable names as column names. Any cells with empty entries, not applicable or question marks must be coded as NA. If matrix densification should consider taxonomic structure, a flat taxonomy must be provided, listing every taxon present in the initial data frame along with all the nodes connecting it to the root. Such a taxonomy can be generated with the `build_flat_taxonomy_matrix` function, if all nodes and tips are provided alongside each of their parent nodes. For generating a language taxonomy, glottolog can be used directly.
 
 ```r
 install.packages("densifieR")
 library(densifier)
 
-# Prepare data: WALS and glottolog
+# prepare data: WALS and glottolog
 data(wals)
 data(glottolog_languoids)
 
@@ -76,37 +73,46 @@ wals[wals=="?"] <- NA
 wals[wals=="NA"] <- NA
 head(wals)
 
-# Generate flat taxonomy using glottolog
-taxonomy_matrix <- build_flat_taxonomy_matrix(glottolog_languoids$id, glottolog_languoids$parent_id)
-head(taxonomy_matrix)
+# generate flat taxonomy using glottolog
+taxonomy\_matrix <- build\_flat\_taxonomy\_matrix(id = glottolog\_languoids$id, parent\_id = glottolog\_languoids$parent\_id)
+head(taxonomy\_matrix)
 ```
 ## Pruning
 Iterative pruning of the input matrix is performed by the `densify_steps` function, which requires the following information:
 
   *	The original data frame. Default: wals
   *	An integer specifying the number of iterations performed. Default: 1
-  *	The mean type, which can be: "arithmetic", "geometric", "log_odds". Default: "log_odds".
+  *	The mean type, which can be: "arithmetic", "geometric", "log\_odds". Default: "log\_odds".
   *	Is taxonomy accounted for in the pruning process? Default: `FALSE`
   *	The taxonomy matrix, required if taxonomy = `TRUE`, optional otherwise? Default: NULL.
-  *	The tax_weight_factor, required if mean_type = "log_odds". Default: 0.99
-  *	The coding_weight_factor, required if mean_type = "log_odds". Default: 0.99
+  *	The tax\_weight\_factor, required if mean\_type = "log_odds". Default: 0.99
+  *	The coding\_weight\_factor, required if mean\_type = "log_odds". Default: 0.99
 
 For a more detailed discussion of the parameters, refer to the vignette hosted in the software repository.
+
 ```r
 set.seed(2023)
-documentation <- densify_steps(original_data = wals, max_steps = (nrow(wals)+ncol(wals), mean_type = "log_odds", taxonomy = TRUE, taxonomy_matrix = taxonomy_matrix, tax_weight_factor = 0.99, coding_weight_factor = 0.99)
+documentation <- densify\_steps(original\_data = wals, max\_steps = nrow(wals)+ncol(wals), mean\_type = "log\_odds", taxonomy = TRUE, taxonomy\_matrix = taxonomy\_matrix, tax\_weight\_factor = 0.99, coding\_weight\_factor = 0.99)
 head(documentation)
 ```
 
-The graph settings specified by `prepareGraphs` will influence the analytical output of downstream functions.
-
 ## Retrieving the optimal number of iterations and producing the sub-matrix
-``discourseGT`` offers graph theory-based analytics via two separate functions: `coreNetAnalysis()` and `subgroupsNetAnalysis()`. 
-
-`coreNetAnalysis()` will perform core graph theory operations, such as the counting number of nodes and edges and calculating edge weights, average graph degree, centrality, and other graph theory parameters [@Chai_2019].
+Given the pruining documentation output, `densify_score` will identify the optimal sub-matrix given user-defined perform core graph theory operations, such as the counting number of nodes and edges and calculating edge weights, average graph degree, centrality, and other graph theory parameters [@Chai_2019].
 
 ```r
-coreNet <- coreNetAnalysis(prepNet)
+exponent\_prop\_coded\_data <- 1
+exponent\_available\_data\_points <- 1
+exponent\_lowest\_taxon\_coding\_score <-1
+exponent\_lowest\_variable\_coding\_score <-1
+exponent\_taxonomic\_diversity <- 1
+
+optimum <- densify_score(documentation = documentation, 
+                         exponent\_prop\_coded\_data = exponent\_prop\_coded\_data, 
+                         exponent\_available\_data\_points = exponent\_available\_data\_points, 
+                         exponent\_lowest\_taxon\_coding\_score = exponent\_lowest\_taxon\_coding\_score,
+                         exponent\_lowest\_variable\_coding\_score = exponent\_lowest\_variable\_coding\_score,
+                         exponent\_taxonomic\_diversity = exponent\_taxonomic\_diversity)
+
 ```
 
 # Conclusions
