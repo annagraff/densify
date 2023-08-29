@@ -38,7 +38,7 @@
 #' @export
 ######################################################
 
-densify_steps <- function(original_data, max_steps = 1, mean_type = "log_odds", taxonomy = F, taxonomy_matrix, tax_weight_factor = 0.99, coding_weight_factor = 0.99){
+densify_steps <- function(original_data = wals, max_steps = 1, mean_type = "log_odds", taxonomy = F, taxonomy_matrix, tax_weight_factor = 0.99, coding_weight_factor = 0.99){
   library(vegan)
   
   if (taxonomy == F){
