@@ -13,7 +13,7 @@ install.packages("densifieR")
 
 # How to perform matrix densification with densifieR
 
-For details on each function, refer to the help page (see below) and/or resort to the vignette. 
+For details on each function, refer to the help page (see below) and/or resort to the publication paper and vignette. 
 ~~~~
 library("densifieR")
 
@@ -31,4 +31,5 @@ For suggestions how `densifieR` could be improved or to report bugs, open an iss
 - Anna Graff
 - Marc Lischka
 - Taras Zakharko
+- Reinhard Furrer
 - Balthasar Bickel
