@@ -11,7 +11,7 @@
 #'
 #' @param original_data A data frame with the glottocodes as row names and variable names as column names.
 #' @param documentation A data frame containing the documentation generated during the densification process.
-#' @param optimum The iteration number representing the optimum quality score. The function will densify the matrix and prune languages/variables up to this iteration.
+#' @param optimum The iteration number representing the optimum quality score. The function will densify the matrix and prune languages/variables up to this iteration. Default is set to 1 (output is original data frame).
 #'
 #' @return A pruned and densified data frame.
 #'
