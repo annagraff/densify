@@ -1,21 +1,21 @@
 # densify
 
-densifieR ist an R package for densifying sparse matrices 
+densify ist an R package for densifying sparse matrices 
 
 
 # Installation (for users)
 
-To install densifieR from CRAN, run the following code in R:
+To install densify from CRAN, run the following code in R:
 
 ~~~~
-install.packages("densifieR")
+install.packages("densify")
 ~~~~
 
-# How to perform matrix densification with densifieR
+# How to perform matrix densification with densify
 
 For details on each function, refer to the help page (see below) and/or resort to the publication paper and vignette. 
 ~~~~
-library("densifieR")
+library("densify")
 
 ?flat_taxonomy_matrix
 ?densify_steps
@@ -25,7 +25,7 @@ library("densifieR")
 
 ## Contributing
 
-For suggestions how `densifieR` could be improved or to report bugs, open an issue on GitHub. 
+For suggestions how `densify` could be improved or to report bugs, open an issue on GitHub. 
 
 ## Authors
 - Anna Graff
