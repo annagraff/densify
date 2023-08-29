@@ -100,7 +100,7 @@ head(documentation)
 ```
 
 ## Retrieving the optimal number of iterations and producing the sub-matrix
-Given the pruining documentation output, `densify_score` will identify the optimal sub-matrix given user-defined perform core graph theory operations, such as the counting number of nodes and edges and calculating edge weights, average graph degree, centrality, and other graph theory parameters [@Chai_2019].
+Given the pruning documentation output, `densify_score` will identify the optimal sub-matrix via a quality score, defined via user-defined exponents relating to the overall proportion of coded data in the matrix, the number of available data points, the coding density of the least well-coded taxon, the coding density of the least well-coded variable, and a taxonomic diversity index (Shannon diversity).
 
 ```r
 exponent\_prop\_coded\_data <- 1
@@ -115,7 +115,8 @@ optimum <- densify_score(documentation = documentation,
                          exponent\_lowest\_taxon\_coding\_score = exponent\_lowest\_taxon\_coding\_score,
                          exponent\_lowest\_variable\_coding\_score = exponent\_lowest\_variable\_coding\_score,
                          exponent\_taxonomic\_diversity = exponent\_taxonomic\_diversity)
-
+                         
+pruned_wals <- densify_prune(wals, documentation, optimum)
 ```
 
 # Conclusions
@@ -126,5 +127,4 @@ FINANCIAL SUPPORT??
 The authors declare that there are no conflicts of interest.
 
 # References
-A list of key references, including to other software addressing related needs. Note that the references should include full names of venues, e.g., journals and conferences, not abbreviations only understood in the context of a specific discipline.
 
