@@ -1,9 +1,9 @@
 rm(list=ls())
 
-source("F1_flat_taxonomy_matrix.R")
-source("F2_densify_steps.R")
-source("F3_densify_score.R")
-source("F4_densify_prune.R")
+source("../package_densify/R/flat_taxonomy_matrix.R")
+source("../package_densify/R/densify_steps.R")
+source("../package_densify/R/densify_score.R")
+source("../package_densify/R/densify_prune.R")
 
 library(readr)
 library(plyr)
@@ -16,10 +16,10 @@ library(vegan)
 # paper tests
 
 # Read language and value information from the ZIP file:
-wals_languages <- read.csv(unz("../data/wals_dataset.cldf.zip", "languages.csv"),
+wals_languages <- read.csv(unz("../old-data/wals_dataset.cldf.zip", "languages.csv"),
                            header=TRUE, sep=",")
-wals_values <- read.csv(unz("../wals_dataset.cldf.zip", "values.csv"),header=TRUE, sep=",")
-wals_parameters <- read.csv(unz("../wals_dataset.cldf.zip", "parameters.csv"),header=TRUE, sep=",")
+wals_values <- read.csv(unz("../old-data/wals_dataset.cldf.zip", "values.csv"),header=TRUE, sep=",")
+wals_parameters <- read.csv(unz("../old-data/wals_dataset.cldf.zip", "parameters.csv"),header=TRUE, sep=",")
 
 wals_parameters$Feature <- apply(wals_parameters, 1, function(x) paste(x[1]," ",x[2],sep=""))
 wals_parameters <- wals_parameters %>% select(c("ID","Feature"))
@@ -42,6 +42,11 @@ lgs <- wals$Glottocode
 rownames(wals) <- lgs
 wals <- select(wals,-Glottocode)
 
+saveRDS(wals,file="../package_densify/data/wals.rda")
+
+glottolog_languoids <- readr::read_csv("../old-data/glottolog_languoid_v4.8/languoid.csv")
+saveRDS(glottolog_languoids,file="../package_densify/data/glottolog_languoids.rda")
+
 
 wals[wals=="?"] <- NA
 wals[wals=="NA"] <- NA
@@ -49,7 +54,6 @@ head(wals)
 
 
 # test F1
-glottolog_languoids <- readr::read_csv("../data/glottolog_languoid_v4.8/languoid.csv")
 taxonomy_matrix <- build_flat_taxonomy_matrix(id = glottolog_languoids$id, parent_id = glottolog_languoids$parent_id)
 head(taxonomy_matrix)
 
