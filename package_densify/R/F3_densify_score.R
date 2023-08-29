@@ -67,12 +67,12 @@ densify_score <- function(documentation, exponent_prop_coded_data = 1, exponent_
     as.numeric(documentation$available_data_points)^exponent_available_data_points
 
   # if exponent_taxonomic_diversity is provided, include this in the quality score
-  if(!is.null(exponent_taxonomic_diversity)){
+  if(!is.null(exponent_lowest_taxon_coding_score)){
     quality <- (quality * as.numeric(documentation$worst_tax_abs_coding_density)^exponent_lowest_taxon_coding_score)
   }
   
   # if exponent_lowest_variable_coding_score is provided, include this in the quality score
-  if(!is.null(exponent_taxonomic_diversity)){
+  if(!is.null(exponent_lowest_variable_coding_score)){
     quality <- (quality * as.numeric(documentation$worst_var_abs_coding_density)^exponent_lowest_variable_coding_score)
   }
   

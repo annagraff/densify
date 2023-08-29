@@ -46,11 +46,11 @@ densify_prune <- function(original_data, documentation, optimum = 1) {
   documentation <- slice(documentation, 1:optimum)
 
   # Process removed languages and variables:
-  prune_lgs <- unique(unlist(strsplit(documentation$removed_lg, ";")))[unique(unlist(strsplit(documentation$removed_lg, ";"))) != "NA"]
+  prune_taxa <- unique(unlist(strsplit(documentation$removed_tax, ";")))[unique(unlist(strsplit(documentation$removed_tax, ";"))) != "NA"]
   prune_vars <- unique(unlist(strsplit(documentation$removed_var, ";")))[unique(unlist(strsplit(documentation$removed_var, ";"))) != "NA"]
 
   # Create the pruned matrix by removing specified languages and variables:
-  pruned_matrix <- original_data[which(rownames(original_data)%in%prune_lgs==F),which(colnames(original_data)%in%prune_vars==F)]
+  pruned_matrix <- original_data[which(rownames(original_data)%in%prune_taxa==F),which(colnames(original_data)%in%prune_vars==F)]
 
   return(pruned_matrix)
 }

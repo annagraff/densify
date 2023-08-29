@@ -18,7 +18,7 @@
 #' @param taxonomy A logical indicating whether taxonomic diversity should be factored in for the pruning/retention of rows.
 #'   If `TRUE`, taxonomic diversity is considered; if `FALSE`, it is not. Default is `FALSE`.
 #'
-#' @param taxonomy_matrix A data frame containing a taxonomy matrix, which can be retrieved from the `glottocode_taxonomy` function or provided directly.
+#' @param taxonomy_matrix A data frame containing a taxonomy matrix, which can be retrieved from the `build_flat_taxonomy_matrix` function or provided directly.
 #'   This parameter must be specified if `taxonomy = TRUE` and is optional otherwise (if specified, taxonomic index is computed for each iteration). 
 #'
 #' @param tax_weight_factor A numeric value between 0 and 1 that determines the relative weight given to taxonomy in taxon pruning.
@@ -69,15 +69,11 @@ densify_steps <- function(original_data, max_steps = 1, mean_type = "log_odds", 
   
   if(is.data.frame(taxonomy_matrix)){ # if a taxonomy matrix is provided:
     # reduce both the matrix and the taxonomy to the glottocodes present in both files
-    full_matrix <- full_matrix[which(rownames(full_matrix)%in%taxonomy_matrix$glottocode),]
+    full_matrix <- full_matrix[which(rownames(full_matrix)%in%taxonomy_matrix$id),]
     
-    # reorganise taxonomy_matrix: trim it to the taxa in the initial matrix in the corresponding order; reorganise it so that each tip is not listed in the last column but at whatever node appropriate for that tip
-    taxonomy_reorganised <- taxonomy_matrix %>% filter(glottocode %in% rownames(full_matrix)) %>% select(-c(glottolog.name,longitude,latitude))
-    taxonomy_reorganised <- taxonomy_reorganised[match(rownames(full_matrix),taxonomy_reorganised$glottocode),]
-    for(i in 1:nrow(taxonomy_reorganised)){
-      taxonomy_reorganised[i,sum(!is.na(taxonomy_reorganised[i,2:ncol(taxonomy_reorganised)]))+1]<-taxonomy_reorganised$glottocode[i] # the 2nd column lists the first node (hence 2; 1)
-    }
-    taxonomy_reorganised <- select(taxonomy_reorganised,-ncol(taxonomy_reorganised)) # delete the last column of taxonomy_reorganised
+    # reorganise taxonomy_matrix: trim it to the taxa in the initial matrix in the corresponding order; reorganise it so that each tip is listed not just in "id" but also in the last listed level
+    taxonomy_reorganised <- taxonomy_matrix %>% filter(id %in% rownames(full_matrix))
+    taxonomy_reorganised <- taxonomy_reorganised[match(rownames(full_matrix),taxonomy_reorganised$id),]
     max_node_nr <- ncol(taxonomy_reorganised)-1
   }
   
@@ -98,7 +94,7 @@ densify_steps <- function(original_data, max_steps = 1, mean_type = "log_odds", 
                               na_distribution_index = sqrt(var(rowSums(full_matrix)/ncol(full_matrix))+var(colSums(full_matrix)/nrow(full_matrix))))
   
   if(is.data.frame(taxonomy_matrix)){ # if a taxonomy matrix is provided, score the taxonomic index for the input data frame
-    documentation <- cbind(documentation, taxonomic_index = vegan::diversity(table(taxonomy_reorganised$glottolog.node1)))
+    documentation <- cbind(documentation, taxonomic_index = vegan::diversity(table(taxonomy_reorganised$level1)))
   }
   
   
@@ -133,20 +129,20 @@ densify_steps <- function(original_data, max_steps = 1, mean_type = "log_odds", 
     # fill up current matrix with taxonomic_weight measures entirely only in the first iteration and if taxonomy is considered for pruning
     if (iterations==1 & taxonomy==T){
       cat("Computing initial taxonomic weights.\n")
-      families <- unique(taxonomy_reorganised$glottolog.node1)
+      families <- unique(taxonomy_reorganised$level1)
       for (f in 1:length(families)){
-        taxa <- filter(taxonomy_reorganised, glottolog.node1%in%families[f])$glottocode
+        taxa <- filter(taxonomy_reorganised, level1%in%families[f])$id
         if(length(taxa)==1){ # if taxon is sole representative of its family, --> weight 1
           weight_collection[taxa,"taxonomic_weight"] <- 1
         }
         else{
           # rather than listing the identity of each node, list how often this node appears within the sample. these counts are needed to derive a taxonomic diversity measure
           # where the taxonomy is exhausted (nodes start appearing as NA) --> record 1 rather than NA (this is to make taxa with different taxonomic depth comparable by the measure we employ)
-          node_freq_count <- taxonomy_reorganised %>% filter(glottolog.node1==families[f])
+          node_freq_count <- taxonomy_reorganised %>% filter(level1==families[f])
           for (node_level in 2:(max_node_nr+1)){ # transform node columns as described above
             node_freq_count[is.na(node_freq_count[,node_level]),node_level] <- "none"
             count_table <- table(node_freq_count[,node_level])
-            node_freq_count[,node_level]<-(unlist(lapply(node_freq_count[,node_level],function(node_id){if(node_id!="none"){as.integer(count_table[node_id])}else{1}})))
+            node_freq_count[,node_level]<-apply(node_freq_count[,node_level],1,function(node_id){if(node_id!="none"){as.integer(count_table[node_id])}else{1}})
           }
           
           # sometimes taxa have nodes that can be collapsed, given the taxon sample. where this is the case, collapse the nodes accordingly
@@ -154,10 +150,10 @@ densify_steps <- function(original_data, max_steps = 1, mean_type = "log_odds", 
           for (tax in 1:nrow(node_freq_count)){
             relevant_levels<-(unique(as.numeric(node_freq_count[tax,2:(max_node_nr+1)])))
             new_levels<-(c(relevant_levels,rep(1,(max_node_nr-length(relevant_levels))))) # this collapses any unnecessary nodes
-            node_freq_count[tax,2:(max_node_nr+1)]<-new_levels # update node_freq_count with new node count
+            node_freq_count[tax,2:(max_node_nr+1)]<-as.list(new_levels) # update node_freq_count with new node count
             node_freq_count[tax,"prov_tax_weight"]<-1/(prod(new_levels)^(1/length(new_levels))) # this is 1/(geometric mean of (modified) node level counts)
           }
-          weight_collection[node_freq_count$glottocode,"taxonomic_weight"]<-prop.table(node_freq_count$prov_tax_weight)
+          weight_collection[node_freq_count$id,"taxonomic_weight"]<-prop.table(node_freq_count$prov_tax_weight)
         }
       }
     }
@@ -199,7 +195,7 @@ densify_steps <- function(original_data, max_steps = 1, mean_type = "log_odds", 
       
       updated_matrix <- updated_matrix[-which(rownames(updated_matrix)==removed_taxa),] # update matrix by pruning away worst taxon
       weight_collection <- weight_collection[-which(rownames(weight_collection)==removed_taxa),] # update weight collection by pruning away worst taxon
-      if(is.data.frame(taxonomy_matrix)){taxonomy_reorganised <- taxonomy_reorganised[taxonomy_reorganised$glottocode%in%removed_taxa==F,]} # update taxonomy_reorganised by pruning away worst taxon if taxonomy provided
+      if(is.data.frame(taxonomy_matrix)){taxonomy_reorganised <- taxonomy_reorganised[taxonomy_reorganised$id%in%removed_taxa==F,]} # update taxonomy_reorganised by pruning away worst taxon if taxonomy provided
       
     }
     
@@ -253,7 +249,7 @@ densify_steps <- function(original_data, max_steps = 1, mean_type = "log_odds", 
       removed_taxa <- c(removed_taxa,uninformative_taxa)[-which(is.na(c(removed_taxa,uninformative_taxa)))]
       updated_matrix <- updated_matrix[-which(rownames(updated_matrix)%in%uninformative_taxa),] # update matrix by pruning away worst taxon
       weight_collection <- weight_collection[-which(rownames(weight_collection)%in%uninformative_taxa),] # update weight collection by pruning away worst taxon
-      if (is.data.frame(taxonomy_matrix)){taxonomy_reorganised <- taxonomy_reorganised[taxonomy_reorganised$glottocode%in%uninformative_taxa==F,]} # update taxonomy_reorganised by pruning away worst taxon
+      if (is.data.frame(taxonomy_matrix)){taxonomy_reorganised <- taxonomy_reorganised[taxonomy_reorganised$id%in%uninformative_taxa==F,]} # update taxonomy_reorganised by pruning away worst taxon
       cat("Remove the following uninformative taxa:", uninformative_taxa,"\n")
     }
     
@@ -265,27 +261,27 @@ densify_steps <- function(original_data, max_steps = 1, mean_type = "log_odds", 
     # if any taxa were removed, the phylogenetic weights for remaining taxa of their families must be updated!
     if ((length(removed_taxa))!=0 & is.data.frame(taxonomy_matrix)){
       cat("There are phylogenetic weights to be updated.\n")
-      fams_for_tax_weight_update <- unique(filter(taxonomy_matrix,glottocode%in%removed_taxa)$glottolog.node1)
+      fams_for_tax_weight_update <- unique(filter(taxonomy_matrix,id%in%removed_taxa)$level1)
       for (fam in fams_for_tax_weight_update){ # proceed family-wise
-        node_freq_count <- filter(taxonomy_reorganised,glottolog.node1%in%fam) # filter out remaining taxa of this family
+        node_freq_count <- filter(taxonomy_reorganised,level1%in%fam) # filter out remaining taxa of this family
         if(nrow(node_freq_count)==0){} else if(nrow(node_freq_count)==1){ # if taxon is sole representative of its family, --> weight 1
-          weight_collection[node_freq_count$glottocode,"taxonomic_weight"] <- 1
+          weight_collection[node_freq_count$id,"taxonomic_weight"] <- 1
         } else { # if taxon is one of several taxa from the same family in the current sample, the other taxa from that family need to be updated
           for (node_level in 2:(max_node_nr+1)){ # transform node columns as described above
             node_freq_count[is.na(node_freq_count[,node_level]),node_level] <- "none"
             count_table <- table(node_freq_count[,node_level])
-            node_freq_count[,node_level] <- (unlist(lapply(node_freq_count[,node_level], function(node_id){if(node_id!="none"){as.integer(count_table[node_id])}else{1}})))
+            node_freq_count[,node_level] <- apply(node_freq_count[,node_level],1,function(node_id){if(node_id!="none"){as.integer(count_table[node_id])}else{1}})
           }
           # sometimes taxa have nodes that can be collapsed, given the taxon sample. where this is the case, collapse the nodes accordingly
           # (e.g. if we have 2 low-level dialects as the sole representatives of a clade within a family, they will have several (identical) nodes that are unnecessary and which distort their relative taxonomic position to taxa in another clade of this family)
           for (tax in 1:nrow(node_freq_count)){
             relevant_levels <- (unique(as.numeric(node_freq_count[tax,2:(max_node_nr+1)])))
             new_levels <- (c(relevant_levels,rep(1,(max_node_nr-length(relevant_levels))))) # this collapses any unnecessary nodes
-            node_freq_count[tax,2:(max_node_nr+1)] <- new_levels # update node_freq_count with new node count
+            node_freq_count[tax,2:(max_node_nr+1)] <- as.list(new_levels) # update node_freq_count with new node count
             node_freq_count[tax,"prov_tax_weight"] <- 1/(prod(new_levels)^(1/length(new_levels))) # this is 1/(geometric mean of (modified) node level counts)
           }
           ## update the taxonomic weight in weight_collection (multiplied by tax_weight_factor to ensure log-odds can be computed if applicable)
-          weight_collection[which(rownames(weight_collection)%in%node_freq_count$glottocode),"taxonomic_weight"]<-prop.table(node_freq_count$prov_tax_weight)
+          weight_collection[which(rownames(weight_collection)%in%node_freq_count$id),"taxonomic_weight"]<-prop.table(node_freq_count$prov_tax_weight)
         }
       }
     }
@@ -305,7 +301,7 @@ densify_steps <- function(original_data, max_steps = 1, mean_type = "log_odds", 
                              paste(removed_taxa,collapse=";"),
                              paste(removed_vars,collapse=";"),
                              sqrt(var(rowSums(updated_matrix)/ncol(updated_matrix))+var(colSums(updated_matrix)/nrow(updated_matrix))),
-                             vegan::diversity(table(taxonomy_reorganised$glottolog.node1))))
+                             vegan::diversity(table(taxonomy_reorganised$level1))))
     } else{
       documentation<-rbind(documentation,
                            c(iterations,
