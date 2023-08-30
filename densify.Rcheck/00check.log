@@ -1,0 +1,124 @@
+* using log directory ‘/home/b/malisc/myR/densify/densify.Rcheck’
+* using R version 4.2.1 (2022-06-23)
+* using platform: x86_64-pc-linux-gnu (64-bit)
+* using session charset: UTF-8
+* using options ‘--no-manual --as-cran’
+* checking for file ‘densify/DESCRIPTION’ ... OK
+* this is package ‘densify’ version ‘0.0.0.9000’
+* package encoding: UTF-8
+* checking package namespace information ... OK
+* checking package dependencies ... OK
+* checking if this is a source package ... OK
+* checking if there is a namespace ... OK
+* checking for executable files ... OK
+* checking for hidden files and directories ... OK
+* checking for portable file names ... OK
+* checking for sufficient/correct file permissions ... OK
+* checking serialization versions ... OK
+* checking whether package ‘densify’ can be installed ... OK
+* checking installed package size ... OK
+* checking package directory ... OK
+* checking for future file timestamps ... OK
+* checking DESCRIPTION meta-information ... WARNING
+Invalid license file pointers: LICENSE
+* checking top-level files ... OK
+* checking for left-over files ... OK
+* checking index information ... OK
+* checking package subdirectories ... OK
+* checking R files for non-ASCII characters ... OK
+* checking R files for syntax errors ... OK
+* checking whether the package can be loaded ... OK
+* checking whether the package can be loaded with stated dependencies ... OK
+* checking whether the package can be unloaded cleanly ... OK
+* checking whether the namespace can be loaded with stated dependencies ... OK
+* checking whether the namespace can be unloaded cleanly ... OK
+* checking loading without being on the library search path ... OK
+* checking dependencies in R code ... WARNING
+'::' or ':::' imports not declared from:
+  ‘rlang’ ‘tibble’ ‘vctrs’ ‘vegan’
+'library' or 'require' calls not declared from:
+  ‘tibble’ ‘vegan’
+'library' or 'require' calls in package code:
+  ‘tibble’ ‘vegan’
+  Please use :: or requireNamespace() instead.
+  See section 'Suggested packages' in the 'Writing R Extensions' manual.
+* checking S3 generic/method consistency ... OK
+* checking replacement functions ... OK
+* checking foreign function calls ... OK
+* checking R code for possible problems ... NOTE
+densify_prune: no visible global function definition for ‘slice’
+densify_score: no visible global function definition for ‘na.omit’
+densify_steps: no visible binding for global variable ‘wals’
+densify_steps: no visible global function definition for ‘filter’
+densify_steps: no visible global function definition for ‘var’
+densify_steps: no visible binding for global variable ‘level1’
+densify_steps: no visible binding for global variable ‘qlogis’
+densify_steps: no visible binding for global variable ‘mean_score’
+densify_steps: no visible binding for global variable
+  ‘count_second_largest_variable_state’
+Undefined global functions or variables:
+  count_second_largest_variable_state filter level1 mean_score na.omit
+  qlogis slice var wals
+Consider adding
+  importFrom("stats", "filter", "na.omit", "qlogis", "var")
+to your NAMESPACE file.
+* checking for missing documentation entries ... WARNING
+Undocumented code objects:
+  ‘build_flat_taxonomy_matrix’ ‘densify_prune’ ‘densify_score’
+  ‘densify_steps’
+All user-level objects in a package should have documentation entries.
+See chapter ‘Writing R documentation files’ in the ‘Writing R
+Extensions’ manual.
+* checking contents of ‘data’ directory ... WARNING
+Output for data("glottolog_languoids", package = "densify"):
+  Error in load(zfile, envir = tmp_env) : 
+    bad restore file magic number (file may be corrupted) -- no data loaded
+  Calls: <Anonymous> ... suppressMessages -> withCallingHandlers -> <Anonymous> -> load
+  In addition: Warning messages:
+  1: In readChar(con, 5L, useBytes = TRUE) :
+    truncating string with embedded nuls
+  2: file ‘glottolog_languoids.rda’ has magic number 'X'
+    Use of save versions prior to 2 is deprecated 
+  Execution halted
+Output for data("wals", package = "densify"):
+  Error in load(zfile, envir = tmp_env) : 
+    bad restore file magic number (file may be corrupted) -- no data loaded
+  Calls: <Anonymous> ... suppressMessages -> withCallingHandlers -> <Anonymous> -> load
+  In addition: Warning messages:
+  1: In readChar(con, 5L, useBytes = TRUE) :
+    truncating string with embedded nuls
+  2: file ‘wals.rda’ has magic number 'X'
+    Use of save versions prior to 2 is deprecated 
+  Execution halted
+* checking data for non-ASCII characters ... NOTE
+  Error loading dataset 'glottolog_languoids': bad restore file magic number (file may be corrupted) -- no data loaded
+  Call sequence:
+  2: load(zfile, envir = tmp_env)
+  1: utils::data(list = f, package = character(), envir = dataEnv)
+    ...
+  
+  Error loading dataset 'wals': bad restore file magic number (file may be corrupted) -- no data loaded
+  Call sequence:
+  2: load(zfile, envir = tmp_env)
+  1: utils::data(list = f, package = character(), envir = dataEnv)
+    ...
+  
+* checking data for ASCII and uncompressed saves ... WARNING
+  Error in load(p, envir = env) : 
+    bad restore file magic number (file may be corrupted) -- no data loaded
+  Calls: <Anonymous> ... suppressPackageStartupMessages -> withCallingHandlers -> load
+  In addition: Warning messages:
+  1: In readChar(con, 5L, useBytes = TRUE) :
+    truncating string with embedded nuls
+  2: In readChar(con, 5L, useBytes = TRUE) :
+    truncating string with embedded nuls
+  3: In readChar(con, 5L, useBytes = TRUE) :
+    truncating string with embedded nuls
+  4: file ‘glottolog_languoids.rda’ has magic number 'X'
+    Use of save versions prior to 2 is deprecated 
+  Execution halted
+* checking examples ... NONE
+* checking for non-standard things in the check directory ... OK
+* checking for detritus in the temp directory ... OK
+* DONE
+Status: 5 WARNINGs, 2 NOTEs

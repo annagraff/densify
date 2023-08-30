@@ -1,0 +1,7 @@
+exportPattern("^[[:alpha:]]+")
+
+importFrom(magrittr, "%>%")
+importFrom(dplyr, "select")
+
+import(tidyverse)
+import(plyr)
