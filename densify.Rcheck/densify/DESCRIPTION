@@ -7,12 +7,13 @@ Authors@R:
 Description: This package provides functions to densify linguistic data frames 
              with NAs.
 License: MIT + file LICENSE
-Imports: magrittr, dplyr, plyr, tidyverse
+Imports: magrittr, dplyr, plyr, tidyverse, vegan
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
 NeedsCompilation: no
-Packaged: 2023-08-30 11:28:35 UTC; malisc
+Packaged: 2023-08-30 11:52:10 UTC; malisc
 Author: Marc Lischka [aut, cre]
 Maintainer: Marc Lischka <marc.lischka@math.uzh.ch>
-Built: R 4.2.1; ; 2023-08-30 11:28:42 UTC; unix
+Depends: R (>= 3.5.0)
+Built: R 4.2.1; ; 2023-08-30 11:52:17 UTC; unix

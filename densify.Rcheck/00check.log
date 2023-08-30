@@ -14,7 +14,6 @@
 * checking for hidden files and directories ... OK
 * checking for portable file names ... OK
 * checking for sufficient/correct file permissions ... OK
-* checking serialization versions ... OK
 * checking whether package ‘densify’ can be installed ... OK
 * checking installed package size ... OK
 * checking package directory ... OK
@@ -35,13 +34,16 @@ Invalid license file pointers: LICENSE
 * checking loading without being on the library search path ... OK
 * checking dependencies in R code ... WARNING
 '::' or ':::' imports not declared from:
-  ‘rlang’ ‘tibble’ ‘vctrs’ ‘vegan’
+  ‘rlang’ ‘tibble’ ‘vctrs’
 'library' or 'require' calls not declared from:
   ‘tibble’ ‘vegan’
 'library' or 'require' calls in package code:
   ‘tibble’ ‘vegan’
   Please use :: or requireNamespace() instead.
   See section 'Suggested packages' in the 'Writing R Extensions' manual.
+Namespaces in Imports field not imported from:
+  ‘dplyr’ ‘magrittr’ ‘plyr’ ‘tidyverse’
+  All declared Imports should be used.
 * checking S3 generic/method consistency ... OK
 * checking replacement functions ... OK
 * checking foreign function calls ... OK
@@ -49,7 +51,9 @@ Invalid license file pointers: LICENSE
 densify_prune: no visible global function definition for ‘slice’
 densify_score: no visible global function definition for ‘na.omit’
 densify_steps: no visible binding for global variable ‘wals’
+densify_steps: no visible global function definition for ‘%>%’
 densify_steps: no visible global function definition for ‘filter’
+densify_steps: no visible binding for global variable ‘id’
 densify_steps: no visible global function definition for ‘var’
 densify_steps: no visible binding for global variable ‘level1’
 densify_steps: no visible binding for global variable ‘qlogis’
@@ -57,68 +61,50 @@ densify_steps: no visible binding for global variable ‘mean_score’
 densify_steps: no visible binding for global variable
   ‘count_second_largest_variable_state’
 Undefined global functions or variables:
-  count_second_largest_variable_state filter level1 mean_score na.omit
-  qlogis slice var wals
+  %>% count_second_largest_variable_state filter id level1 mean_score
+  na.omit qlogis slice var wals
 Consider adding
   importFrom("stats", "filter", "na.omit", "qlogis", "var")
 to your NAMESPACE file.
+* checking Rd files ... OK
+* checking Rd metadata ... OK
+* checking Rd line widths ... NOTE
+Rd file 'densify_steps.Rd':
+  \examples lines wider than 100 characters:
+     densify_steps(original_data, max_steps = 3, mean_type = "log_odds", taxonomy = TRUE, taxonomy_matrix, tax_weight_factor = 0.99, coding_ ... [TRUNCATED]
+
+These lines will be truncated in the PDF manual.
+* checking Rd cross-references ... OK
 * checking for missing documentation entries ... WARNING
-Undocumented code objects:
-  ‘build_flat_taxonomy_matrix’ ‘densify_prune’ ‘densify_score’
-  ‘densify_steps’
+Undocumented data sets:
+  ‘taxonomy_glottolog_4_8’
 All user-level objects in a package should have documentation entries.
 See chapter ‘Writing R documentation files’ in the ‘Writing R
 Extensions’ manual.
-* checking contents of ‘data’ directory ... WARNING
-Output for data("glottolog_languoids", package = "densify"):
-  Error in load(zfile, envir = tmp_env) : 
-    bad restore file magic number (file may be corrupted) -- no data loaded
-  Calls: <Anonymous> ... suppressMessages -> withCallingHandlers -> <Anonymous> -> load
-  In addition: Warning messages:
-  1: In readChar(con, 5L, useBytes = TRUE) :
-    truncating string with embedded nuls
-  2: file ‘glottolog_languoids.rda’ has magic number 'X'
-    Use of save versions prior to 2 is deprecated 
-  Execution halted
-Output for data("wals", package = "densify"):
-  Error in load(zfile, envir = tmp_env) : 
-    bad restore file magic number (file may be corrupted) -- no data loaded
-  Calls: <Anonymous> ... suppressMessages -> withCallingHandlers -> <Anonymous> -> load
-  In addition: Warning messages:
-  1: In readChar(con, 5L, useBytes = TRUE) :
-    truncating string with embedded nuls
-  2: file ‘wals.rda’ has magic number 'X'
-    Use of save versions prior to 2 is deprecated 
-  Execution halted
-* checking data for non-ASCII characters ... NOTE
-  Error loading dataset 'glottolog_languoids': bad restore file magic number (file may be corrupted) -- no data loaded
-  Call sequence:
-  2: load(zfile, envir = tmp_env)
-  1: utils::data(list = f, package = character(), envir = dataEnv)
-    ...
-  
-  Error loading dataset 'wals': bad restore file magic number (file may be corrupted) -- no data loaded
-  Call sequence:
-  2: load(zfile, envir = tmp_env)
-  1: utils::data(list = f, package = character(), envir = dataEnv)
-    ...
-  
-* checking data for ASCII and uncompressed saves ... WARNING
-  Error in load(p, envir = env) : 
-    bad restore file magic number (file may be corrupted) -- no data loaded
-  Calls: <Anonymous> ... suppressPackageStartupMessages -> withCallingHandlers -> load
-  In addition: Warning messages:
-  1: In readChar(con, 5L, useBytes = TRUE) :
-    truncating string with embedded nuls
-  2: In readChar(con, 5L, useBytes = TRUE) :
-    truncating string with embedded nuls
-  3: In readChar(con, 5L, useBytes = TRUE) :
-    truncating string with embedded nuls
-  4: file ‘glottolog_languoids.rda’ has magic number 'X'
-    Use of save versions prior to 2 is deprecated 
-  Execution halted
-* checking examples ... NONE
+* checking for code/documentation mismatches ... OK
+* checking Rd \usage sections ... OK
+* checking Rd contents ... OK
+* checking for unstated dependencies in examples ... OK
+* checking contents of ‘data’ directory ... OK
+* checking data for non-ASCII characters ... OK
+* checking data for ASCII and uncompressed saves ... OK
+* checking examples ... ERROR
+Running examples in ‘densify-Ex.R’ failed
+The error most likely occurred in:
+
+> base::assign(".ptime", proc.time(), pos = "CheckExEnv")
+> ### Name: densify_prune
+> ### Title: Function to densify and prune the original input matrix
+> ### Aliases: densify_prune
+> 
+> ### ** Examples
+> 
+> # Assuming 'original_data' and 'documentation' are prepared
+> pruned_densified <- densify_prune(original_data, documentation, optimum = 2)
+Error in is.data.frame(original_data) : object 'original_data' not found
+Calls: densify_prune -> is.data.frame
+Execution halted
 * checking for non-standard things in the check directory ... OK
 * checking for detritus in the temp directory ... OK
 * DONE
-Status: 5 WARNINGs, 2 NOTEs
+Status: 1 ERROR, 3 WARNINGs, 2 NOTEs
