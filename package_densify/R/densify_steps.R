@@ -9,7 +9,10 @@
 #' @param original_data A data frame with the taxa (e.g. languages, as glottocodes) as row names and variable names as column names.
 #'   Any question marks, empty entries, or "NA"s must be represented as NAs. Default is the data from WALS.
 #'
-#' @param max_steps An optional integer specifying the maximum number of iterations attempted during densification.
+#' @param max_steps An integer specifying the maximum number of iterations attempted during densification.
+#'   Default is 1.
+#'
+#' @param variability_threshold specifying how many taxa the second-most-frequent variable state of any variable must contain for the variable to be maintained in the matrix.
 #'   Default is 1.
 #'
 #' @param mean_type A character string specifying the type of mean to be used for calculating the final weights.
@@ -32,13 +35,13 @@
 #'
 #' @examples
 #' # Assuming `original_data` and `taxonomy_matrix` are appropriate data frames
-#' densify_steps(original_data, max_steps = 3, mean_type = "log_odds", taxonomy = TRUE, taxonomy_matrix, tax_weight_factor = 0.99, coding_weight_factor = 0.99)
+#' densify_steps(original_data, max_steps = 3, variability_threshold = 3, mean_type = "log_odds", taxonomy = TRUE, taxonomy_matrix, tax_weight_factor = 0.99, coding_weight_factor = 0.99)
 #'
 #' @import vegan
 #' @export
 ######################################################
 
-densify_steps <- function(original_data = wals, max_steps = 1, mean_type = "log_odds", taxonomy = F, taxonomy_matrix, tax_weight_factor = 0.99, coding_weight_factor = 0.99){
+densify_steps <- function(original_data = wals, max_steps = 1, variability_threshold = 1, mean_type = "log_odds", taxonomy = F, taxonomy_matrix, tax_weight_factor = 0.99, coding_weight_factor = 0.99){
   library(vegan)
   
   if (taxonomy == F){
@@ -221,8 +224,8 @@ densify_steps <- function(original_data = wals, max_steps = 1, mean_type = "log_
       break
     }
     
-    # make sure that all variables are/remain sufficiently variable --> the second-most-frequent variable state must contain at least 3 taxa
-    # if any variables are not/no longer sufficiently variable for our areal analysis, remove them
+    # make sure that all variables are/remain sufficiently variable --> the second-most-frequent variable state must contain at least N taxa (N=variability_threshold)
+    # if any variables are not/no longer sufficiently variable, remove them
     cat("Ensuring variable variablity.\n")
     
     pruned_matrix <- original_data[which(rownames(original_data)%in%rownames(updated_matrix)),which(colnames(original_data)%in%colnames(updated_matrix))]
@@ -230,8 +233,8 @@ densify_steps <- function(original_data = wals, max_steps = 1, mean_type = "log_
                            number_of_variable_states=apply(pruned_matrix,2,function(x)length(table(as.factor(x)))),
                            count_second_largest_variable_state=apply(pruned_matrix,2,function(x)sort(table(as.factor(x)),decreasing=T)[2]))
     
-    if (sum(nrlevels$count_second_largest_variable_state%in%c(NA,1,2))!=0){ # only act if there is a variable that needs removal
-      uninformative_variables <- rownames(filter(nrlevels,count_second_largest_variable_state%in%c(NA,1,2)))
+    if (sum(nrlevels$count_second_largest_variable_state%in%c(NA,1:variability_threshold))!=0){ # only act if there is a variable that needs removal
+      uninformative_variables <- rownames(filter(nrlevels,count_second_largest_variable_state%in%c(NA,1:variability_threshold)))
       removed_vars <- c(removed_vars,uninformative_variables)[-which(is.na(c(removed_vars,uninformative_variables)))]
       updated_matrix <- updated_matrix[,-which(colnames(updated_matrix)%in%uninformative_variables)] # update matrix by pruning away uninformative variables
       c_weights_updated <- c_weights_updated[-which(colnames(updated_matrix)%in%uninformative_variables)] # update weights by pruning away uninformative variables
