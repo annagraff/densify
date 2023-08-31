@@ -52,7 +52,6 @@ densify_steps <- function(original_data = wals, max_steps = 1, variability_thres
     warning("Attention, no taxonomy matrix has been provided.\n")
   }
   
-  
   # prepare original_data and taxonomy_matrix, if applicable:
   densify_prep <- function(original_data) {
     # save row names for later
