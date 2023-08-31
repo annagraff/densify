@@ -28,8 +28,8 @@
 #'   This parameter must be specified if `taxonomy = TRUE` and `mean_type = "log_odds"`. Default is 0.99.
 #'
 #' @param coding_weight_factor A numeric value between 0 and 1 that determines the relative weight given to coding quality
-#'   (absolute coding score and weighted coding score) in taxon pruning. This parameter must be specified if `taxonomy = TRUE`
-#'   and `mean_type = "log_odds"`. Default is 0.99.
+#'   (absolute coding score and weighted coding score) in taxon pruning. This parameter must be specified if
+#'  `mean_type = "log_odds"`. Default is 0.99.
 #'
 #' @return A data frame with details about the matrix after each iteration of densification.
 #'
