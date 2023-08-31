@@ -235,7 +235,7 @@ densify_steps <- function(original_data = wals, max_steps = 1, variability_thres
     
     if (sum(nrlevels$count_second_largest_variable_state%in%c(NA,1:variability_threshold))!=0){ # only act if there is a variable that needs removal
       uninformative_variables <- rownames(filter(nrlevels,count_second_largest_variable_state%in%c(NA,1:variability_threshold)))
-      removed_vars <- c(removed_vars,uninformative_variables)[-which(is.na(c(removed_vars,uninformative_variables)))]
+      removed_vars <- c(removed_vars,uninformative_variables)
       updated_matrix <- updated_matrix[,-which(colnames(updated_matrix)%in%uninformative_variables)] # update matrix by pruning away uninformative variables
       c_weights_updated <- c_weights_updated[-which(colnames(updated_matrix)%in%uninformative_variables)] # update weights by pruning away uninformative variables
       cat("; remove the following uninformative variables", uninformative_variables,"\n")
@@ -262,7 +262,7 @@ densify_steps <- function(original_data = wals, max_steps = 1, variability_thres
     }
     
     # if any taxa were removed, the phylogenetic weights for remaining taxa of their families must be updated!
-    if ((length(removed_taxa))!=0 & is.data.frame(taxonomy_matrix)){
+    if ((length(removed_taxa))!=0 & taxonomy == T){
       cat("There are phylogenetic weights to be updated.\n")
       fams_for_tax_weight_update <- unique(filter(taxonomy_matrix,id%in%removed_taxa)$level1)
       for (fam in fams_for_tax_weight_update){ # proceed family-wise
