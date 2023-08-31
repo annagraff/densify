@@ -1,0 +1,142 @@
+---
+title: "Tutorial for densify"
+author: "Anna Graff, Marc Lischka"
+date: "`r Sys.Date()`"
+output: 
+  html_vignette:
+    number_sections: false
+  html_document:
+    toc: true
+    toc_float:
+    collapsed: false
+    smooth_scroll: false
+    toc_depth: 2
+vignette: >
+  %\VignetteIndexEntry{Tutorial for densify}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+bibliography: '`r system.file("sources.bib", package="densify")`'
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = TRUE, message = TRUE, warning = FALSE,
+                      fig.width = 8, fig.height = 8)
+# Packages --------------------------------------------------------------------
+suppressPackageStartupMessages({
+  suppressWarnings({
+    library(densify)
+  })
+})
+
+options(tinytex.verbose = TRUE)
+
+```
+
+# Introduction
+
+The `densify` package generates denser subsets of input data frames according to varying user-defined parameters. This tutorial guides users through all parameters to demonstrate their effect on densification to help users select settings according to their needs. The data used in this tutorial are the default data provided in the package (the language-variable matrix obtained from the World Atlas of Language Structures (WALS [@wals]) and the language taxonomy provided by Glottolog v. 4.8 [@glottolog]).
+
+```{r data, echo=TRUE}
+library("densify")
+wals <- data(wals)
+glottolog_languoids <- data(glottolog_languoids)
+```
+
+# Preparing input
+The input for densification needs to be a data frame with taxon names as row names and variable names as column names. Any cells with empty entries, not applicable or question marks must be coded as NA. If the densification process should be sensitive taxonomic structure, a flat taxonomy must be provided, listing every taxon present in the initial data frame along with all the nodes connecting it to the root. Such a taxonomy can be generated with the `build_flat_taxonomy_matrix` function, if all nodes and tips are provided alongside each of their parent nodes. For generating a language taxonomy, the "languoids.csv" file Glottolog can be used directly.
+
+```{r data, echo=TRUE}
+# exclude languages from wals that are not attributable to glottolog taxonomy
+wals <- wals[which(rownames(wals) %in% glottolog_languoids$id), ]
+
+# ensure all missing and non-applicable information is coded as NA
+wals[wals==""] <- NA
+wals[wals=="?"] <- NA
+wals[wals=="NA"] <- NA
+head(wals)
+
+# create glottolog taxonomy
+taxonomy_matrix <- build_flat_taxonomy_matrix(id = glottolog_languoids$id, parent_id = glottolog_languoids$parent_id)
+head(taxonomy_matrix)
+```
+
+The initial (full) dataset provided by WALS encompasses data on 192 linguistic features, coded for 2456 (representing 315 families) languages that are attributable to Glottolog. However, each feature is coded for a distinct set of languages, such that coding density is patchy for both languages and variables. 
+
+```{r patchy coding for langauges and variables, echo=TRUE}
+# number of languages, families and features
+nrow(wals) 
+taxonomy_matrix %>% filter(id %in% rownames(wals)) %>% select(level1) %>% unique() %>% nrow()
+ncol(wals) 
+
+hist(apply(wals, 1, function(x) (length(na.omit(x))))/ncol(wals), col = "cadetblue2",xlab = "coding density per language", ylab = "frequency", main = "Coding density per language in unpruned WALS")
+
+hist(apply(wals, 2, function(x) (length(na.omit(x))))/nrow(wals), col = "forestgreen",xlab = "coding density per variable", ylab = "frequency", main = "Coding density per variable in unpruned WALS")
+```
+
+The overall coding density of the input data frame is 15.9%.
+```{r overall coding density input data frame, echo=TRUE}
+sum(!is.na(wals))/(ncol(wals)*nrow(wals))
+```
+
+# Iterative matrix densification pruning using densify_steps
+A straightforward method to find a denser sub-matrix within a sparse super-matrix is to remove all rows (languages) and columns (variables) with density below a given threshold. However, removing a row subtly changes all column densities and vice versa, so a more cautious method is to iteratively remove them. This is what `densify_steps`, the core function of the package, accomplishes.
+
+The following implementations of densify_steps vary key parameters discussed below to illustrate their effect on the densification process. 
+
+```{r densify_steps}
+documentation_
+
+```
+
+
+## High-level description of densify_steps
+Based on the given sparsely encoded data frame, `densify_steps` defines an encoding matrix of the same dimensions, containing zeroes for NAs and ones elsewhere. Using this encoding matrix, it identifies the row and/or column with the lowest quality score given user-specified parameters (randomly sampling one row or column if there are ties), removes it, and re-establishes the least important row/and or column in the resulting sub-matrix. 
+To determine the quality of a column (variable), a mean measure of the absolute and weighted column coding densities is computed; to determine that of a row (language), the measure takes into account the contribution of a specific row to the taxonomic diversity of the sample in addition to the absolute and weighted row coding densities, if specified. Otherwise, it considers only absolute and weighted coding densities. 
+Because the removal of a specific row can result in a column ceasing to display sufficient variability across rows, the algorithm assesses whether any variables have become uninformative according to a user-defined threshold after each row removal, and removes any such column(s) alongside the row in the same iteration. Conversely, the removal of a specific column can result in a row no longer exhibiting any data points, such that the algorithm assesses whether any rows have become empty after each column removal, and removes any such row(s) alongside the column in the same iteration. 
+The described procedure consisting of identifying row(s) and/or column(s) to be removed is repeated until the matrix is empty. 
+The output of the function is a table (data frame) logging the characteristics of the sub-matrix resulting from each iteration.
+
+## The parameters for densify_steps
+### Introducing all parameters
+This section will describe and discuss the parameters available to fine-tune the densification process.
+`densify_steps` takes the following mandatory arguments:
+
+- original_data: The data frame to be pruned, in the format described above. The default data frame used is WALS.
+- max_steps: An integer specifying the maximum number of iterations performed. We recommend setting max_steps to the maximum possible number of iterations conceivable for a given input matrix (i.e. nrow(original_data)+ncol(original_data)-1). The default number of iterations is set to 1.
+- variability_threshold: An integer specifying how many taxa the second-most-frequent variable state of any variable must contain for the variable to be maintained in the matrix. The default set to 1. 
+- taxonomy: A logical parameter denoting whether the taxonomic structure of rows shall be taken into account in the pruning process or not. The default setting is `TRUE`
+- mean_type: This parameter specifies how the measure denoting row and column quality is computed. It can be one of the following three mean-types: "arithmetic", "geometric", "log_odds". See below for more details. The default setting is "log_odds".
+
+The following parameters are conditionally mandatory.
+- taxonomy_matrix: The taxonomy matrix encompassing all taxa represented in original_data, in the format described above. If the parameter taxonomy == `TRUE`, it is mandatory. Otherwise, it is optional. The default setting is NULL.
+- tax_weight_factor: This parameter specifies the weight factor attributed to contribution to taxonomic diversity in the computation of the log_odds mean of rows. It must lie between 0 and 1 (excluding these values) and is mandatory if mean_type ==  log_odds and if taxonomy == `TRUE`. Otherwise, it is undefined. The default value is 0.99.
+- coding_weight_factor: This parameter specifies the weight factor attributed to absolute and weighted coding densities in the computation of the log_odds mean. It must lie between 0 and 1 (excluding these values) and is mandatory if mean_type ==  log_odds. Otherwise, it is undefined. The default value is 0.99.
+
+### Parameter variability_threshold
+While 
+
+### Parameters taxonomy and taxonomy_matrix
+
+### Parameters mean_type, tax_weight_factor and coding_weight_factor
+
+
+# Determining the optimal number of iterations using densify_score
+```{r densify_score}
+
+```
+
+# Retrieving the pruned matrix using densify_score
+```{r densify_prune}
+
+```
+
+# Comparing outputs using varying parameters
+
+
+```{r comparing outputs}
+
+```
+
+
+# References
