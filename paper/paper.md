@@ -57,7 +57,7 @@ While certain packages exist to generate sub-matrices from varying input matrice
 
 # Usage
 
-``densify`` provides the data from The World Atlas of Language Strucutres (WALS [@wals]) and the language taxonomy provided by Glottolog v. 4.8 [@glottolog] as example data. This data is used to demonstrate the utility and flexibility of ``densify`` to subsample an input matrix according to varying needs.
+``densify`` provides the data from The World Atlas of Language Strucutres (WALS [@wals]) and the language taxonomy provided by Glottolog v. 4.8 [@glottolog] as example data. The vignette features a detailed demonstration of the utility and flexibility of ``densify`` to subsample an input matrix according to varying needs using this data.
 
 ## Preparing input
 
@@ -85,6 +85,7 @@ Iterative pruning of the input matrix is performed by the `densify_steps` functi
 
   *	The original data frame. Default: wals
   *	An integer specifying the number of iterations performed. Default: 1
+  *	An integer specifying the threshold for variability in columns. Default: 1
   *	The mean type, which can be: "arithmetic", "geometric", "log\_odds". Default: "log\_odds".
   *	Is taxonomy accounted for in the pruning process? Default: `FALSE`
   *	The taxonomy matrix, required if taxonomy = `TRUE`, optional otherwise. Default: NULL.
@@ -95,7 +96,7 @@ For a more detailed discussion of the parameters, refer to the vignette hosted i
 
 ```r
 set.seed(2023)
-documentation <- densify\_steps(original\_data = wals, max\_steps = nrow(wals)+ncol(wals), mean\_type = "log\_odds", taxonomy = TRUE, taxonomy\_matrix = taxonomy\_matrix, tax\_weight\_factor = 0.99, coding\_weight\_factor = 0.99)
+documentation <- densify\_steps(original\_data = wals, max\_steps = nrow(wals)+ncol(wals)-2, variability_threshold=3, mean\_type = "log\_odds", taxonomy = TRUE, taxonomy\_matrix = taxonomy\_matrix, tax\_weight\_factor = 0.99, coding\_weight\_factor = 0.99)
 head(documentation)
 ```
 
