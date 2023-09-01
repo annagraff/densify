@@ -84,7 +84,7 @@ A straightforward method to find a denser sub-matrix within a sparse super-matri
 
 The following implementations of densify_steps vary key parameters discussed below to illustrate their effect on the densification process.
 
-```{r densify_steps, eval = FALSE}
+```{r densify_steps generate documentations, eval = FALSE}
 # the following parameters remain constant throughout all runs:
 max_steps <- nrow(wals)+ncol(wals)-2
 variability_threshold <- 3
@@ -141,6 +141,27 @@ set.seed(6666)
 documentation_logodds_taxfalse_050_seed6666 <- densify_steps(original_data = wals, max_steps = max_steps, variability_threshold = variability_threshold, mean_type = "log_odds", taxonomy = F, taxonomy_matrix = taxonomy_matrix, coding_weight_factor = 0.50)
 ```
 
+
+```{r densify_steps read in codumentations, eval = TURE, echo = FALSE}
+# to not rerun all densify_steps() runs, read in the stored documentation files
+documentation_arithmetic_taxtrue_seed1234 <- read.csv("vignette_documentations/documentation_arithmetic_taxtrue_seed1234.csv") %>% select(-X)
+documentation_arithmetic_taxfalse_seed4321 <- read.csv("vignette_documentations/documentation_arithmetic_taxfalse_seed4321.csv") %>% select(-X)
+documentation_geometric_taxtrue_seed5678 <- read.csv("vignette_documentations/documentation_geometric_taxtrue_seed5678.csv") %>% select(-X)
+documentation_geometric_taxfalse_seed8765 <- read.csv("vignette_documentations/documentation_geometric_taxfalse_seed8765.csv") %>% select(-X)
+documentation_logodds_taxtrue_099099_seed1111 <- read.csv("vignette_documentations/documentation_logodds_taxtrue_099099_seed1111.csv") %>% select(-X)
+documentation_logodds_taxtrue_095095_seed2222 <- read.csv("vignette_documentations/documentation_logodds_taxtrue_095095_seed2222.csv") %>% select(-X)
+documentation_logodds_taxtrue_090090_seed3333 <- read.csv("vignette_documentations/documentation_logodds_taxtrue_090090_seed3333.csv") %>% select(-X)
+documentation_logodds_taxtrue_050050_seed4444<- read.csv("vignette_documentations/documentation_logodds_taxtrue_050050_seed4444.csv") %>% select(-X)
+documentation_logodds_taxtrue_099095_seed1122 <- read.csv("vignette_documentations/documentation_logodds_taxtrue_099095_seed1122.csv") %>% select(-X)
+documentation_logodds_taxtrue_095099_seed2211 <- read.csv("vignette_documentations/documentation_logodds_taxtrue_095099_seed2211.csv") %>% select(-X)
+documentation_logodds_taxtrue_099090_seed1133 <- read.csv("vignette_documentations/documentation_logodds_taxtrue_099090_seed1133.csv") %>% select(-X)
+documentation_logodds_taxtrue_090099_seed3311 <- read.csv("vignette_documentations/documentation_logodds_taxtrue_090099_seed3311.csv") %>% select(-X)
+documentation_logodds_taxfalse_099_seed9999 <- read.csv("vignette_documentations/documentation_logodds_taxfalse_099_seed9999.csv") %>% select(-X)
+documentation_logodds_taxfalse_095_seed8888 <- read.csv("vignette_documentations/documentation_logodds_taxfalse_095_seed8888.csv") %>% select(-X)
+documentation_logodds_taxfalse_090_seed7777 <- read.csv("vignette_documentations/documentation_logodds_taxfalse_090_seed7777.csv") %>% select(-X)
+documentation_logodds_taxfalse_050_seed6666 <- read.csv("vignette_documentations/documentation_logodds_taxfalse_050_seed6666.csv") %>% select(-X)
+```
+
 ## High-level description of densify_steps
 Based on the given sparsely encoded data frame, `densify_steps` defines an encoding matrix of the same dimensions, containing zeroes for NAs and ones elsewhere. Using this encoding matrix, it identifies the row and/or column with the lowest quality score given user-specified parameters (randomly sampling one row or column if there are ties), removes it, and re-establishes the least important row/and or column in the resulting sub-matrix. 
 To determine that of a row (language), a mean measure taking into account the absolute and weighted row coding densities as well as the contribution of a specific row to the taxonomic diversity of the sample, if specified. To determine the quality of a column (variable) on the other hand, only the weighted column coding density is computed. The asymmetry of ways to compute row and column quality scores arises because a) only rows can have taxonomic structure and b) the focus of densification resides chiefly on pruning away taxa/observations rather than variables in most research applications (given that the former are usually substantially more numerous), and including absolute coding densities in the row quality score chiefly has the effect of promoting the penalization of scarcely-coded rows in the matrix.
@@ -168,7 +189,7 @@ The following parameters are conditionally mandatory.
 While it is perfectly conceivable that a feature encoded in a database displays no variability whatsoever among the coded taxa/observations (variability_threshold = 0), such features are uninteresting for most analyses. Setting the parameter variability_threshold to 1 (the default value) ensures that such features are immediately removed in the pruning process. For certain comparative analyses, it may be reasonable to set the threshold to a higher integer than 1, because such settings ensure that each variable allows to form at least two groups of the specified number or more taxa/observations. 
 
 ### Parameters taxonomy and taxonomy_matrix
-The logical parameter taxonomy is `FALSE` by default because it requires a taxonomy ma
+The logical parameter taxonomy denotes whether taxonomic structure among the entities represented in rows should contribute to determining the quality score of rows in each iteration. It is `FALSE` by default because it requires a taxonomy matrix, which is not always applicable or available. A taxonomy matrix must be provided whenever the parameter taxonomy is `TRUE`, but can also be provided when it is false: in the latter case, the Shannon entropy of the highest taxonomic level is computed and logged for each sub-matrix, such that even when disconsidering taxonomic diversity for the pruning process, it can be considered for identifying the optimal number of iterations using `densify_prune` (see below).
 
 ### Parameters mean_type, tax_weight_factor and coding_weight_factor
 `densify_steps` offers three methods of computing the mean of row-wise absolute and weighted coding densities as well as contribution to taxonomic diversity of the sample where applicable: 
@@ -190,6 +211,4 @@ MARC TO CONTRIBUTE HERE.
 ```{r comparing outputs}
 
 ```
-
-
 # References
