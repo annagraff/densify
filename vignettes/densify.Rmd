@@ -246,10 +246,42 @@ c(optimum11000, optimum12000, optimum13000, optimum21000, optimum31000)
 ```
 
 # Retrieving the pruned matrix using densify_score
+The function `densify_prune` subsets the original data frame to the pruned data frame, given the output of `densify_steps` and `densify_score`.
 
+```{r densify_prune, echo = TRUE}
+pruned_wals_exponents11111 <- densify_prune(original_data = wals, documentation = documentation_logodds_taxtrue_099099_seed1111, optimum = optimum11111)
 
-```{r densify_prune}
+pruned_wals_exponents11001 <- densify_prune(original_data = wals, documentation = documentation_logodds_taxtrue_099099_seed1111, optimum = optimum11001)
+```
 
+Compare the resulting data frames with the initial data frame. 
+
+The densified matrix resulting from setting all exponents to 1 encompasses 131 languages in 53 families coded for 131 features at an overall coding density of 85.8%
+
+```{r densify_prune comparison, echo = TRUE}
+# number of languages, families and features, overall coding density
+nrow(pruned_wals_exponents11111) 
+taxonomy_matrix %>% filter(id %in% rownames(pruned_wals_exponents11111)) %>% select(level1) %>% unique() %>% nrow()
+ncol(pruned_wals_exponents11111)
+sum(!is.na(pruned_wals_exponents11111))/(ncol(pruned_wals_exponents11111)*nrow(pruned_wals_exponents11111))
+
+hist(apply(pruned_wals_exponents11111, 1, function(x) (length(na.omit(x))))/ncol(pruned_wals_exponents11111), col = "cadetblue2",xlab = "coding density per language", ylab = "frequency", main = "Coding density per language in pruned WALS (all exponents = 1)")
+
+hist(apply(pruned_wals_exponents11111, 2, function(x) (length(na.omit(x))))/nrow(pruned_wals_exponents11111), col = "forestgreen",xlab = "coding density per variable", ylab = "frequency", main = "Coding density per variable in pruned WALS (all exponents = 1)")
+```
+
+The densified matrix resulting from setting all exponents but `exponent_lowest_taxon_coding_score` and `exponent_lowest_variable_coding_score` to 1 encompasses 1436 languages in 236 families coded for 181 features at an overall coding density of 26.4%.
+
+```{r densify_prune comparison, echo = TRUE}
+# number of languages, families and features, overall coding density
+nrow(pruned_wals_exponents11001) 
+taxonomy_matrix %>% filter(id %in% rownames(pruned_wals_exponents11001)) %>% select(level1) %>% unique() %>% nrow()
+ncol(pruned_wals_exponents11001)
+sum(!is.na(pruned_wals_exponents11001))/(ncol(pruned_wals_exponents11001)*nrow(pruned_wals_exponents11001))
+
+hist(apply(pruned_wals_exponents11001, 1, function(x) (length(na.omit(x))))/ncol(pruned_wals_exponents11001), col = "cadetblue2",xlab = "coding density per language", ylab = "frequency", main = "Coding density per language in pruned WALS (exponents = 1, 1, 0, 0, 1)")
+
+hist(apply(pruned_wals_exponents11001, 2, function(x) (length(na.omit(x))))/nrow(pruned_wals_exponents11001), col = "forestgreen",xlab = "coding density per variable", ylab = "frequency", main = "Coding density per variable in pruned WALS (exponents = 1, 1, 0, 0, 1)")
 ```
 
 # Comparing outputs using varying parameters
