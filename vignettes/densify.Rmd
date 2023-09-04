@@ -71,7 +71,7 @@ taxonomy_matrix <- build_flat_taxonomy_matrix(id = glottolog_languoids$id, paren
 head(taxonomy_matrix)
 ```
 
-The initial (full) dataset provided by WALS encompasses data on 192 linguistic features, coded for 2456 (representing 315 families) languages that are attributable to Glottolog.
+The initial (full) dataset provided by WALS encompasses data on 192 linguistic features, coded for 2456 languages (representing 315 families) that are attributable to Glottolog.
 However, each feature is coded for a distinct set of languages, such that coding density is patchy for both languages and variables.
 
 ```{r patchy coding for langauges and variables, echo = TRUE}
@@ -215,7 +215,7 @@ It must lie between 0 and 1 (excluding these values) and is mandatory if mean_ty
 Otherwise, it is undefined.
 The default value is 0.99.
 
-While it is possible to run `densify_steps` with several parameter settings on the same input data frame, we strongly recommend motivating parameter settings with the desired characteristics of the output data frame (e.g. how strongly should taxonomic diversity be weighted relation to coding density of rows?) in mind.
+While it is possible to run `densify_steps` with several parameter settings on the same input data frame, we strongly recommend motivating parameter settings with the desired characteristics of the output data frame (e.g. how strongly should taxonomic diversity be weighted in relation to coding density of rows?) in mind.
 
 ### Parameter variability_threshold
 
