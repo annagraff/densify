@@ -234,13 +234,13 @@ A taxonomy matrix must be provided whenever the parameter taxonomy is `TRUE`, bu
 `densify_steps` offers three methods of computing the mean of row-wise absolute and weighted coding densities as well as contribution to taxonomic diversity of the sample where applicable: Possible values are "arithmetic", "geometric", or "log_odds".
 The arithmetic and geometric means operate as conventionally understood in mathematics: the arithmetic mean utilizes the `mean` function, while the geometric mean involves the n-th root of the product.
 The log odds mean is computed by taking the logit transform of all inputs, then taking the mean, the transforming back, in symbols:
- ```
+```{r, eval=FALSE}
 log_odds_mean = invlogit(mean(logit(inputs)))
- ```
+```
 Because `logit` is equivalent to `qlogis`, and `invlogit` is equivalent to `plogis`, we instead compute:
- ```
+```{r, eval=FALSE}
 log_odds_mean = plogis(mean(qlogis(inputs)))
- ```
+```
 Both `qlogis` and `plogis` deal favorably with edge cases. Specifically, qlogis(0) = -Inf, qlogis(1) = 1, plogis(-Inf) = 0, plogis(Inf) = 1.
 However, to avoid calculations like -Inf+Inf = NaN, we prevent inputs from being 1 by multiplying them with tax_weight_factor or coding_weight_factor, which are numbers strictly between 0 and 1. 
 
