@@ -22,6 +22,7 @@
 #' @param parent_id Vector of node parent ids (must be of same size and type as `id`)
 #'
 #' @return a data frame with one row per node id and as many columns as there are levels in the tree
+
 build_flat_taxonomy_matrix <- function(id, parent_id) {
   # TODO: argument checks
   length(id) == length(parent_id) || rlang::abort("`id` and `parent_id` must have same size")
@@ -51,11 +52,6 @@ build_flat_taxonomy_matrix <- function(id, parent_id) {
   out <- c(list(id), mat)
   names(out) <- c("id", paste0("level", seq_along(mat)))
   out <- vctrs::new_data_frame(out)
-
-  # make it into tibble, if available
-  if(require("tibble", quietly = TRUE)) {
-    out <- tibble::as_tibble(out)
-  }
 
   out
 }

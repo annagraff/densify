@@ -1,7 +1,7 @@
 #' Flattens a taxonomy and encodes it in a table (with one column per taxonomic level)
 #'
 #' A taxonomy tree is said to be "flattened" if the depth of each of it's leaf nodes is equal to the
-#' tree height. Such tree can be consucted by injectign dummy nodes where appropriate. Example:
+#' tree height. Such tree can be constructed by injecting dummy nodes where appropriate. Example:
 #'
 #'    A                              A      F''     level 1
 #'   / \         dummy nodes        / \     |
@@ -22,6 +22,7 @@
 #' @param parent_id Vector of node parent ids (must be of same size and type as `id`)
 #'
 #' @return a data frame with one row per node id and as many columns as there are levels in the tree
+
 build_flat_taxonomy_matrix <- function(id, parent_id) {
   # TODO: argument checks
   length(id) == length(parent_id) || rlang::abort("`id` and `parent_id` must have same size")
@@ -29,7 +30,6 @@ build_flat_taxonomy_matrix <- function(id, parent_id) {
   # we build the matrix by recursively joining last ids by parent
   mat <- list(id)
 
-  # todo: optimize this by only merging things we know are not NA
   repeat {
     # get the next level of parents
     next_level <- parent_id[vctrs::vec_match(mat[[1L]], id)]
@@ -52,11 +52,6 @@ build_flat_taxonomy_matrix <- function(id, parent_id) {
   out <- c(list(id), mat)
   names(out) <- c("id", paste0("level", seq_along(mat)))
   out <- vctrs::new_data_frame(out)
-
-  # make it into tibble, if available
-  if(require("tibble", quietly = TRUE)) {
-    out <- tibble::as_tibble(out)
-  }
 
   out
 }

@@ -16,7 +16,7 @@ a data frame with one row per node id and as many columns as there are levels in
 }
 \description{
 A taxonomy tree is said to be "flattened" if the depth of each of it's leaf nodes is equal to the
-tree height. Such tree can be consucted by injectign dummy nodes where appropriate. Example:
+tree height. Such tree can be constructed by injecting dummy nodes where appropriate. Example:
 }
 \details{
 A                              A      F''     level 1

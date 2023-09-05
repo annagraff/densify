@@ -34,6 +34,6 @@ Function to define a quality score for each iteration as documented in the outpu
 }
 \examples{
 # Assuming `documentation` is a data frame generated from `densify_steps` function
-densify_score(documentation)
+# densify_score(documentation)
 
 }

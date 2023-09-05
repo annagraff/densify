@@ -19,8 +19,8 @@
 #'
 #' @examples
 #' # Assuming 'original_data' and 'documentation' are prepared
-#' pruned_densified <- densify_prune(original_data, documentation, optimum = 2)
-#'
+#' # pruned_densified <- densify_prune(original_data, documentation, optimum = 2)
+#' @import dplyr
 #' @export
 
 densify_prune <- function(original_data, documentation, optimum = 1) {
@@ -43,7 +43,7 @@ densify_prune <- function(original_data, documentation, optimum = 1) {
   }
 
   # Extract relevant documentation up to the optimum iteration:
-  documentation <- slice(documentation, 1:optimum)
+  documentation <- dplyr::slice(documentation, 1:optimum)
 
   # Process removed languages and variables:
   prune_taxa <- unique(unlist(strsplit(documentation$removed_tax, ";")))[unique(unlist(strsplit(documentation$removed_tax, ";"))) != "NA"]

@@ -7,6 +7,7 @@
 densify_steps(
   original_data = wals,
   max_steps = 1,
+  variability_threshold = 1,
   mean_type = "log_odds",
   taxonomy = F,
   taxonomy_matrix,
@@ -18,7 +19,10 @@ densify_steps(
 \item{original_data}{A data frame with the taxa (e.g. languages, as glottocodes) as row names and variable names as column names.
 Any question marks, empty entries, or "NA"s must be represented as NAs. Default is the data from WALS.}
 
-\item{max_steps}{An optional integer specifying the maximum number of iterations attempted during densification.
+\item{max_steps}{An integer specifying the maximum number of iterations attempted during densification.
+Default is 1.}
+
+\item{variability_threshold}{specifying how many taxa the second-most-frequent variable state of any variable must contain for the variable to be maintained in the matrix.
 Default is 1.}
 
 \item{mean_type}{A character string specifying the type of mean to be used for calculating the final weights.
@@ -34,8 +38,8 @@ This parameter must be specified if \code{taxonomy = TRUE} and is optional other
 This parameter must be specified if \code{taxonomy = TRUE} and \code{mean_type = "log_odds"}. Default is 0.99.}
 
 \item{coding_weight_factor}{A numeric value between 0 and 1 that determines the relative weight given to coding quality
-(absolute coding score and weighted coding score) in taxon pruning. This parameter must be specified if \code{taxonomy = TRUE}
-and \code{mean_type = "log_odds"}. Default is 0.99.}
+(absolute coding score and weighted coding score) in taxon pruning. This parameter must be specified if
+\code{mean_type = "log_odds"}. Default is 0.99.}
 }
 \value{
 A data frame with details about the matrix after each iteration of densification.
@@ -46,6 +50,13 @@ each iteration.
 }
 \examples{
 # Assuming `original_data` and `taxonomy_matrix` are appropriate data frames
-densify_steps(original_data, max_steps = 3, mean_type = "log_odds", taxonomy = TRUE, taxonomy_matrix, tax_weight_factor = 0.99, coding_weight_factor = 0.99)
+# densify_steps(original_data = wals,
+# max_steps = 3,
+# variability_threshold = 3,
+# mean_type = "log_odds",
+# taxonomy = T,
+# taxonomy_matrix,
+# tax_weight_factor = 0.99,
+# coding_weight_factor = 0.99)
 
 }

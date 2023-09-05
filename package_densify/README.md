@@ -1,6 +1,6 @@
 # densify
 
-densify ist an R package for densifying sparse matrices 
+densify ist an R package for densifying sparse matrices.
 
 
 # Installation (for users)
@@ -26,10 +26,3 @@ library("densify")
 ## Contributing
 
 For suggestions how `densify` could be improved or to report bugs, open an issue on GitHub. 
-
-## Authors
-- Anna Graff
-- Marc Lischka
-- Taras Zakharko
-- Reinhard Furrer
-- Balthasar Bickel

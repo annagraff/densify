@@ -21,8 +21,7 @@ This function takes the original data matrix and the documentation generated fro
 }
 \examples{
 # Assuming 'original_data' and 'documentation' are prepared
-pruned_densified <- densify_prune(original_data, documentation, optimum = 2)
-
+# pruned_densified <- densify_prune(original_data, documentation, optimum = 2)
 }
 \seealso{
 \code{\link{densify_steps}}

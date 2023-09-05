@@ -22,8 +22,9 @@
 #'
 #' @examples
 #' # Assuming `documentation` is a data frame generated from `densify_steps` function
-#' densify_score(documentation)
+#' # densify_score(documentation)
 #'
+#' @importFrom stats na.omit
 #' @export
 
 densify_score <- function(documentation, exponent_prop_coded_data = 1, exponent_available_data_points = 1, exponent_lowest_taxon_coding_score = NULL, exponent_lowest_variable_coding_score = NULL, exponent_taxonomic_diversity = NULL) {
