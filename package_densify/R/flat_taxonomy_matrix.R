@@ -1,7 +1,7 @@
 #' Flattens a taxonomy and encodes it in a table (with one column per taxonomic level)
 #'
 #' A taxonomy tree is said to be "flattened" if the depth of each of it's leaf nodes is equal to the
-#' tree height. Such tree can be consucted by injectign dummy nodes where appropriate. Example:
+#' tree height. Such tree can be constructed by injecting dummy nodes where appropriate. Example:
 #'
 #'    A                              A      F''     level 1
 #'   / \         dummy nodes        / \     |
@@ -29,7 +29,6 @@ build_flat_taxonomy_matrix <- function(id, parent_id) {
   # we build the matrix by recursively joining last ids by parent
   mat <- list(id)
 
-  # todo: optimize this by only merging things we know are not NA
   repeat {
     # get the next level of parents
     next_level <- parent_id[vctrs::vec_match(mat[[1L]], id)]
