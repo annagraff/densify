@@ -2,6 +2,7 @@
 ** using staged installation
 ** R
 ** data
+*** moving datasets to lazyload DB
 ** byte-compile and prepare package for lazy loading
 trying URL 'https://cdstar.eva.mpg.de//bitstreams/EAEA0-B701-6328-C3E3-0/glottolog_languoid.csv.zip'
 Content type 'application/zip' length 578779 bytes (565 KB)

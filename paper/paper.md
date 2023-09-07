@@ -39,9 +39,6 @@ citation_author: Graff et al.
 date: 29 August 2023
 year: 2023
 bibliography: sources.bib
-output: rticles::joss_article
-csl: apa.csl
-journal: JOSS
 ---
 
 # Summary

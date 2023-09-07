@@ -22,6 +22,7 @@
 #' @param parent_id Vector of node parent ids (must be of same size and type as `id`)
 #'
 #' @return a data frame with one row per node id and as many columns as there are levels in the tree
+#' @export
 
 build_flat_taxonomy_matrix <- function(id, parent_id) {
   # TODO: argument checks
@@ -52,6 +53,13 @@ build_flat_taxonomy_matrix <- function(id, parent_id) {
   out <- c(list(id), mat)
   names(out) <- c("id", paste0("level", seq_along(mat)))
   out <- vctrs::new_data_frame(out)
+
+  # replace first level by nodes, if first level is empty
+  if(all(out$level1=="")){
+    nms <- names(out)[-length(names(out))]
+    out <- out[,-2]
+    names(out) <- nms
+  }
 
   out
 }

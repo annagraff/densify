@@ -1,62 +1,41 @@
 ---
 title: "Tutorial for densify"
-author: "Anna Graff, Marc Lischka"
+author: "Anna Graff"
 date: "`r Sys.Date()`"
-output: 
-  html_vignette:
-    number_sections: false
-  html_document:
-    toc: true
-    toc_float:
-    collapsed: false
-    smooth_scroll: false
-    toc_depth: 2
+output: rmarkdown::html_vignette
+bibliography: sources.bib
 vignette: >
   %\VignetteIndexEntry{Tutorial for densify}
-  \usepackage[utf8]{inputenc}
   %\VignetteEngine{knitr::rmarkdown}
-bibliography: '`r system.file("sources.bib", package="densify")`'
-editor_options: 
-  markdown: 
-    wrap: sentence
+  %\VignetteEncoding{UTF-8}
 ---
 
-```{r setup, include=FALSE}
-
-knitr::opts_chunk$set(echo = TRUE, message = TRUE, warning = FALSE,
-                      fig.width = 8, fig.height = 8)
-# Packages --------------------------------------------------------------------
-suppressPackageStartupMessages({
-  suppressWarnings({
-    library(densify)
-  })
-})
-
-options(tinytex.verbose = TRUE)
-
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
 ```
 
 # Introduction
 
-The `densify` package generates denser subsets of input data frames according to varying user-defined parameters.
-This tutorial guides users through all parameters to demonstrate their effect on densification to help users select settings according to their needs.
-The data used in this tutorial are the default data provided in the package (the language-variable matrix obtained from the World Atlas of Language Structures (WALS [@wals]) and the language taxonomy provided by Glottolog v. 4.8 [@glottolog]).
+The `densify` package generates denser subsets of input data frames according to varying user-defined parameters. This tutorial guides users through all parameters to demonstrate their effect on densification to help users select settings according to their needs. 
 
-```{r data, echo = TRUE}
-library("densify")
-wals <- data(wals)
-glottolog_languoids <- data(glottolog_languoids)
-```
+The data used in this tutorial are the default data provided in the package (the language-variable matrix `wals` obtained from the World Atlas of Language Structures (WALS [@wals]) and the language taxonomy `glottolog_languoids` provided by Glottolog v. 4.8 [@glottolog]) .
 
 # Preparing input
 
-The input for densification needs to be a data frame with taxon names as row names and variable names as column names.
-Any cells with empty entries, not applicable or question marks must be coded as NA.
-If the densification process should be sensitive taxonomic structure, a flat taxonomy must be provided, listing every taxon present in the initial data frame along with all the nodes connecting it to the root.
-Such a taxonomy can be generated with the `build_flat_taxonomy_matrix` function, if all nodes and tips are provided alongside each of their parent nodes.
-For generating a language taxonomy, the "languoids.csv" file from Glottolog can be used directly.
+The input for densification needs to be a data frame with taxon names as row names and variable names as column names. Any cells with empty entries, not applicable or question marks must be coded as `NA`. 
 
-```{r data, echo = TRUE}
+If the densification process should be sensitive taxonomic structure, a flat taxonomy must be provided, listing every taxon present in the initial data frame along with all the nodes connecting it to the root. Such a taxonomy can be generated with the `build_flat_taxonomy_matrix` function, if all nodes and tips are provided alongside each of their parent nodes. For generating a language taxonomy, the "languoids.csv" file from Glottolog can be used directly.
+
+```{r packages, echo = FALSE, warnings = FALSE}
+# load packages
+library(densify)
+library(tidyverse)
+```
+
+```{r taxonomy, echo = TRUE}
 # exclude languages from wals that are not attributable to glottolog taxonomy
 wals <- wals[which(rownames(wals) %in% glottolog_languoids$id), ]
 
@@ -64,28 +43,41 @@ wals <- wals[which(rownames(wals) %in% glottolog_languoids$id), ]
 wals[wals==""] <- NA
 wals[wals=="?"] <- NA
 wals[wals=="NA"] <- NA
-head(wals)
 
 # create glottolog taxonomy
 taxonomy_matrix <- build_flat_taxonomy_matrix(id = glottolog_languoids$id, parent_id = glottolog_languoids$parent_id)
-head(taxonomy_matrix)
 ```
 
-The initial (full) dataset provided by WALS encompasses data on 192 linguistic features, coded for 2456 languages (representing 315 families) that are attributable to Glottolog.
-However, each feature is coded for a distinct set of languages, such that coding density is patchy for both languages and variables.
+The initial (full) dataset provided by WALS encompasses data on 192 linguistic features, coded for 2496 languages (representing 317 families) that are attributable to Glottolog. 
 
-```{r patchy coding for langauges and variables, echo = TRUE}
+```{r unpruned wals summary statistics, echo = TRUE}
 # number of languages, families and features
 nrow(wals) 
 taxonomy_matrix %>% filter(id %in% rownames(wals)) %>% select(level1) %>% unique() %>% nrow()
 ncol(wals) 
-
-hist(apply(wals, 1, function(x) (length(na.omit(x))))/ncol(wals), col = "cadetblue2",xlab = "coding density per language", ylab = "frequency", main = "Coding density per language in unpruned WALS")
-
-hist(apply(wals, 2, function(x) (length(na.omit(x))))/nrow(wals), col = "forestgreen",xlab = "coding density per variable", ylab = "frequency", main = "Coding density per variable in unpruned WALS")
 ```
 
-The overall coding density of the input data frame is 15.9%.
+However, each feature is coded for a distinct set of languages, such that coding density is patchy for both languages and variables.
+
+```{r patchy coding for langauges and variables, echo = TRUE, fig.show="hold", out.width="40%", fig.width=5, fig.height=3}
+par(mar = c(4, 4, .1, .1))
+
+ggplot(data.frame(density=apply(wals, 1, function(x) (length(na.omit(x))))/ncol(wals)), aes(x=density))+
+  geom_histogram(color="black", fill="cadetblue2", bins=20)+
+  theme_bw()+
+  labs(title="Unpruned WALS", 
+       x="coding density per language",
+       y="frequency")
+
+ggplot(data.frame(density=apply(wals, 2, function(x) (length(na.omit(x))))/nrow(wals)), aes(x=density))+
+  geom_histogram(color="black", fill="forestgreen", bins=20)+
+  theme_bw()+
+  labs(title="Unpruned WALS",
+       x="coding density per variable",
+       y="frequency")
+```
+
+The overall coding density of the input data frame is 15.7%.
 
 ```{r overall coding density input data frame, echo = TRUE}
 sum(!is.na(wals))/(ncol(wals)*nrow(wals))
@@ -93,9 +85,7 @@ sum(!is.na(wals))/(ncol(wals)*nrow(wals))
 
 # Iterative matrix densification pruning using densify_steps
 
-A straightforward method to find a denser sub-matrix within a sparse super-matrix is to remove all rows (languages) and columns (variables) with density below a given threshold.
-However, removing a row subtly changes all column densities and vice versa, so a more cautious method is to iteratively remove them.
-This is what `densify_steps`, the core function of the package, accomplishes.
+A straightforward method to find a denser sub-matrix within a sparse super-matrix is to remove all rows (languages) and columns (variables) with density below a given threshold. However, removing a row subtly changes all column densities and vice versa, so a more cautious method is to iteratively remove them. This is what `densify_steps`, the core function of the package, accomplishes.
 
 The following implementations of densify_steps vary key parameters discussed below to illustrate their effect on the densification process.
 
@@ -106,54 +96,170 @@ variability_threshold <- 3
 
 # arithmetic mean, taxonomy == TRUE and taxonomy == FALSE
 set.seed(1234)
-documentation_arithmetic_taxtrue_seed1234 <- densify_steps(original_data = wals, max_steps = max_steps, variability_threshold = variability_threshold, mean_type = "arithmetic", taxonomy = T, taxonomy_matrix = taxonomy_matrix)
+documentation_arithmetic_taxtrue_seed1234 <- 
+  densify_steps(original_data = wals, 
+                max_steps = max_steps, 
+                variability_threshold = variability_threshold, 
+                mean_type = "arithmetic", 
+                taxonomy = T, 
+                taxonomy_matrix = taxonomy_matrix)
 
-# set.seed(4321)
-documentation_arithmetic_taxfalse_seed4321 <- densify_steps(original_data = wals, max_steps = max_steps, variability_threshold = variability_threshold, mean_type = "arithmetic", taxonomy = F, taxonomy_matrix = taxonomy_matrix)
+set.seed(4321)
+documentation_arithmetic_taxfalse_seed4321 <- 
+    densify_steps(original_data = wals, 
+                max_steps = max_steps, 
+                variability_threshold = variability_threshold, 
+                mean_type = "arithmetic", 
+                taxonomy = F, 
+                taxonomy_matrix = taxonomy_matrix)
 
 # geometric mean, taxonomy == TRUE and taxonomy == FALSE
 set.seed(5678)
-documentation_geometric_taxtrue_seed5678 <- densify_steps(original_data = wals, max_steps = max_steps, variability_threshold = variability_threshold, mean_type = "geometric", taxonomy = T, taxonomy_matrix = taxonomy_matrix)
+documentation_geometric_taxtrue_seed5678 <- 
+  densify_steps(original_data = wals, 
+                max_steps = max_steps, 
+                variability_threshold = variability_threshold, 
+                mean_type = "geometric", 
+                taxonomy = T, 
+                taxonomy_matrix = taxonomy_matrix)
 
 set.seed(8765)
-documentation_geometric_taxfalse_seed8765 <- densify_steps(original_data = wals, max_steps = max_steps, variability_threshold = variability_threshold, mean_type = "geometric", taxonomy = F, taxonomy_matrix = taxonomy_matrix)
+documentation_geometric_taxfalse_seed8765 <- 
+    densify_steps(original_data = wals, 
+                max_steps = max_steps, 
+                variability_threshold = variability_threshold, 
+                mean_type = "geometric", 
+                taxonomy = F, 
+                taxonomy_matrix = taxonomy_matrix)
 
-# log_odds mean, varying coding_weight_factor and tax_weight_factor (where applicable) for both taxonomy == TRUE and taxonomy == FALSE
+# log_odds mean, varying coding_weight_factor and tax_weight_factor (where applicable) 
+# for both taxonomy == TRUE and taxonomy == FALSE
 set.seed(1111)
-documentation_logodds_taxtrue_099099_seed1111 <- densify_steps(original_data = wals, max_steps = max_steps, variability_threshold = variability_threshold, mean_type = "log_odds", taxonomy = T, taxonomy_matrix = taxonomy_matrix, tax_weight_factor = 0.99, coding_weight_factor = 0.99)
+documentation_logodds_taxtrue_099099_seed1111 <- 
+  densify_steps(original_data = wals, 
+                max_steps = max_steps, 
+                variability_threshold = variability_threshold,
+                mean_type = "log_odds",
+                taxonomy = T,
+                taxonomy_matrix = taxonomy_matrix, 
+                tax_weight_factor = 0.99, 
+                coding_weight_factor = 0.99)
 
 set.seed(2222)
-documentation_logodds_taxtrue_095095_seed2222 <- densify_steps(original_data = wals, max_steps = max_steps, variability_threshold = variability_threshold, mean_type = "log_odds", taxonomy = T, taxonomy_matrix = taxonomy_matrix, tax_weight_factor = 0.95, coding_weight_factor = 0.95)
+documentation_logodds_taxtrue_095095_seed2222 <-   
+  densify_steps(original_data = wals, 
+                max_steps = max_steps, 
+                variability_threshold = variability_threshold,
+                mean_type = "log_odds",
+                taxonomy = T,
+                taxonomy_matrix = taxonomy_matrix, 
+                tax_weight_factor = 0.95, 
+                coding_weight_factor = 0.95)
 
 set.seed(3333)
-documentation_logodds_taxtrue_090090_seed3333 <- densify_steps(original_data = wals, max_steps = max_steps, variability_threshold = variability_threshold, mean_type = "log_odds", taxonomy = T, taxonomy_matrix = taxonomy_matrix, tax_weight_factor = 0.90, coding_weight_factor = 0.90)
+documentation_logodds_taxtrue_090090_seed3333 <- 
+    densify_steps(original_data = wals, 
+                max_steps = max_steps, 
+                variability_threshold = variability_threshold,
+                mean_type = "log_odds",
+                taxonomy = T,
+                taxonomy_matrix = taxonomy_matrix, 
+                tax_weight_factor = 0.90, 
+                coding_weight_factor = 0.90)
 
 set.seed(4444)
-documentation_logodds_taxtrue_050050_seed4444 <- densify_steps(original_data = wals, max_steps = max_steps, variability_threshold = variability_threshold, mean_type = "log_odds", taxonomy = T, taxonomy_matrix = taxonomy_matrix, tax_weight_factor = 0.50, coding_weight_factor = 0.50)
+documentation_logodds_taxtrue_050050_seed4444 <- 
+    densify_steps(original_data = wals, 
+                max_steps = max_steps, 
+                variability_threshold = variability_threshold,
+                mean_type = "log_odds",
+                taxonomy = T,
+                taxonomy_matrix = taxonomy_matrix, 
+                tax_weight_factor = 0.50, 
+                coding_weight_factor = 0.50)
 
 set.seed(1122)
-documentation_logodds_taxtrue_099095_seed1122 <- densify_steps(original_data = wals, max_steps = max_steps, variability_threshold = variability_threshold, mean_type = "log_odds", taxonomy = T, taxonomy_matrix = taxonomy_matrix, tax_weight_factor = 0.99, coding_weight_factor = 0.95)
+documentation_logodds_taxtrue_099095_seed1122 <-
+    densify_steps(original_data = wals, 
+                max_steps = max_steps, 
+                variability_threshold = variability_threshold,
+                mean_type = "log_odds",
+                taxonomy = T,
+                taxonomy_matrix = taxonomy_matrix, 
+                tax_weight_factor = 0.99, 
+                coding_weight_factor = 0.95)
 
 set.seed(2211)
-documentation_logodds_taxtrue_095099_seed2211 <- densify_steps(original_data = wals, max_steps = max_steps, variability_threshold = variability_threshold, mean_type = "log_odds", taxonomy = T, taxonomy_matrix = taxonomy_matrix, tax_weight_factor = 0.95, coding_weight_factor = 0.99)
+documentation_logodds_taxtrue_095099_seed2211 <-
+    densify_steps(original_data = wals, 
+                max_steps = max_steps, 
+                variability_threshold = variability_threshold,
+                mean_type = "log_odds",
+                taxonomy = T,
+                taxonomy_matrix = taxonomy_matrix, 
+                tax_weight_factor = 0.95, 
+                coding_weight_factor = 0.99)
 
 set.seed(1133)
-documentation_logodds_taxtrue_099090_seed1133 <- densify_steps(original_data = wals, max_steps = max_steps, variability_threshold = variability_threshold, mean_type = "log_odds", taxonomy = T, taxonomy_matrix = taxonomy_matrix, tax_weight_factor = 0.99, coding_weight_factor = 0.90)
+documentation_logodds_taxtrue_099090_seed1133 <- 
+    densify_steps(original_data = wals, 
+                max_steps = max_steps, 
+                variability_threshold = variability_threshold,
+                mean_type = "log_odds",
+                taxonomy = T,
+                taxonomy_matrix = taxonomy_matrix, 
+                tax_weight_factor = 0.99, 
+                coding_weight_factor = 0.90)
 
 set.seed(3311)
-documentation_logodds_taxtrue_090099_seed3311 <- densify_steps(original_data = wals, max_steps = max_steps, variability_threshold = variability_threshold, mean_type = "log_odds", taxonomy = T, taxonomy_matrix = taxonomy_matrix, tax_weight_factor = 0.90, coding_weight_factor = 0.99)
+documentation_logodds_taxtrue_090099_seed3311 <- 
+    densify_steps(original_data = wals, 
+                max_steps = max_steps, 
+                variability_threshold = variability_threshold,
+                mean_type = "log_odds",
+                taxonomy = T,
+                taxonomy_matrix = taxonomy_matrix, 
+                tax_weight_factor = 0.90, 
+                coding_weight_factor = 0.99)
 
 set.seed(9999)
-documentation_logodds_taxfalse_099_seed9999 <- densify_steps(original_data = wals, max_steps = max_steps, variability_threshold = variability_threshold, mean_type = "log_odds", taxonomy = F, taxonomy_matrix = taxonomy_matrix, coding_weight_factor = 0.99)
+documentation_logodds_taxfalse_099_seed9999 <- 
+  densify_steps(original_data = wals, 
+                max_steps = max_steps, 
+                variability_threshold = variability_threshold,
+                mean_type = "log_odds", 
+                taxonomy = F, 
+                taxonomy_matrix = taxonomy_matrix, 
+                coding_weight_factor = 0.99)
 
 set.seed(8888)
-documentation_logodds_taxfalse_095_seed8888 <- densify_steps(original_data = wals, max_steps = max_steps, variability_threshold = variability_threshold, mean_type = "log_odds", taxonomy = F, taxonomy_matrix = taxonomy_matrix, coding_weight_factor = 0.95)
+documentation_logodds_taxfalse_095_seed8888 <- 
+    densify_steps(original_data = wals, 
+                max_steps = max_steps, 
+                variability_threshold = variability_threshold,
+                mean_type = "log_odds", 
+                taxonomy = F, 
+                taxonomy_matrix = taxonomy_matrix, 
+                coding_weight_factor = 0.95)
 
 set.seed(7777)
-documentation_logodds_taxfalse_090_seed7777 <- densify_steps(original_data = wals, max_steps = max_steps, variability_threshold = variability_threshold, mean_type = "log_odds", taxonomy = F, taxonomy_matrix = taxonomy_matrix, coding_weight_factor = 0.90)
-
+documentation_logodds_taxfalse_090_seed7777 <- 
+      densify_steps(original_data = wals, 
+                max_steps = max_steps, 
+                variability_threshold = variability_threshold,
+                mean_type = "log_odds", 
+                taxonomy = F, 
+                taxonomy_matrix = taxonomy_matrix, 
+                coding_weight_factor = 0.90)
 set.seed(6666)
-documentation_logodds_taxfalse_050_seed6666 <- densify_steps(original_data = wals, max_steps = max_steps, variability_threshold = variability_threshold, mean_type = "log_odds", taxonomy = F, taxonomy_matrix = taxonomy_matrix, coding_weight_factor = 0.50)
+documentation_logodds_taxfalse_050_seed6666 <- 
+      densify_steps(original_data = wals, 
+                max_steps = max_steps, 
+                variability_threshold = variability_threshold,
+                mean_type = "log_odds", 
+                taxonomy = F, 
+                taxonomy_matrix = taxonomy_matrix, 
+                coding_weight_factor = 0.50)
 ```
 
 ```{r densify_steps read in documentations, eval = TRUE, echo = FALSE}
@@ -178,128 +284,174 @@ documentation_logodds_taxfalse_050_seed6666 <- read.csv("vignette_documentations
 
 ## High-level description of densify_steps
 
-Based on the given sparsely encoded data frame, `densify_steps` defines an encoding matrix of the same dimensions, containing zeroes for NAs and ones elsewhere.
-Using this encoding matrix, it identifies the row and/or column with the lowest quality score given user-specified parameters (randomly sampling one row or column if there are ties), removes it, and re-establishes the least important row/and or column in the resulting sub-matrix.
-To determine that of a row (language), a mean measure taking into account the absolute and weighted row coding densities as well as the contribution of a specific row to the taxonomic diversity of the sample, if specified.
-To determine the quality of a column (variable) on the other hand, only the weighted column coding density is computed.
-The asymmetry of ways to compute row and column quality scores arises because a) only rows can have taxonomic structure and b) the focus of densification resides chiefly on pruning away taxa/observations rather than variables in most research applications (given that the former are usually substantially more numerous), and including absolute coding densities in the row quality score chiefly has the effect of promoting the penalization of scarcely-coded rows in the matrix.
-Because the removal of a specific row can result in a column ceasing to display sufficient variability across rows, the algorithm assesses whether any variables have become uninformative according to a user-defined threshold after each row removal, and removes any such column(s) alongside the row in the same iteration.
-Conversely, the removal of a specific column can result in a row no longer exhibiting any data points, such that the algorithm assesses whether any rows have become empty after each column removal, and removes any such row(s) alongside the column in the same iteration.
-The described procedure consisting of identifying row(s) and/or column(s) to be removed is repeated until the matrix is empty.
-The output of the function is a table (data frame) logging the characteristics of the sub-matrix resulting from each iteration.
+Based on the given sparsely encoded data frame, `densify_steps` defines an encoding matrix of the same dimensions, containing zeroes for NAs and ones elsewhere. 
+
+Using this encoding matrix, it identifies the row and/or column with the lowest quality score given user-specified parameters (randomly sampling one row or column if there are ties), removes it, and re-establishes the least important row/and or column in the resulting sub-matrix. 
+
+To determine that of a row (language), a mean measure taking into account the absolute and weighted row coding densities as well as the contribution of a specific row to the taxonomic diversity of the sample, if specified. To determine the quality of a column (variable) on the other hand, only the weighted column coding density is computed. 
+
+The asymmetry of ways to compute row and column quality scores arises because a) only rows can have taxonomic structure and b) the focus of densification resides chiefly on pruning away taxa/observations rather than variables in most research applications (given that the former are usually substantially more numerous), and including absolute coding densities in the row quality score chiefly has the effect of promoting the penalization of scarcely-coded rows in the matrix. 
+
+Because the removal of a specific row can result in a column ceasing to display sufficient variability across rows, the algorithm assesses whether any variables have become uninformative according to a user-defined threshold after each row removal, and removes any such column(s) alongside the row in the same iteration. Conversely, the removal of a specific column can result in a row no longer exhibiting any data points, such that the algorithm assesses whether any rows have become empty after each column removal, and removes any such row(s) alongside the column in the same iteration. 
+
+The described procedure consisting of identifying row(s) and/or column(s) to be removed is repeated until the matrix is empty. The output of the function is a table (data frame) logging the characteristics of the sub-matrix resulting from each iteration.
 
 ## The parameters for densify_steps
 
 ### Introducing all parameters
 
-This section describes and discusses the parameters available to fine-tune the densification process.
-`densify_steps` takes the following mandatory arguments:
+This section describes and discusses the parameters available to fine-tune the densification process. `densify_steps` takes the following mandatory arguments:
 
--   original_data: The data frame to be pruned, in the format described above. The default data frame used is WALS.
--   max_steps: An integer specifying the maximum number of iterations performed. We recommend setting max_steps to the maximum possible number of iterations conceivable for a given input matrix (i.e. nrow(original_data)+ncol(original_data)-2). The default number of iterations is set to 1.
--   variability_threshold: An integer specifying how many taxa the second-most-frequent variable state of any variable must contain for the variable to be maintained in the matrix. The default set to 1.
--   taxonomy: A logical parameter denoting whether the taxonomic structure of rows shall be taken into account in the pruning process or not. The default setting is `TRUE`
--   mean_type: This parameter specifies how the measure denoting row and column quality is computed. It can be one of the following three mean-types: "arithmetic", "geometric", "log_odds". See below for more details. The default setting is "log_odds".
+-   `original_data`: The data frame to be pruned, in the format described above. The default data frame used is WALS.
+-   `max_steps`: An integer specifying the maximum number of iterations performed. We recommend setting max_steps to the maximum possible number of iterations conceivable for a given input matrix (i.e. `nrow(original_data)+ncol(original_data)-2`). The default number of iterations is set to `1`.
+-   variability_threshold: An integer specifying how many taxa the second-most-frequent variable state of any variable must contain for the variable to be maintained in the matrix. The default set to `1`.
+-   `taxonomy`: A logical parameter denoting whether the taxonomic structure of rows shall be taken into account in the pruning process or not. The default setting is `TRUE`
+-   `mean_type`: This parameter specifies how the measure denoting row quality is computed. It can be one of the following three mean-types: `arithmetic`, `geometric`, `log_odds`. See below for more details. The default setting is `log_odds`.
 
-The following parameters are conditionally mandatory.
-\* taxonomy_matrix: The taxonomy matrix encompassing all taxa represented in original_data, in the format described above.
-If the parameter taxonomy == `TRUE`, it is mandatory.
-Otherwise, it is optional.
-The default setting is NULL.
-\* tax_weight_factor: This parameter specifies the weight factor attributed to contribution to taxonomic diversity in the computation of the log_odds mean of rows.
-It must lie between 0 and 1 (excluding these values) and is mandatory if mean_type == `log_odds` and if taxonomy == `TRUE`.
-Otherwise, it is undefined.
-The default value is 0.99.
-\* coding_weight_factor: This parameter specifies the weight factor attributed to absolute and weighted coding densities in the computation of the log_odds mean.
-It must lie between 0 and 1 (excluding these values) and is mandatory if mean_type == `log_odds`.
-Otherwise, it is undefined.
-The default value is 0.99.
+The following parameters are conditionally mandatory:
+
+-  `taxonomy_matrix`: The taxonomy matrix encompassing all taxa represented in original_data, in the format described above. If the parameter `taxonomy == TRUE`, it is mandatory. Otherwise, it is optional. The default setting is `NULL`. 
+-  `tax_weight_factor`: This parameter specifies the weight factor attributed to contribution to taxonomic diversity in the computation of the log_odds mean of rows. It must lie between 0 and 1 (excluding these values) and is mandatory if `mean_type == "log_odds"` and if `taxonomy == TRUE`. Otherwise, it is undefined. The default value is `0.99`. 
+-  `coding_weight_factor`: This parameter specifies the weight factor attributed to absolute and weighted coding densities in the computation of the log_odds mean. It must lie between 0 and 1 (excluding these values) and is mandatory if `mean_type == "log_odds"`. Otherwise, it is undefined. The default value is `0.99`.
 
 While it is possible to run `densify_steps` with several parameter settings on the same input data frame, we strongly recommend motivating parameter settings with the desired characteristics of the output data frame (e.g. how strongly should taxonomic diversity be weighted in relation to coding density of rows?) in mind.
 
 ### Parameter variability_threshold
 
-While it is perfectly conceivable that a feature encoded in a database displays no variability whatsoever among the coded taxa/observations (variability_threshold = 0), such features are uninteresting for most analyses.
-Setting the parameter variability_threshold to 1 (the default value) ensures that such features are immediately removed in the pruning process.
-For certain comparative analyses, it may be reasonable to set the threshold to a higher integer than 1, because such settings ensure that each variable allows to form at least two groups of the specified number or more taxa/observations.
+While it is conceivable that a feature encoded in a database displays no variability whatsoever among the coded taxa/observations (`variability_threshold = 0`), such features are uninteresting for most analyses. 
+
+Setting the parameter variability_threshold to `1` (the default value) ensures that such features are immediately removed in the pruning process. 
+
+For certain comparative analyses, it may be reasonable to set the threshold to a higher integer than `1`, because such settings ensure that each variable allows to form at least two groups of the specified number or more taxa/observations.
 
 ### Parameters taxonomy and taxonomy_matrix
 
-The logical parameter taxonomy denotes whether taxonomic structure among the entities represented in rows should contribute to determining the quality score of rows in each iteration.
-It is `FALSE` by default because it requires a taxonomy matrix, which is not always applicable or available.
-A taxonomy matrix must be provided whenever the parameter taxonomy is `TRUE`, but can also be provided when it is false: in the latter case, the Shannon entropy of the highest taxonomic level is computed and logged for each sub-matrix, such that even when disconsidering taxonomic diversity for the pruning process, it can be considered for identifying the optimal number of iterations using `densify_prune` (see below).
+The logical parameter taxonomy denotes whether taxonomic structure among the entities represented in rows should contribute to determining the quality score of rows in each iteration. It is `FALSE` by default because it requires a taxonomy matrix, which is not always applicable or available. 
+
+A taxonomy matrix must be provided whenever the parameter taxonomy is `TRUE`, but can also be provided when it is `FALSE`: in the latter case, the Shannon entropy of the highest taxonomic level is computed and logged for each sub-matrix, such that even when disconsidering taxonomic diversity for the pruning process, it can be considered for identifying the optimal number of iterations using `densify_prune` (see below).
 
 ### Parameters mean_type, tax_weight_factor and coding_weight_factor
 
-`densify_steps` offers three methods of computing the mean of row-wise absolute and weighted coding densities as well as contribution to taxonomic diversity of the sample where applicable: Possible values are "arithmetic", "geometric", or "log_odds".
-The arithmetic and geometric means operate as conventionally understood in mathematics: the arithmetic mean utilizes the `mean` function, while the geometric mean involves the n-th root of the product.
-The log odds mean is computed by taking the logit transform of all inputs, then taking the mean, the transforming back, in symbols:
+`densify_steps` offers three methods of computing the mean of row-wise absolute and weighted coding densities as well as contribution to taxonomic diversity of the sample where applicable: Possible values are `arithmetic`, `geometric`, or `log_odds`. 
+
+The arithmetic and geometric means operate as conventionally understood in mathematics: the arithmetic mean utilizes the `mean` function, while the geometric mean involves the n-th root of the product. The log odds mean is computed by taking the logit transform of all inputs, then taking the mean, the transforming back, in symbols:
+
 ```{r, eval=FALSE}
 log_odds_mean = invlogit(mean(logit(inputs)))
 ```
+
 Because `logit` is equivalent to `qlogis`, and `invlogit` is equivalent to `plogis`, we instead compute:
+
 ```{r, eval=FALSE}
 log_odds_mean = plogis(mean(qlogis(inputs)))
 ```
-Both `qlogis` and `plogis` deal favorably with edge cases. Specifically, qlogis(0) = -Inf, qlogis(1) = 1, plogis(-Inf) = 0, plogis(Inf) = 1.
-However, to avoid calculations like -Inf+Inf = NaN, we prevent inputs from being 1 by multiplying them with tax_weight_factor or coding_weight_factor, which are numbers strictly between 0 and 1. 
+
+Both `qlogis` and `plogis` deal favorably with edge cases. Specifically, qlogis(0) = -Inf, qlogis(1) = 1, plogis(-Inf) = 0, plogis(Inf) = 1. However, to avoid calculations like -Inf+Inf = NaN, we prevent inputs from being 1 by multiplying them with tax_weight_factor or coding_weight_factor, which are numbers strictly between 0 and 1.
+
 
 # Determining the optimal number of iterations using densify_score
 
-Given the pruning documentation output, `densify_score` will compute a quality score for the sub-matrix resulting from each iteration via user-defined exponents.
-The function will produce a plot of all quality scores and identify the iteration at which the score is maximized (selecting the earlier iteration in the unlikely case of ties).
+Given the pruning documentation output, `densify_score` will compute a quality score for the sub-matrix resulting from each iteration via user-defined exponents. The function will produce a plot of all quality scores and identify the iteration at which the score is maximized (selecting the earlier iteration in the unlikely case of ties).
 
 The quality score is the product of five values, each modifiable by an exponent: (1) the proportion of coded data in the matrix overall, (2) the absolute number of non-missing data points in the matrix, (3) the proportion of columns for which the least well-coded row is coded, (4) the proportion of rows for which the least well-coded column is coded, and (5) the taxonomic diversity of the taxa provided in rows (computed as the Shannon entropy of the highest taxonomic level of all taxa present; applicable only if a taxonomy matrix is provided).
 
 Thus, the following parameters are available to modulate the weight of each of these values to identify the optimal sub-matrix:
 
--   exponent_prop_coded_data: By increasing this parameter, the weight of the proportion of coded data in the overall matrix is increased for the quality score. Thus, denser matrices are given higher quality scores, all other things equal. This parameter is obligatory and set to 1 by default.
--   exponent_available_data_points: By increasing this parameter, the weight of the absolute number of data points present in the matrix is increased for the quality score. Thus, larger matrices (with more rows and columns) are given higher quality scores, all other things equal. This parameter is obligatory and set to 1 by default.
--   exponent_lowest_taxon_coding_score: By increasing this parameter, the weight of the coding density of the most sparsely-coded row in the matrix is increased for the quality score. Thus, matrices including rows with low coding densities are given lower quality scores, all other things equal. This parameter is optional, with no default value.
--   exponent_lowest_variable_coding_score: By increasing this parameter, the weight of the coding density of the most sparsely-coded column in the matrix is increased for the quality score. Thus, matrices including columns with low coding densities are given lower quality scores, all other things equal. This parameter is optional, with no default value.
--   exponent_taxonomic_diversity: By increasing this parameter, the weight of the taxonomic diversity of included taxa in the matrix is increased for the quality score. Thus, matrices with higher taxonomic diversities are given higher quality scores, all other things equal. This parameter is optional and only conditionally applicable (if a taxonomy matrix is provided), with no default value.
+-   `exponent_prop_coded_data`: By increasing this parameter, the weight of the proportion of coded data in the overall matrix is increased for the quality score. Thus, denser matrices are given higher quality scores, all other things equal. This parameter is obligatory and set to `1` by default.
+-   `exponent_available_data_points`: By increasing this parameter, the weight of the absolute number of data points present in the matrix is increased for the quality score. Thus, larger matrices (with more rows and columns) are given higher quality scores, all other things equal. This parameter is obligatory and set to `1` by default.
+-   `exponent_lowest_taxon_coding_score`: By increasing this parameter, the weight of the coding density of the most sparsely-coded row in the matrix is increased for the quality score. Thus, matrices including rows with low coding densities are given lower quality scores, all other things equal. This parameter is optional, with no default value.
+-   `exponent_lowest_variable_coding_score`: By increasing this parameter, the weight of the coding density of the most sparsely-coded column in the matrix is increased for the quality score. Thus, matrices including columns with low coding densities are given lower quality scores, all other things equal. This parameter is optional, with no default value.
+-   `exponent_taxonomic_diversity`: By increasing this parameter, the weight of the taxonomic diversity of included taxa in the matrix is increased for the quality score. Thus, matrices with higher taxonomic diversities are given higher quality scores, all other things equal. This parameter is optional and only conditionally applicable (if a taxonomy matrix is provided), with no default value.
 
-Each defined exponent must be a positive number.
-Setting an exponent to 0 corresponds to disregarding the corresponding value in the computation of the quality score.
-The exponents' magnitude in relation to one another translates into the relative weight given to each corresponding value in the computation of quality scores, i.e. increasing an exponent by factor 2 results in the corresponding value weighing twice as much, all other things equal.
+Each defined exponent must be a positive number. Setting an exponent to `0` corresponds to disregarding the corresponding value in the computation of the quality score. The exponents' magnitude in relation to one another translates into the relative weight given to each corresponding value in the computation of quality scores, i.e. increasing an exponent by factor 2 results in the corresponding value weighing twice as much, all other things equal.
 
-As such, in the example settings below, the following are equivalent: (1), (2) and (3); (4) and (5).
-1.
-exponent_prop_coded_data = 1, exponent_available_data_points = 1, exponent_lowest_taxon_coding_score = 0, exponent_lowest_variable_coding_score = 0, exponent_taxonomic_diversity = 0 2.
-exponent_prop_coded_data = 1, exponent_available_data_points = 1 3.
-exponent_prop_coded_data = 2, exponent_available_data_points = 2 4.
-exponent_prop_coded_data = 0.5, exponent_available_data_points = 1 5.
-exponent_prop_coded_data = 1, exponent_available_data_points = 2
+As such, in the example settings below, the following are equivalent: (1), (2) and (3); (4) and (5). 
 
-Users can run `densify_score` multiple times on the same documentation log using varying exponents to fine-tune the settings according to their needs.
-We recommend the choice of exponents to be motivated by characteristics of the input data frame as well as the desired characteristics of the output data frame in mind.
-For instance, if coding sparsity of the input matrix mainly manifests itself in rows but not columns, and an output matrix with low row coding density is undesirable, this should be expressed by including the parameter `exponent_lowest_taxon_coding_score` (e.g. `exponent_lowest_taxon_coding_score = 1`) and possibly excluding the parameter `exponent_lowest_variable_coding_score`.
-Other users may have an extremely sparse matrix and merely seek to strongly densify it, irrespective of taxonomic structure in rows.
-They would seek to include `exponent_lowest_taxon_coding_score`, `exponent_lowest_variable_coding_score`, possibly even increasing `exponent_prop_coded_data` relative to `exponent_available_data_points`.
-In another example, coding densities may be high and roughly even across rows and columns, and the motivation for pruning resides mainly in selecting a taxonomically diverse sub-sample for an analysis.
-In such a case, the parameter `exponent_taxonomic_diversity` would be included, while the parameters `exponent_lowest_taxon_coding_score` and `exponent_lowest_variable_coding_score` might be omitted, and the user may even consider to lower the parameter `exponent_available_data_points` relative to `exponent_prop_coded_data`.
+1.  exponent_prop_coded_data = 1, exponent_available_data_points = 1, exponent_lowest_taxon_coding_score = 0, exponent_lowest_variable_coding_score = 0, exponent_taxonomic_diversity = 0 
+2.  exponent_prop_coded_data = 1, exponent_available_data_points = 1 
+3.  exponent_prop_coded_data = 2, exponent_available_data_points = 2 
+4.  exponent_prop_coded_data = 0.5, exponent_available_data_points = 1 
+5.  exponent_prop_coded_data = 1, exponent_available_data_points = 2
 
-To appreciate the effect of the parameters of `densify_score`, compare the following quality score plots and optimum iterations retrieved using the following parameter settings on the same documentation file (obtained from an implementation of `densify_steps` using the settings mean = "log_odds", taxonomy = TRUE, tax_weight_factor = 0.99 and coding_weight_factor = 0.99):
+Users can run `densify_score` multiple times on the same documentation log using varying exponents to fine-tune the settings according to their needs. We recommend the choice of exponents to be motivated by characteristics of the input data frame as well as the desired characteristics of the output data frame in mind. 
 
-```{r densify_score, ones and zeros, echo = TRUE}
-optimum11111 <- densify_score(documentation_logodds_taxtrue_099099_seed1111, exponent_prop_coded_data = 1, exponent_available_data_points = 1, exponent_lowest_taxon_coding_score = 1, exponent_lowest_variable_coding_score = 1, exponent_taxonomic_diversity = 1)
-optimum11000 <- densify_score(documentation_logodds_taxtrue_099099_seed1111, exponent_prop_coded_data = 1, exponent_available_data_points = 1, exponent_lowest_taxon_coding_score = 0, exponent_lowest_variable_coding_score = 0, exponent_taxonomic_diversity = 0)
-optimum11001 <- densify_score(documentation_logodds_taxtrue_099099_seed1111, exponent_prop_coded_data = 1, exponent_available_data_points = 1, exponent_lowest_taxon_coding_score = 0, exponent_lowest_variable_coding_score = 0, exponent_taxonomic_diversity = 1)
-optimum11101 <- densify_score(documentation_logodds_taxtrue_099099_seed1111, exponent_prop_coded_data = 1, exponent_available_data_points = 1, exponent_lowest_taxon_coding_score = 1, exponent_lowest_variable_coding_score = 0, exponent_taxonomic_diversity = 1)
+For instance, if coding sparsity of the input matrix mainly manifests itself in rows but not columns, and an output matrix with low row coding density is undesirable, this should be expressed by including the parameter `exponent_lowest_taxon_coding_score` (e.g. `exponent_lowest_taxon_coding_score = 1`) and possibly excluding the parameter `exponent_lowest_variable_coding_score`. 
 
+Other users may have an extremely sparse matrix and merely seek to strongly densify it, irrespective of taxonomic structure in rows. They would seek to include `exponent_lowest_taxon_coding_score`, `exponent_lowest_variable_coding_score`, possibly even increasing `exponent_prop_coded_data` relative to `exponent_available_data_points`. 
+
+In another example, coding densities may be high and roughly even across rows and columns, and the motivation for pruning resides mainly in selecting a taxonomically diverse sub-sample for an analysis. In such a case, the parameter `exponent_taxonomic_diversity` would be included, while the parameters `exponent_lowest_taxon_coding_score` and `exponent_lowest_variable_coding_score` might be omitted, and the user may even consider to lower the parameter `exponent_available_data_points` relative to `exponent_prop_coded_data`.
+
+To appreciate the effect of the parameters of `densify_score`, compare the following quality score plots and optimum iterations retrieved using the following parameter settings on the same documentation file (obtained from an implementation of `densify_steps` using the settings `mean = "log_odds", taxonomy = TRUE, tax_weight_factor = 0.99, coding_weight_factor = 0.99`):
+
+```{r densify_score 10, ones and zeros, echo = TRUE,  fig.show="hold", out.width="40%", fig.width=4, fig.height=2.5}
+optimum11111 <- densify_score(documentation_logodds_taxtrue_099099_seed1111, 
+                              exponent_prop_coded_data = 1, 
+                              exponent_available_data_points = 1, 
+                              exponent_lowest_taxon_coding_score = 1, 
+                              exponent_lowest_variable_coding_score = 1, 
+                              exponent_taxonomic_diversity = 1)
+
+optimum11000 <- densify_score(documentation_logodds_taxtrue_099099_seed1111, 
+                              exponent_prop_coded_data = 1, 
+                              exponent_available_data_points = 1, 
+                              exponent_lowest_taxon_coding_score = 0, 
+                              exponent_lowest_variable_coding_score = 0, 
+                              exponent_taxonomic_diversity = 0)
+
+optimum11001 <- densify_score(documentation_logodds_taxtrue_099099_seed1111, 
+                              exponent_prop_coded_data = 1,
+                              exponent_available_data_points = 1, 
+                              exponent_lowest_taxon_coding_score = 0, 
+                              exponent_lowest_variable_coding_score = 0, 
+                              exponent_taxonomic_diversity = 1)
+
+optimum11101 <- densify_score(documentation_logodds_taxtrue_099099_seed1111,
+                              exponent_prop_coded_data = 1, 
+                              exponent_available_data_points = 1, 
+                              exponent_lowest_taxon_coding_score = 1, 
+                              exponent_lowest_variable_coding_score = 0, 
+                              exponent_taxonomic_diversity = 1)
+```
+
+```{r densify_score 12 comparison, echo = TRUE}
+# compare the optima (number of iterations)
 c(optimum11111, optimum11000, optimum11001, optimum11101)
 ```
 
-```{r densify_score, twos and ones, echo = FALSE}
-optimum12000 <- densify_score(documentation_logodds_taxtrue_099099_seed1111, exponent_prop_coded_data = 1, exponent_available_data_points = 2, exponent_lowest_taxon_coding_score = 0, exponent_lowest_variable_coding_score = 0, exponent_taxonomic_diversity = 0)
-optimum13000 <- densify_score(documentation_logodds_taxtrue_099099_seed1111, exponent_prop_coded_data = 1, exponent_available_data_points = 3, exponent_lowest_taxon_coding_score = 0, exponent_lowest_variable_coding_score = 0, exponent_taxonomic_diversity = 0)
-optimum21000 <- densify_score(documentation_logodds_taxtrue_099099_seed1111, exponent_prop_coded_data = 1, exponent_available_data_points = 3, exponent_lowest_taxon_coding_score = 0, exponent_lowest_variable_coding_score = 0, exponent_taxonomic_diversity = 0)
-optimum31000 <- densify_score(documentation_logodds_taxtrue_099099_seed1111, exponent_prop_coded_data = 1, exponent_available_data_points = 3, exponent_lowest_taxon_coding_score = 0, exponent_lowest_variable_coding_score = 0, exponent_taxonomic_diversity = 0)
+```{r densify_score 21, twos and ones, echo = FALSE, fig.show='hide'}
+optimum12000 <- densify_score(documentation_logodds_taxtrue_099099_seed1111, 
+                              exponent_prop_coded_data = 1,
+                              exponent_available_data_points = 2,
+                              exponent_lowest_taxon_coding_score = 0, 
+                              exponent_lowest_variable_coding_score = 0, 
+                              exponent_taxonomic_diversity = 0)
+
+optimum13000 <- densify_score(documentation_logodds_taxtrue_099099_seed1111,
+                              exponent_prop_coded_data = 1,
+                              exponent_available_data_points = 3, 
+                              exponent_lowest_taxon_coding_score = 0, 
+                              exponent_lowest_variable_coding_score = 0, 
+                              exponent_taxonomic_diversity = 0)
+
+optimum21000 <- densify_score(documentation_logodds_taxtrue_099099_seed1111,
+                              exponent_prop_coded_data = 2, 
+                              exponent_available_data_points = 1, 
+                              exponent_lowest_taxon_coding_score = 0, 
+                              exponent_lowest_variable_coding_score = 0, 
+                              exponent_taxonomic_diversity = 0)
+
+optimum31000 <- densify_score(documentation_logodds_taxtrue_099099_seed1111,
+                              exponent_prop_coded_data = 3, 
+                              exponent_available_data_points = 1,
+                              exponent_lowest_taxon_coding_score = 0, 
+                              exponent_lowest_variable_coding_score = 0, 
+                              exponent_taxonomic_diversity = 0)
 ```
 
 Compare also how the optimum changes when varying the relative weight of exponents:
 
-```{r densify_score, echo = TRUE}
+```{r densify_score comparison, echo = TRUE}
+# compare the optima (number of iterations)
 c(optimum11000, optimum12000, optimum13000, optimum21000, optimum31000)
 ```
 
@@ -308,48 +460,87 @@ c(optimum11000, optimum12000, optimum13000, optimum21000, optimum31000)
 The function `densify_prune` subsets the original data frame to the pruned data frame, given the output of `densify_steps` and `densify_score`.
 
 ```{r densify_prune, echo = TRUE}
-pruned_wals_exponents11111 <- densify_prune(original_data = wals, documentation = documentation_logodds_taxtrue_099099_seed1111, optimum = optimum11111)
+pruned_wals_exponents11111 <- 
+  densify_prune(original_data = wals, 
+                documentation = documentation_logodds_taxtrue_099099_seed1111, 
+                optimum = optimum11111)
 
-pruned_wals_exponents11001 <- densify_prune(original_data = wals, documentation = documentation_logodds_taxtrue_099099_seed1111, optimum = optimum11001)
+pruned_wals_exponents11001 <- 
+  densify_prune(original_data = wals, 
+                documentation = documentation_logodds_taxtrue_099099_seed1111, 
+                optimum = optimum11001)
 ```
 
 Compare the resulting data frames with the initial data frame.
 
-The densified matrix resulting from setting all exponents to 1 encompasses 131 languages in 53 families coded for 131 features at an overall coding density of 85.8%
-
-```{r densify_prune comparison, echo = TRUE}
+The densified matrix resulting from setting all exponents to 1 encompasses 132 languages in 54 families coded for 97 features at an overall coding density of 85.6%.
+```{r densify_prune comparison 1, echo = TRUE}
 # number of languages, families and features, overall coding density
 nrow(pruned_wals_exponents11111) 
-taxonomy_matrix %>% filter(id %in% rownames(pruned_wals_exponents11111)) %>% select(level1) %>% unique() %>% nrow()
+taxonomy_matrix %>% 
+  filter(id %in% rownames(pruned_wals_exponents11111)) %>% 
+  select(level1) %>% unique() %>% nrow()
 ncol(pruned_wals_exponents11111)
-sum(!is.na(pruned_wals_exponents11111))/(ncol(pruned_wals_exponents11111)*nrow(pruned_wals_exponents11111))
-
-hist(apply(pruned_wals_exponents11111, 1, function(x) (length(na.omit(x))))/ncol(pruned_wals_exponents11111), col = "cadetblue2",xlab = "coding density per language", ylab = "frequency", main = "Coding density per language in pruned WALS (all exponents = 1)")
-
-hist(apply(pruned_wals_exponents11111, 2, function(x) (length(na.omit(x))))/nrow(pruned_wals_exponents11111), col = "forestgreen",xlab = "coding density per variable", ylab = "frequency", main = "Coding density per variable in pruned WALS (all exponents = 1)")
+sum(!is.na(pruned_wals_exponents11111))/
+  (ncol(pruned_wals_exponents11111)*nrow(pruned_wals_exponents11111))
 ```
 
-The densified matrix resulting from setting all exponents but `exponent_lowest_taxon_coding_score` and `exponent_lowest_variable_coding_score` to 1 encompasses 1436 languages in 236 families coded for 181 features at an overall coding density of 26.4%.
+Note how both language and variable coding densities have become very high, and how the inclusion of taxonomic diversity for both the pruning process and `densify_prune` result in the inclusion of a number of languages that are not densely coded, but increase taxonomic diversity.
 
-```{r densify_prune comparison, echo = TRUE}
+```{r densify_prune plots, echo = TRUE, fig.show="hold", out.width="40%", fig.width=5, fig.height=3}
+par(mar = c(4, 4, .1, .1))
+
+ggplot(data.frame(density=apply(pruned_wals_exponents11111, 1, function(x) (length(na.omit(x))))/ncol(pruned_wals_exponents11111)), aes(x=density))+
+  geom_histogram(color="black", fill="cadetblue2", bins=20)+
+  theme_bw()+
+  labs(title="Pruned WALS, log_odds, 0.99, 0.99, all exponents = 1", 
+       x="coding density per language",
+       y="frequency")
+
+ggplot(data.frame(density=apply(pruned_wals_exponents11111, 2, function(x) (length(na.omit(x))))/nrow(pruned_wals_exponents11111)), aes(x=density))+
+  geom_histogram(color="black", fill="forestgreen", bins=20)+
+  theme_bw()+
+  labs(title="Pruned WALS, log_odds, 0.99, 0.99, all exponents = 1",
+       x="coding density per variable",
+       y="frequency")
+```
+
+The densified matrix resulting from setting all exponents but `exponent_lowest_taxon_coding_score` and `exponent_lowest_variable_coding_score` to `1` encompasses 1452 languages in 232 families coded for 181 features at an overall coding density of 26.2%.
+
+```{r densify_prune comparison 2, echo = TRUE}
 # number of languages, families and features, overall coding density
 nrow(pruned_wals_exponents11001) 
-taxonomy_matrix %>% filter(id %in% rownames(pruned_wals_exponents11001)) %>% select(level1) %>% unique() %>% nrow()
+taxonomy_matrix %>% 
+  filter(id %in% rownames(pruned_wals_exponents11001)) %>%
+  select(level1) %>% unique() %>% nrow()
 ncol(pruned_wals_exponents11001)
 sum(!is.na(pruned_wals_exponents11001))/(ncol(pruned_wals_exponents11001)*nrow(pruned_wals_exponents11001))
-
-hist(apply(pruned_wals_exponents11001, 1, function(x) (length(na.omit(x))))/ncol(pruned_wals_exponents11001), col = "cadetblue2",xlab = "coding density per language", ylab = "frequency", main = "Coding density per language in pruned WALS (exponents = 1, 1, 0, 0, 1)")
-
-hist(apply(pruned_wals_exponents11001, 2, function(x) (length(na.omit(x))))/nrow(pruned_wals_exponents11001), col = "forestgreen",xlab = "coding density per variable", ylab = "frequency", main = "Coding density per variable in pruned WALS (exponents = 1, 1, 0, 0, 1)")
 ```
+
+```{r densify_prune 2 plots, echo = TRUE, fig.show="hold", out.width="40%", fig.width=5, fig.height=3}
+par(mar = c(4, 4, .1, .1))
+
+ggplot(data.frame(density=apply(pruned_wals_exponents11001, 1, function(x) (length(na.omit(x))))/ncol(pruned_wals_exponents11001)), aes(x=density))+
+  geom_histogram(color="black", fill="cadetblue2", bins=20)+
+  theme_bw()+
+  labs(title="Pruned WALS, log_odds, 0.99, 0.99, exponents = c(1, 1, 0, 0, 1)", 
+       x="coding density per language",
+       y="frequency")
+
+ggplot(data.frame(density=apply(pruned_wals_exponents11001, 2, function(x) (length(na.omit(x))))/nrow(pruned_wals_exponents11001)), aes(x=density))+
+  geom_histogram(color="black", fill="forestgreen", bins=20)+
+  theme_bw()+
+  labs(title="Pruned WALS, log_odds, 0.99, 0.99, exponents = c(1, 1, 0, 0, 1)",
+       x="coding density per variable",
+       y="frequency")
+```
+
 
 # Comparing outputs using varying parameters
 
-To illustrate in more detail the effects of varying parameters in `densify_steps` and `densify_score`, we set 10 different exponent settings in `densify_score` for each of the 16 parameter settings for `densify_steps` and log for each of the resulting matrices the overall coding density of the matrix as well as the number of languages, the number of families and the number of variables maintained.
-Each of these values are compared to the values of the original data frame.
-The full log-file is stored as a separate file (varying_parameters.csv).
+To illustrate in more detail the effects of varying parameters in `densify_steps` and `densify_score`, we set 10 different exponent settings in `densify_score` for each of the 16 parameter settings for `densify_steps` and log for each of the resulting matrices the overall coding density of the matrix as well as the number of languages, the number of families and the number of variables maintained. Each of these values are compared to the values of the original data frame. The full log-file is stored as a separate file (varying_parameters.csv).
 
-```{r comparing outputs, echo = FALSE}
+```{r comparing outputs, echo = FALSE, eval = FALSE}
 documentation_files <- c("documentation_arithmetic_taxfalse_seed4321","documentation_arithmetic_taxtrue_seed1234","documentation_geometric_taxfalse_seed8765","documentation_geometric_taxtrue_seed5678","documentation_logodds_taxfalse_050_seed6666","documentation_logodds_taxfalse_090_seed7777","documentation_logodds_taxfalse_095_seed8888","documentation_logodds_taxfalse_099_seed9999","documentation_logodds_taxtrue_050050_seed4444","documentation_logodds_taxtrue_090090_seed3333","documentation_logodds_taxtrue_090099_seed3311","documentation_logodds_taxtrue_095095_seed2222","documentation_logodds_taxtrue_095099_seed2211","documentation_logodds_taxtrue_099090_seed1133","documentation_logodds_taxtrue_099095_seed1122","documentation_logodds_taxtrue_099099_seed1111")
 
 seeds <- c(4321,1234,8765,5678,6666,7777,8888,9999,4444,3333,3311,2222,2211,1133,1122,1111)
@@ -428,8 +619,15 @@ for (i in 1:length(documentation_files)){
 }
 
 write.csv(logfile,"varying_parameters.csv")
+```
 
-head(logfile, n=17)
+```{r read varying parameters, echo = FALSE}
+logfile <- read.csv("varying_parameters.csv") %>% select(-X)
+```
+
+
+```{r head, echo = TRUE}
+str(logfile)
 ```
 
 # References

@@ -16,6 +16,6 @@
 
 temp <- tempfile()
 download.file("https://cdstar.eva.mpg.de//bitstreams/EAEA0-B701-6328-C3E3-0/glottolog_languoid.csv.zip",temp)
-"glottolog_languoids" <- read.csv(unz(temp, "languoid.csv"))
+glottolog_languoids <- read.csv(unz(temp, "languoid.csv"))
 unlink(temp)
 rm(temp)

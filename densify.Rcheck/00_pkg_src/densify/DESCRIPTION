@@ -10,8 +10,9 @@ Imports: tidyverse, dplyr, vegan, vctrs, rlang, stats
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
+LazyData: true
 NeedsCompilation: no
-Packaged: 2023-09-05 14:40:40 UTC; Anna
+Packaged: 2023-09-06 06:51:28 UTC; Anna
 Author: Marc Lischka [aut, cre]
 Maintainer: Marc Lischka <marc.lischka@math.uzh.ch>
 Depends: R (>= 3.5.0)

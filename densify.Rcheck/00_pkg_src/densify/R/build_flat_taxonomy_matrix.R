@@ -22,6 +22,7 @@
 #' @param parent_id Vector of node parent ids (must be of same size and type as `id`)
 #'
 #' @return a data frame with one row per node id and as many columns as there are levels in the tree
+#' @export
 
 build_flat_taxonomy_matrix <- function(id, parent_id) {
   # TODO: argument checks

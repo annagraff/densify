@@ -49,4 +49,4 @@ rownames(wals) <- lgs
 
 rm(wals_codes, wals_parameters, wals_languages, wals_values, lgs)
 
-"wals" <- select(wals,-Glottocode)
+wals <- select(wals,-Glottocode)

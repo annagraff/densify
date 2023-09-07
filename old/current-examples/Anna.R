@@ -13,7 +13,7 @@ library(testthat)
 library(GetoptLong)
 library(vegan)
 
-# paper tests
+# generate data for package
 
 # Read language and value information from the ZIP file:
 wals_languages <- read.csv(unz("../old-data/wals_dataset.cldf.zip", "languages.csv"),
@@ -47,34 +47,51 @@ saveRDS(wals,file="../package_densify/data/wals.rda")
 glottolog_languoids <- readr::read_csv("../old-data/glottolog_languoid_v4.8/languoid.csv")
 saveRDS(glottolog_languoids,file="../package_densify/data/glottolog_languoids.rda")
 
+# paper tests
+wals <- readRDS("../package_densify/data/wals.rda")
+glottolog_languoids <- readRDS("../package_densify/data/glottolog_languoids.rda")
+
 
 wals[wals=="?"] <- NA
 wals[wals=="NA"] <- NA
 head(wals)
 
-
 # test F1
 taxonomy_matrix <- build_flat_taxonomy_matrix(id = glottolog_languoids$id, parent_id = glottolog_languoids$parent_id)
 head(taxonomy_matrix)
 
-tic()
 set.seed(2023)
 documentation <- densify_steps(original_data = wals, max_steps = nrow(wals)+ncol(wals), mean_type = "log_odds", taxonomy = TRUE, taxonomy_matrix = taxonomy_matrix, tax_weight_factor = 0.99, coding_weight_factor = 0.99)
 head(documentation)
-toc()
 
 exponent_prop_coded_data <- 1
 exponent_available_data_points <- 1
 exponent_lowest_taxon_coding_score <- 1
-exponent_lowest_variable_coding_score <- 0
+exponent_lowest_variable_coding_score <- 1
 exponent_taxonomic_diversity <- 1
 
-optimum <- densify_score(documentation = documentation, 
-                         exponent_prop_coded_data = exponent_prop_coded_data, 
-                         exponent_available_data_points = exponent_available_data_points, 
+optimum <- densify_score(documentation = documentation,
+                         exponent_prop_coded_data = exponent_prop_coded_data,
+                         exponent_available_data_points = exponent_available_data_points,
                          exponent_lowest_taxon_coding_score = exponent_lowest_taxon_coding_score,
                          exponent_lowest_variable_coding_score = exponent_lowest_variable_coding_score,
                          exponent_taxonomic_diversity = exponent_taxonomic_diversity)
+
+pruned_wals <- densify_prune(wals, documentation, optimum = optimum)
+
+
+#pruned_matrix <- original_data
+# ######### some plots
+hist(apply(wals, 1, function(x) (length(na.omit(x))))/ncol(wals), col = "cadetblue2",xlab = "coding density per language", ylab = "frequency", main = "Coding density per language in unpruned WALS")
+hist(apply(wals,2,function(x)(length(na.omit(x))))/nrow(wals),col = "cadetblue2",xlab="coding density per variable", ylab="frequency")
+#
+# proportion coded languages
+sum(!is.na(wals))/(ncol(wals)*nrow(wals))
+nrow(wals)
+register_pruned <- filter(taxonomy_matrix, id %in% rownames(wals))
+length(unique(register_pruned$level1))
+ncol(wals)
+
 
 
 
@@ -139,15 +156,14 @@ pruned_matrix <- densify_prune(original_data, d, optimum)
   # ######### some plots
   # hist(apply(pruned_matrix,1,function(x)(length(na.omit(x))))/ncol(pruned_matrix),col = "cadetblue2",xlab="coding density per language", ylab="frequency")
   # hist(apply(pruned_matrix,2,function(x)(length(na.omit(x))))/nrow(pruned_matrix),col = "cadetblue2",xlab="coding density per variable", ylab="frequency")
-  # 
+  #
   # proportion coded languages
   sum(!is.na(pruned_matrix))/(ncol(pruned_matrix)*nrow(pruned_matrix))
   nrow(pruned_matrix)
   register_pruned <- filter(taxonomy_matrix, id %in% rownames(pruned_matrix))
   length(unique(register_pruned$level1))
   ncol(pruned_matrix)
-  
+
 # write.csv(pruned_matrix,"original-220823-pruned-GBMO-11111.csv")
   # write.csv(pruned_matrix,"logical-220823-pruned-GBML-11111.csv")
   # write.csv(pruned_matrix,"statistical-220823-pruned-GBMS-11111.csv")
-  

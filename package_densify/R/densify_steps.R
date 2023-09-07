@@ -84,7 +84,7 @@ densify_steps <- function(original_data = wals, max_steps = 1, variability_thres
 
     # reorganise taxonomy_matrix: trim it to the taxa in the initial matrix in the corresponding order; reorganise it so that each tip is listed not just in "id" but also in the last listed level
     taxonomy_reorganised <- taxonomy_matrix %>% dplyr::filter(id %in% rownames(full_matrix))
-    taxonomy_reorganised <- taxonomy_reorganised[match(rownames(full_matrix),taxonomy_reorganised$id),]
+    taxonomy_reorganised <- as_tibble(taxonomy_reorganised[match(rownames(full_matrix),taxonomy_reorganised$id),])
     max_node_nr <- ncol(taxonomy_reorganised)-1
   }
 
