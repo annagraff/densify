@@ -65,7 +65,8 @@ While certain packages exist to generate sub-matrices from varying input matrice
 
 ## Preparing input
 
-`densify` requires the input data frame to be a data frame with taxon names as row names and variable names as column names. Any cells with empty entries, not applicable or question marks must be coded as NA. If matrix densification should consider taxonomic structure, a flat taxonomy must be provided, listing every taxon present in the initial data frame along with all the nodes connecting it to the root. Such a taxonomy can be generated with the `build_flat_taxonomy_matrix` function, if all nodes and tips are provided alongside each of their parent nodes. For generating a language taxonomy, glottolog can be used directly.
+`densify` requires the input data frame to be a data frame with taxon names as row names and variable names as column names. Any cells with empty entries, not applicable or question marks must be coded as NA. If matrix densification should consider taxonomic structure, a flat taxonomy must be provided, listing every taxon present in the initial data frame along with all the nodes connecting it to the root. Such a taxonomy can be generated with the `build_flat_taxonomy_matrix()` function, if all nodes and tips are provided alongside each of their parent nodes. For generating a language taxonomy, glottolog can be used directly.
+[function with ()]
 
 ``` r
 install.packages("densify")
@@ -105,6 +106,8 @@ set.seed(2023)
 documentation <- densify_steps(original_data = wals, max_steps = nrow(wals)+ncol(wals)-2, variability_threshold=3, mean_type = "log_odds", taxonomy = TRUE, taxonomy_matrix = taxonomy_matrix, tax_weight_factor = 0.99, coding_weight_factor = 0.99)
 head(documentation)
 ```
+[Line breaks]
+
 
 ## Retrieving the optimal number of iterations and producing the sub-matrix
 
@@ -118,13 +121,15 @@ exponent_lowest_variable_coding_score <-1
 exponent_taxonomic_diversity <- 1
 
 optimum <- densify_score(documentation = documentation, 
-                         exponent_prop_coded_data = exponent_prop_coded_data, 
-                         exponent_available_data_points = exponent_available_data_points, 
+                         exponent_prop_coded_data = 1, 
+                         exponent_available_data_points = 1, ## as same name 
                          exponent_lowest_taxon_coding_score = exponent_lowest_taxon_coding_score,
                          exponent_lowest_variable_coding_score = exponent_lowest_variable_coding_score,
                          exponent_taxonomic_diversity = exponent_taxonomic_diversity)
                          
 pruned_wals <- densify_prune(wals, documentation, optimum)
+
+# add that the execution takes a few seconds
 ```
 
 # Conclusions

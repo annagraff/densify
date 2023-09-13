@@ -6,6 +6,8 @@
 #
 ######################################################
 
+# add argument 'plot=TRUE' with if in line 88
+
 #' densify_score
 #'
 #' Function to define a quality score for each iteration as documented in the output created in F2 and identify the optimal number of iterations post-hoc. Exponents can be modified.
