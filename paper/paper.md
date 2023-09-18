@@ -1,5 +1,5 @@
 ---
-title: "densifieR: An R package to prune sparse data frames of typological linguistic data"
+title: "densify: An R package to prune sparse data frames of typological linguistic data"
 tags:
   - sparse matrices
   - sub-sampling
