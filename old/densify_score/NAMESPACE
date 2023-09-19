@@ -1,5 +1,0 @@
-exportPattern("^[[:alpha:]]+")
-
-importFrom(magrittr, "%>%")
-importFrom(dplyr, "select")
-
