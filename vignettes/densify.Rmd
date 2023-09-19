@@ -29,7 +29,7 @@ The input for densification needs to be a data frame with taxon names as row nam
 
 If the densification process should be sensitive taxonomic structure, a flat taxonomy must be provided, listing every taxon present in the initial data frame along with all the nodes connecting it to the root. Such a taxonomy can be generated with the `build_flat_taxonomy_matrix` function, if all nodes and tips are provided alongside each of their parent nodes. For generating a language taxonomy, the "languoids.csv" file from Glottolog can be used directly.
 
-```{r packages, echo = FALSE, warnings = FALSE}
+```{r packages, echo = TRUE, warnings = FALSE, message = FALSE}
 # load packages
 library(densify)
 library(tidyverse)
