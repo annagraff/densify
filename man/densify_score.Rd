@@ -10,7 +10,8 @@ densify_score(
   exponent_available_data_points = 1,
   exponent_lowest_taxon_coding_score = NULL,
   exponent_lowest_variable_coding_score = NULL,
-  exponent_taxonomic_diversity = NULL
+  exponent_taxonomic_diversity = NULL,
+  plot = FALSE
 )
 }
 \arguments{
@@ -25,6 +26,8 @@ densify_score(
 \item{exponent_lowest_variable_coding_score}{Exponent for the lowest variable score. This exponent is not mandatory, so there is no default.}
 
 \item{exponent_taxonomic_diversity}{Exponent for the taxonomic diversity index. This exponent is not mandatory, so there is no default.}
+
+\item{plot}{Logical denoting whether the quality scores should be plotted. Default is \code{FALSE}.}
 }
 \value{
 The optimal number of iterations with the highest quality score.

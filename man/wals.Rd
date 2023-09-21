@@ -13,6 +13,11 @@ data(wals)
 \description{
 This dataset is the language-feature matrix generated from WALS Online (retrieved on 5 September 2023).
 }
+\examples{
+data(wals)
+dim(wals)  # rows: languages, columns: features
+wals["stan1295",1] # 100A Alignment of Verbal Person Marking (in German)
+}
 \references{
 \itemize{
 \item Dryer, Matthew S. & Haspelmath, Martin (eds.) 2013.

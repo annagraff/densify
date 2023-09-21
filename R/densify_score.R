@@ -54,7 +54,7 @@ densify_score <- function(documentation, exponent_prop_coded_data = 1, exponent_
     }
   }
 
-  if(!is.null(exponent_taxonomic_diversity) & "taxonomic_index" %in% names(documentation)){
+  if(!is.null(exponent_taxonomic_diversity) & "taxonomic_index" %in% names(documentation == F)){
     stop("densify_steps() was carried out without providing a taxonomy matrix, so there cannot be an exponent for taxonomic diversity.")
   }
 
