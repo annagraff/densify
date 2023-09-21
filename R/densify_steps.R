@@ -104,8 +104,7 @@ densify_steps <- function(original_data = wals, max_steps = 1, variability_thres
                               worst_var_abs = paste(names(colSums(full_matrix))[which(colSums(full_matrix)==min(colSums(full_matrix)))],collapse=";"),
                               worst_var_abs_coding_density = min(colSums(full_matrix)/nrow(full_matrix)),
                               removed_tax = "NA",
-                              removed_var = "NA",
-                              na_distribution_index = sqrt(var(rowSums(full_matrix)/ncol(full_matrix))+var(colSums(full_matrix)/nrow(full_matrix))))
+                              removed_var = "NA")
 
   if(is.data.frame(taxonomy_matrix)){ # if a taxonomy matrix is provided, score the taxonomic index for the input data frame
     documentation <- cbind(documentation, taxonomic_index = vegan::diversity(table(taxonomy_reorganised$level1)))
@@ -331,7 +330,6 @@ densify_steps <- function(original_data = wals, max_steps = 1, variability_thres
                              min(colSums(updated_matrix)/nrow(updated_matrix)),
                              paste(removed_taxa,collapse=";"),
                              paste(removed_vars,collapse=";"),
-                             sqrt(var(rowSums(updated_matrix)/ncol(updated_matrix))+var(colSums(updated_matrix)/nrow(updated_matrix))),
                              vegan::diversity(table(taxonomy_reorganised$level1))))
     } else{
       documentation<-rbind(documentation,
@@ -345,8 +343,7 @@ densify_steps <- function(original_data = wals, max_steps = 1, variability_thres
                              paste(names(colSums(updated_matrix))[which(colSums(updated_matrix)==min(colSums(updated_matrix)))],collapse=";"),
                              min(colSums(updated_matrix)/nrow(updated_matrix)),
                              paste(removed_taxa,collapse=";"),
-                             paste(removed_vars,collapse=";"),
-                             sqrt(var(rowSums(updated_matrix)/ncol(updated_matrix))+var(colSums(updated_matrix)/nrow(updated_matrix)))))
+                             paste(removed_vars,collapse=";")))
     }
 
     if (verbose == "TRUE"){
