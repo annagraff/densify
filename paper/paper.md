@@ -116,8 +116,8 @@ Given the pruning documentation output, `densify_score` will identify the optima
 ``` r
 exponent_prop_coded_data <- 1
 exponent_available_data_points <- 1
-exponent_lowest_taxon_coding_score <-1
-exponent_lowest_variable_coding_score <-1
+exponent_lowest_taxon_coding_score <- 1
+exponent_lowest_variable_coding_score <- 1
 exponent_taxonomic_diversity <- 1
 
 optimum <- densify_score(documentation = documentation, 
