@@ -364,6 +364,7 @@ Thus, the following parameters are available to modulate the weight of each of t
 -   `exponent_lowest_variable_coding_score`: By increasing this parameter, the weight of the coding density of the most sparsely-coded column in the matrix is increased for the quality score. Thus, matrices including columns with low coding densities are given lower quality scores, all other things equal. This parameter is optional, with no default value.
 -   `exponent_taxonomic_diversity`: By increasing this parameter, the weight of the taxonomic diversity of included taxa in the matrix is increased for the quality score. Thus, matrices with higher taxonomic diversities are given higher quality scores, all other things equal. This parameter is optional and only conditionally applicable (if a taxonomy matrix is provided), with no default value.
 
+
 Each defined exponent must be a positive number. Setting an exponent to `0` corresponds to disregarding the corresponding value in the computation of the quality score. The exponents' magnitude in relation to one another translates into the relative weight given to each corresponding value in the computation of quality scores, i.e. increasing an exponent by factor 2 results in the corresponding value weighing twice as much, all other things equal.
 
 As such, in the example settings below, the following are equivalent: (1), (2) and (3); (4) and (5). 
@@ -390,29 +391,35 @@ optimum11111 <- densify_score(documentation_logodds_taxtrue_099099_seed1111,
                               exponent_available_data_points = 1, 
                               exponent_lowest_taxon_coding_score = 1, 
                               exponent_lowest_variable_coding_score = 1, 
-                              exponent_taxonomic_diversity = 1)
+                              exponent_taxonomic_diversity = 1,
+                              plot = TRUE)
 
 optimum11000 <- densify_score(documentation_logodds_taxtrue_099099_seed1111, 
                               exponent_prop_coded_data = 1, 
                               exponent_available_data_points = 1, 
                               exponent_lowest_taxon_coding_score = 0, 
                               exponent_lowest_variable_coding_score = 0, 
-                              exponent_taxonomic_diversity = 0)
+                              exponent_taxonomic_diversity = 0,
+                              plot = TRUE)
 
 optimum11001 <- densify_score(documentation_logodds_taxtrue_099099_seed1111, 
                               exponent_prop_coded_data = 1,
                               exponent_available_data_points = 1, 
                               exponent_lowest_taxon_coding_score = 0, 
                               exponent_lowest_variable_coding_score = 0, 
-                              exponent_taxonomic_diversity = 1)
+                              exponent_taxonomic_diversity = 1,
+                              plot = TRUE)
 
 optimum11101 <- densify_score(documentation_logodds_taxtrue_099099_seed1111,
                               exponent_prop_coded_data = 1, 
                               exponent_available_data_points = 1, 
                               exponent_lowest_taxon_coding_score = 1, 
                               exponent_lowest_variable_coding_score = 0, 
-                              exponent_taxonomic_diversity = 1)
+                              exponent_taxonomic_diversity = 1, 
+                              plot = TRUE)
 ```
+
+The logical parameter `plot` is set to `TRUE` here, such that quality score plots are produced upon execution of the function. The default setting is `FALSE`. Appreciate from the plots how the quality score per iteration varies drastically depending on the parameter settings for `densify_score`. Accordingly, so do the optima:
 
 ```{r densify_score 12 comparison, echo = TRUE}
 # compare the optima (number of iterations)
