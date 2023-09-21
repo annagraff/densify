@@ -25,9 +25,9 @@ The data used in this tutorial are the default data provided in the package (the
 
 # Preparing input
 
-The input for densification needs to be a data frame with taxon names as row names and variable names as column names. Any cells with empty entries, not applicable or question marks must be coded as `NA`. 
+The input for densification needs to be a data frame with taxon (or other observation) names as row names and variable names as column names. Any cells with empty entries, not applicable or question marks must be coded as `NA`. 
 
-If the densification process should be sensitive taxonomic structure, a flat taxonomy must be provided, listing every taxon present in the initial data frame along with all the nodes connecting it to the root. Such a taxonomy can be generated with the `build_flat_taxonomy_matrix` function, if all nodes and tips are provided alongside each of their parent nodes. For generating a language taxonomy, the "languoids.csv" file from Glottolog can be used directly.
+If the densification process should be sensitive to taxonomic structure, a flat taxonomy must be provided, listing every taxon present in the initial data frame along with all the nodes connecting it to the root. Such a taxonomy can be generated with the `build_flat_taxonomy_matrix` function, if all nodes and tips are provided alongside each of their parent nodes. For generating a language taxonomy, the "languoids.csv" file from Glottolog can be used directly.
 
 ```{r packages, echo = TRUE, warnings = FALSE, message = FALSE}
 # load packages
@@ -307,6 +307,7 @@ This section describes and discusses the parameters available to fine-tune the d
 -   variability_threshold: An integer specifying how many taxa the second-most-frequent variable state of any variable must contain for the variable to be maintained in the matrix. The default set to `1`.
 -   `taxonomy`: A logical parameter denoting whether the taxonomic structure of rows shall be taken into account in the pruning process or not. The default setting is `TRUE`
 -   `mean_type`: This parameter specifies how the measure denoting row quality is computed. It can be one of the following three mean-types: `arithmetic`, `geometric`, `log_odds`. See below for more details. The default setting is `log_odds`.
+-   `verbose`: A logical parameter denoting whether the function output should be concise or detailed. The default setting is for the output to be concise (`FALSE`).
 
 The following parameters are conditionally mandatory:
 
@@ -363,6 +364,7 @@ Thus, the following parameters are available to modulate the weight of each of t
 -   `exponent_lowest_variable_coding_score`: By increasing this parameter, the weight of the coding density of the most sparsely-coded column in the matrix is increased for the quality score. Thus, matrices including columns with low coding densities are given lower quality scores, all other things equal. This parameter is optional, with no default value.
 -   `exponent_taxonomic_diversity`: By increasing this parameter, the weight of the taxonomic diversity of included taxa in the matrix is increased for the quality score. Thus, matrices with higher taxonomic diversities are given higher quality scores, all other things equal. This parameter is optional and only conditionally applicable (if a taxonomy matrix is provided), with no default value.
 
+
 Each defined exponent must be a positive number. Setting an exponent to `0` corresponds to disregarding the corresponding value in the computation of the quality score. The exponents' magnitude in relation to one another translates into the relative weight given to each corresponding value in the computation of quality scores, i.e. increasing an exponent by factor 2 results in the corresponding value weighing twice as much, all other things equal.
 
 As such, in the example settings below, the following are equivalent: (1), (2) and (3); (4) and (5). 
@@ -389,29 +391,35 @@ optimum11111 <- densify_score(documentation_logodds_taxtrue_099099_seed1111,
                               exponent_available_data_points = 1, 
                               exponent_lowest_taxon_coding_score = 1, 
                               exponent_lowest_variable_coding_score = 1, 
-                              exponent_taxonomic_diversity = 1)
+                              exponent_taxonomic_diversity = 1,
+                              plot = TRUE)
 
 optimum11000 <- densify_score(documentation_logodds_taxtrue_099099_seed1111, 
                               exponent_prop_coded_data = 1, 
                               exponent_available_data_points = 1, 
                               exponent_lowest_taxon_coding_score = 0, 
                               exponent_lowest_variable_coding_score = 0, 
-                              exponent_taxonomic_diversity = 0)
+                              exponent_taxonomic_diversity = 0,
+                              plot = TRUE)
 
 optimum11001 <- densify_score(documentation_logodds_taxtrue_099099_seed1111, 
                               exponent_prop_coded_data = 1,
                               exponent_available_data_points = 1, 
                               exponent_lowest_taxon_coding_score = 0, 
                               exponent_lowest_variable_coding_score = 0, 
-                              exponent_taxonomic_diversity = 1)
+                              exponent_taxonomic_diversity = 1,
+                              plot = TRUE)
 
 optimum11101 <- densify_score(documentation_logodds_taxtrue_099099_seed1111,
                               exponent_prop_coded_data = 1, 
                               exponent_available_data_points = 1, 
                               exponent_lowest_taxon_coding_score = 1, 
                               exponent_lowest_variable_coding_score = 0, 
-                              exponent_taxonomic_diversity = 1)
+                              exponent_taxonomic_diversity = 1, 
+                              plot = TRUE)
 ```
+
+The logical parameter `plot` is set to `TRUE` here, such that quality score plots are produced upon execution of the function. The default setting is `FALSE`. Appreciate from the plots how the quality score per iteration varies drastically depending on the parameter settings for `densify_score`. Accordingly, so do the optima:
 
 ```{r densify_score 12 comparison, echo = TRUE}
 # compare the optima (number of iterations)

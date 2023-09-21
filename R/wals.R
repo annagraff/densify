@@ -12,6 +12,10 @@
 #' (Available online at https://wals.info, Accessed on 2023-09-05.)
 
 #' @usage data(wals)
+#' @examples
+#' data(wals)
+#' dim(wals)  # rows: languages, columns: features
+#' wals["stan1295",1] # 100A Alignment of Verbal Person Marking (in German)
 #' @import tidyverse
 
 library(tidyverse)

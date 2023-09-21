@@ -47,7 +47,7 @@ The R package `densify` takes a data frame as an input, and generates a pruned d
 
 # Statement of Need
 
-While the software will run on any data frame (with rows representing any entities with or without taxonomic structure), it was designed to prune data frames of typological linguistic data.
+While the software will run on any data frame (with rows representing any observations with or without taxonomic structure), it was designed to prune data frames of typological linguistic data.
 
 Linguistic data is increasingly available in large-scale databases, and many analyses that aim at testing hypotheses at global scales, for which project-specific data collection may not be feasible, resort to such databases. Some of these resources have complete or near-complete variable coding density for all languages data is available for, but may be too large for certain computationally intensive analyses (e.g. PHOIBLE [@phoible], Grambank [@grambank]).
 Other databases (e.g. WALS [@wals], AUTOTYP [@AUTOTYP], Lexibank [@Lexibank]) exhibit variables that are coded for very different sets of languages, resulting in sparse language-variable matrices.
@@ -116,8 +116,8 @@ Given the pruning documentation output, `densify_score` will identify the optima
 ``` r
 exponent_prop_coded_data <- 1
 exponent_available_data_points <- 1
-exponent_lowest_taxon_coding_score <-1
-exponent_lowest_variable_coding_score <-1
+exponent_lowest_taxon_coding_score <- 1
+exponent_lowest_variable_coding_score <- 1
 exponent_taxonomic_diversity <- 1
 
 optimum <- densify_score(documentation = documentation, 

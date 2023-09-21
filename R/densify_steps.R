@@ -31,6 +31,8 @@
 #'   (absolute coding score and weighted coding score) in taxon pruning. This parameter must be specified if
 #'  `mean_type = "log_odds"`. Default is 0.99.
 #'
+#' @param verbose A logical indicating how verbose the function should be. If `verbose = FALSE`, only the iteration number is logged. Default is `FALSE`.
+#'
 #' @return A data frame with details about the matrix after each iteration of densification.
 #'
 #' @examples
@@ -42,7 +44,8 @@
 #' # taxonomy = T,
 #' # taxonomy_matrix,
 #' # tax_weight_factor = 0.99,
-#' # coding_weight_factor = 0.99)
+#' # coding_weight_factor = 0.99,
+#' # verbose = T)
 #'
 #' @import vegan
 #' @import tidyverse
@@ -51,7 +54,7 @@
 #' @export
 ######################################################
 
-densify_steps <- function(original_data = wals, max_steps = 1, variability_threshold = 1, mean_type = "log_odds", taxonomy = F, taxonomy_matrix, tax_weight_factor = 0.99, coding_weight_factor = 0.99){
+densify_steps <- function(original_data = wals, max_steps = 1, variability_threshold = 1, mean_type = "log_odds", taxonomy = F, taxonomy_matrix, tax_weight_factor = 0.99, coding_weight_factor = 0.99, verbose = FALSE){
 
   if (taxonomy == F){
     warning("Attention, taxonomy disregarded for pruning.\n")
@@ -101,13 +104,11 @@ densify_steps <- function(original_data = wals, max_steps = 1, variability_thres
                               worst_var_abs = paste(names(colSums(full_matrix))[which(colSums(full_matrix)==min(colSums(full_matrix)))],collapse=";"),
                               worst_var_abs_coding_density = min(colSums(full_matrix)/nrow(full_matrix)),
                               removed_tax = "NA",
-                              removed_var = "NA",
-                              na_distribution_index = sqrt(var(rowSums(full_matrix)/ncol(full_matrix))+var(colSums(full_matrix)/nrow(full_matrix))))
+                              removed_var = "NA")
 
   if(is.data.frame(taxonomy_matrix)){ # if a taxonomy matrix is provided, score the taxonomic index for the input data frame
     documentation <- cbind(documentation, taxonomic_index = vegan::diversity(table(taxonomy_reorganised$level1)))
   }
-
 
   # determine weighted row and column scores (r_weights and c_weights)
   cross_prod = crossprod(full_matrix)
@@ -139,7 +140,9 @@ densify_steps <- function(original_data = wals, max_steps = 1, variability_thres
     }
     # fill up current matrix with taxonomic_weight measures entirely only in the first iteration and if taxonomy is considered for pruning
     if (iterations==1 & taxonomy==T){
-      cat("Computing initial taxonomic weights.\n")
+      if (verbose == "TRUE"){
+        cat("Computing initial taxonomic weights.\n")
+      }
       families <- unique(taxonomy_reorganised$level1)
       for (f in 1:length(families)){
         taxa <- dplyr::filter(taxonomy_reorganised, .data$level1%in%families[f])$id
@@ -168,8 +171,9 @@ densify_steps <- function(original_data = wals, max_steps = 1, variability_thres
         }
       }
     }
-
-    cat("Computing final weights for all taxa\n")
+    if (verbose == "TRUE"){
+      cat("Computing final weights for all taxa\n")
+    }
 
     # compute a final weight for each taxon via the odds-mean of the absolute proportion of non-NA, the weighted coding score and the taxonomic weight
     if (mean_type == "arithmetic"){ # arithmetic mean
@@ -194,11 +198,15 @@ densify_steps <- function(original_data = wals, max_steps = 1, variability_thres
     worsttax <- worsttax[sample(nrow(worsttax),1),]
     worstvar <- sample(colnames(updated_matrix)[which(c_weights_updated==min(c_weights_updated))],1)
 
-    cat("Identifying taxa and variables with lowest score:", rownames(worsttax), "and", worstvar ,"\n")
+    if (verbose == "TRUE"){
+      cat("Identifying taxa and variables with lowest score:", rownames(worsttax), "and", worstvar ,"\n")
+    }
 
     # remove taxon if the worst taxon is currently worse than or equally bad as the worst variable(s)
     if(worsttax$mean_score <= min(c_weights_updated)){
-      cat("Remove the taxon with lowest coding score:",rownames(worsttax),"\n")
+      if (verbose == "TRUE"){
+        cat("Remove the taxon with lowest coding score:",rownames(worsttax),"\n")
+      }
 
       # track this taxon will be removed; track no variable will be removed
       removed_taxa <- rownames(worsttax)
@@ -217,7 +225,9 @@ densify_steps <- function(original_data = wals, max_steps = 1, variability_thres
 
     # remove variable if the worst variable is currently worse than the worst taxon/taxa
     if(worsttax$mean_score > min(c_weights_updated)){
-      cat("Remove the variable with the lowest coding score:", worstvar,"\n")
+      if (verbose == "TRUE"){
+        cat("Remove the variable with the lowest coding score:", worstvar,"\n")
+      }
 
       # track this variable will be removed; track no taxon will be removed
       removed_taxa <- NA
@@ -234,7 +244,10 @@ densify_steps <- function(original_data = wals, max_steps = 1, variability_thres
 
     # make sure that all variables are/remain sufficiently variable --> the second-most-frequent variable state must contain at least N taxa (N=variability_threshold)
     # if any variables are not/no longer sufficiently variable, remove them
-    cat("Ensuring variable variablity.\n")
+
+    if (verbose == "TRUE"){
+      cat("Ensuring variable variablity.\n")
+    }
 
     pruned_matrix <- original_data[which(rownames(original_data)%in%rownames(updated_matrix)),which(colnames(original_data)%in%colnames(updated_matrix))]
     nrlevels <- data.frame(variable=colnames(pruned_matrix),
@@ -246,7 +259,9 @@ densify_steps <- function(original_data = wals, max_steps = 1, variability_thres
       removed_vars <- c(removed_vars,uninformative_variables)[-which(is.na(c(removed_vars,uninformative_variables)))]
       updated_matrix <- updated_matrix[,-which(colnames(updated_matrix)%in%uninformative_variables)] # update matrix by pruning away uninformative variables
       c_weights_updated <- c_weights_updated[-which(colnames(updated_matrix)%in%uninformative_variables)] # update weights by pruning away uninformative variables
-      cat("; remove the following uninformative variables", uninformative_variables,"\n")
+      if (verbose == "TRUE"){
+        cat("; remove the following uninformative variables", uninformative_variables,"\n")
+      }
     }
 
     if (!is.matrix(updated_matrix)){
@@ -261,7 +276,9 @@ densify_steps <- function(original_data = wals, max_steps = 1, variability_thres
       updated_matrix <- updated_matrix[-which(rownames(updated_matrix)%in%uninformative_taxa),] # update matrix by pruning away worst taxon
       weight_collection <- weight_collection[-which(rownames(weight_collection)%in%uninformative_taxa),] # update weight collection by pruning away worst taxon
       if (is.data.frame(taxonomy_matrix)){taxonomy_reorganised <- taxonomy_reorganised[taxonomy_reorganised$id%in%uninformative_taxa==F,]} # update taxonomy_reorganised by pruning away worst taxon
-      cat("Remove the following uninformative taxa:", uninformative_taxa,"\n")
+      if (verbose == "TRUE"){
+        cat("Remove the following uninformative taxa:", uninformative_taxa,"\n")
+      }
     }
 
     if (nrow(updated_matrix)==0){
@@ -271,7 +288,9 @@ densify_steps <- function(original_data = wals, max_steps = 1, variability_thres
 
     # if any taxa were removed, the phylogenetic weights for remaining taxa of their families must be updated!
     if ((length(removed_taxa))!=0 & taxonomy == T){
-      cat("There are phylogenetic weights to be updated.\n")
+      if (verbose == "TRUE"){
+        cat("There are phylogenetic weights to be updated.\n")
+      }
       fams_for_tax_weight_update <- unique(dplyr::filter(taxonomy_matrix,id%in%removed_taxa)$level1)
       for (fam in fams_for_tax_weight_update){ # proceed family-wise
         node_freq_count <- dplyr::filter(taxonomy_reorganised,.data$level1%in%fam) # filter out remaining taxa of this family
@@ -311,7 +330,6 @@ densify_steps <- function(original_data = wals, max_steps = 1, variability_thres
                              min(colSums(updated_matrix)/nrow(updated_matrix)),
                              paste(removed_taxa,collapse=";"),
                              paste(removed_vars,collapse=";"),
-                             sqrt(var(rowSums(updated_matrix)/ncol(updated_matrix))+var(colSums(updated_matrix)/nrow(updated_matrix))),
                              vegan::diversity(table(taxonomy_reorganised$level1))))
     } else{
       documentation<-rbind(documentation,
@@ -325,11 +343,12 @@ densify_steps <- function(original_data = wals, max_steps = 1, variability_thres
                              paste(names(colSums(updated_matrix))[which(colSums(updated_matrix)==min(colSums(updated_matrix)))],collapse=";"),
                              min(colSums(updated_matrix)/nrow(updated_matrix)),
                              paste(removed_taxa,collapse=";"),
-                             paste(removed_vars,collapse=";"),
-                             sqrt(var(rowSums(updated_matrix)/ncol(updated_matrix))+var(colSums(updated_matrix)/nrow(updated_matrix)))))
+                             paste(removed_vars,collapse=";")))
     }
 
-    cat("Recomputing weighted means.\n\n")
+    if (verbose == "TRUE"){
+      cat("Recomputing weighted means.\n\n")
+    }
 
     # update the absolute coding proportion of each taxon
     abs_prop_non_NA<-(rowSums(updated_matrix)/ncol(updated_matrix))

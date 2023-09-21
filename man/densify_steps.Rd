@@ -12,7 +12,8 @@ densify_steps(
   taxonomy = F,
   taxonomy_matrix,
   tax_weight_factor = 0.99,
-  coding_weight_factor = 0.99
+  coding_weight_factor = 0.99,
+  verbose = FALSE
 )
 }
 \arguments{
@@ -40,6 +41,8 @@ This parameter must be specified if \code{taxonomy = TRUE} and \code{mean_type =
 \item{coding_weight_factor}{A numeric value between 0 and 1 that determines the relative weight given to coding quality
 (absolute coding score and weighted coding score) in taxon pruning. This parameter must be specified if
 \code{mean_type = "log_odds"}. Default is 0.99.}
+
+\item{verbose}{A logical indicating how verbose the function should be. If \code{verbose = FALSE}, only the iteration number is logged. Default is \code{FALSE}.}
 }
 \value{
 A data frame with details about the matrix after each iteration of densification.
@@ -57,6 +60,7 @@ each iteration.
 # taxonomy = T,
 # taxonomy_matrix,
 # tax_weight_factor = 0.99,
-# coding_weight_factor = 0.99)
+# coding_weight_factor = 0.99,
+# verbose = T)
 
 }
