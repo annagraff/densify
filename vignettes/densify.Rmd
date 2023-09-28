@@ -349,6 +349,30 @@ log_odds_mean = plogis(mean(qlogis(inputs)))
 
 Both `qlogis` and `plogis` deal favorably with edge cases. Specifically, qlogis(0) = -Inf, qlogis(1) = 1, plogis(-Inf) = 0, plogis(Inf) = 1. However, to avoid calculations like -Inf+Inf = NaN, we prevent inputs from being 1 by multiplying them with tax_weight_factor or coding_weight_factor, which are numbers strictly between 0 and 1.
 
+```{r, eval=TRUE}
+# Define a function to calculate the log odds mean (lom)
+lom <- function(x) {
+  plogis(mean(qlogis(c(1/2, x))))
+}
+
+# Create a sequence of x values from 0 to 1
+x_values <- seq(0, 1, by = 0.01)
+
+# Calculate the lom for each x value
+lom_values <- sapply(x_values, lom)
+
+# Create a plot
+plot(x_values, lom_values, type = "l", 
+     xlab = "x", ylab = "Log Odds Mean (lom)",
+     main = "Log Odds Mean of 1/2 and x")
+
+# Add a horizontal line at lom(1/2)
+abline(h = lom(1/2), col = "red", lty = 2)
+
+# Add legend
+legend("bottomright", legend = "lom(1/2)", col = "red", lty = 2)
+```
+
 
 # Determining the optimal number of iterations using densify_score
 
