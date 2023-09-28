@@ -366,11 +366,11 @@ plot(x_values, lom_values, type = "l",
      xlab = "x", ylab = "Log Odds Mean (lom)",
      main = "Log Odds Mean of 1/2 and x")
 
-# Add a horizontal line at lom(1/2)
-abline(h = lom(1/2), col = "red", lty = 2)
+# Add a horizontal line at 1/2
+abline(h = 1/2, col = "red", lty = 2)
 
 # Add legend
-legend("bottomright", legend = "lom(1/2)", col = "red", lty = 2)
+legend("bottomright", legend = "1/2", col = "red", lty = 2)
 ```
 
 
