@@ -175,7 +175,7 @@ densify_steps <- function(original_data = wals, max_steps = 1, variability_thres
       cat("Computing final weights for all taxa\n")
     }
 
-    # compute a final weight for each taxon via the odds-mean of the absolute proportion of non-NA, the weighted coding score and the taxonomic weight
+    # compute a final weight for each taxon via the mean of the absolute proportion of non-NA, the weighted coding score and the taxonomic weight
     if (mean_type == "arithmetic"){ # arithmetic mean
       weight_collection$mean_score <- apply(weight_collection,1,mean)
     } else if (mean_type == "geometric"){ # geometric mean
