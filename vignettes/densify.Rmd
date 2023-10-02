@@ -350,6 +350,51 @@ log_odds_mean = plogis(mean(qlogis(inputs)))
 Both `qlogis` and `plogis` deal favorably with edge cases. Specifically, qlogis(0) = -Inf, qlogis(1) = 1, plogis(-Inf) = 0, plogis(Inf) = 1. However, to avoid calculations like -Inf+Inf = NaN, we prevent inputs from being 1 by multiplying them with tax_weight_factor or coding_weight_factor, which are numbers strictly between 0 and 1.
 
 ```{r, eval=TRUE}
+# Define a function to calculate the log odds mean (lom) of x an 1/2:
+lom <- function(x) {
+  plogis(mean(qlogis(c(1/2, x))))
+}
+
+# Create a sequence of x values from 0 to 1:
+x_values <- seq(0, 1, by = 0.01)
+
+# Calculate the lom for different x values:
+lom_values <- sapply(x_values, lom)
+lom_values_99 <- sapply(x_values, function(x) lom(x * 0.99))
+lom_values_95 <- sapply(x_values, function(x) lom(x * 0.95))
+lom_values_75 <- sapply(x_values, function(x) lom(x * 0.75))
+lom_values_50 <- sapply(x_values, function(x) lom(x * 0.5))
+
+# Create a plot:
+plot(x_values, lom_values, type = "l", 
+     xlab = "x", ylab = "Log Odds Mean (lom)",
+     main = "Log Odds Mean Variations")
+
+# Add lines for different lom values:
+lines(x_values, lom_values_99, col = "blue")
+lines(x_values, lom_values_95, col = "green")
+lines(x_values, lom_values_75, col = "orange")
+lines(x_values, lom_values_50, col = "purple")
+
+# Add a horizontal line at 1/2:
+abline(h = 1/2, col = "red", lty = 2)
+
+# Add a legend:
+legend("bottomright", legend = c("lom(x)", "lom(x*0.99)", "lom(x*0.95)", "lom(x*0.75)", "lom(x*0.5)", "1/2"),
+       col = c("black", "blue", "green", "orange", "purple", "red"), lty = c(1, 1, 1, 1, 1, 2))
+```
+
+```{r, eval=TRUE}
+# Define a function to calculate the arithmetic mean
+arithmetic_mean <- function(x) {
+  (1/2 + x) / 2
+}
+
+# Define a function to calculate the geometric mean
+geometric_mean <- function(x) {
+  sqrt(1/2 * x)
+}
+
 # Define a function to calculate the log odds mean (lom)
 lom <- function(x) {
   plogis(mean(qlogis(c(1/2, x))))
@@ -358,21 +403,27 @@ lom <- function(x) {
 # Create a sequence of x values from 0 to 1
 x_values <- seq(0, 1, by = 0.01)
 
-# Calculate the lom for each x value
+# Calculate the means for each x value
+arithmetic_mean_values <- sapply(x_values, arithmetic_mean)
+geometric_mean_values <- sapply(x_values, geometric_mean)
 lom_values <- sapply(x_values, lom)
 
-# Create a plot
-plot(x_values, lom_values, type = "l", 
-     xlab = "x", ylab = "Log Odds Mean (lom)",
-     main = "Log Odds Mean of 1/2 and x")
+# Create a plot with specified y-axis limits
+plot(x_values, arithmetic_mean_values, type = "l", 
+     xlab = "x", ylab = "Means", ylim = c(0, 1),
+     main = "Comparison of Means")
 
-# Add a horizontal line at 1/2
+# Add lines for the other means
+lines(x_values, geometric_mean_values, col = "blue")
+lines(x_values, lom_values, col = "green")
+
+# Add horizontal lines at 1/2 for reference
 abline(h = 1/2, col = "red", lty = 2)
 
-# Add legend
-legend("bottomright", legend = "1/2", col = "red", lty = 2)
+# Add a legend at the top left
+legend("topleft", legend = c("Arithmetic Mean", "Geometric Mean", "Log Odds Mean", "1/2"),
+       col = c("black", "blue", "green", "red"), lty = c(1, 1, 1, 2))
 ```
-
 
 # Determining the optimal number of iterations using densify_score
 
