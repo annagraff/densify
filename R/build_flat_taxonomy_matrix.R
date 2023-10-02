@@ -64,7 +64,3 @@ build_flat_taxonomy_matrix <- function(id, parent_id) {
   out
 }
 
-
-
-
-
