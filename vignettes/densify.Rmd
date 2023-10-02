@@ -59,7 +59,7 @@ ncol(wals)
 
 However, each feature is coded for a distinct set of languages, such that coding density is patchy for both languages and variables.
 
-```{r patchy coding for langauges and variables, echo = TRUE, fig.show="hold", out.width="40%", fig.width=5, fig.height=3}
+```{r patchy coding for languages and variables, echo=FALSE, fig.show="hold", out.width="40%", fig.width=4.5, fig.height=3}
 par(mar = c(4, 4, .1, .1))
 
 ggplot(data.frame(density=apply(wals, 1, function(x) (length(na.omit(x))))/ncol(wals)), aes(x=density))+
@@ -313,7 +313,7 @@ The following parameters are conditionally mandatory:
 
 -  `taxonomy_matrix`: The taxonomy matrix encompassing all taxa represented in original_data, in the format described above. If the parameter `taxonomy == TRUE`, it is mandatory. Otherwise, it is optional. The default setting is `NULL`. 
 -  `tax_weight_factor`: This parameter specifies the weight factor attributed to contribution to taxonomic diversity in the computation of the log_odds mean of rows. It must lie between 0 and 1 (excluding these values) and is mandatory if `mean_type == "log_odds"` and if `taxonomy == TRUE`. Otherwise, it is undefined. The default value is `0.99`. 
--  `coding_weight_factor`: This parameter specifies the weight factor attributed to absolute and weighted coding densities in the computation of the log_odds mean. It must lie between 0 and 1 (excluding these values) and is mandatory if `mean_type == "log_odds"`. Otherwise, it is undefined. The default value is `0.99`.
+-  `coding_weight_factor`: This parameter specifies the weight factor attributed to absolute and weighted coding densities in the computation of the log_odds mean of rows. It must lie between 0 and 1 (excluding these values) and is mandatory if `mean_type == "log_odds"`. Otherwise, it is undefined. The default value is `0.99`.
 
 While it is possible to run `densify_steps` with several parameter settings on the same input data frame, we strongly recommend motivating parameter settings with the desired characteristics of the output data frame (e.g. how strongly should taxonomic diversity be weighted in relation to coding density of rows?) in mind.
 
@@ -335,7 +335,9 @@ A taxonomy matrix must be provided whenever the parameter taxonomy is `TRUE`, bu
 
 `densify_steps` offers three methods of computing the mean of row-wise absolute and weighted coding densities as well as contribution to taxonomic diversity of the sample where applicable: Possible values are `arithmetic`, `geometric`, or `log_odds`. 
 
-The arithmetic and geometric means operate as conventionally understood in mathematics: the arithmetic mean utilizes the `mean` function, while the geometric mean involves the n-th root of the product. The log odds mean is computed by taking the logit transform of all inputs, then taking the mean, the transforming back, in symbols:
+The arithmetic and geometric means operate as conventionally understood in mathematics: the arithmetic mean utilizes the `mean` function, while the geometric mean involves the n-th root of the product. For `mean_type` values `arithmetic` and `geometric`, the respective means of the absolute and weighted coding densities are computed if `taxonomy` is `FALSE` for ech row. If `taxonomy` is `TRUE`, the respective means of the absolute coding density, the weighted coding density and the contribution to taxonomic diversity are computed for each row.
+
+The log odds mean is computed by taking the logit transform of all inputs, then taking the mean, the transforming back, in symbols:
 
 ```{r, eval=FALSE}
 log_odds_mean = invlogit(mean(logit(inputs)))
@@ -347,44 +349,15 @@ Because `logit` is equivalent to `qlogis`, and `invlogit` is equivalent to `plog
 log_odds_mean = plogis(mean(qlogis(inputs)))
 ```
 
-Both `qlogis` and `plogis` deal favorably with edge cases. Specifically, qlogis(0) = -Inf, qlogis(1) = 1, plogis(-Inf) = 0, plogis(Inf) = 1. However, to avoid calculations like -Inf+Inf = NaN, we prevent inputs from being 1 by multiplying them with tax_weight_factor or coding_weight_factor, which are numbers strictly between 0 and 1.
+Both `qlogis` and `plogis` deal favorably with edge cases. Specifically, qlogis(0) = -Inf, qlogis(1) = 1, plogis(-Inf) = 0, plogis(Inf) = 1. However, to avoid calculations like -Inf+Inf = NaN, we prevent inputs from being 1 by multiplying them with `tax_weight_factor` or `coding_weight_factor`, which are numbers strictly between 0 and 1.
 
-```{r, eval=TRUE}
-# Define a function to calculate the log odds mean (lom) of x an 1/2:
-lom <- function(x) {
-  plogis(mean(qlogis(c(1/2, x))))
-}
+As for the other `mean_type` values, the value `log_odds` specifies for the log odds means of the absolute and weighted coding densities to be computed if `taxonomy` is `FALSE` and the log odds means of the absolute coding density, the weighted coding density and the contribution to taxonomic diversity to be computed if `taxonomy` is `TRUE`. However, setting the `mean_type` to `log_odds` requires setting the aforementioned additional parameter `coding_weight_factor` and, if `taxonomy` = `TRUE`, also a separate parameter `tax_weight_factor`. In addition to serving to avoid possible computations like -Inf+Inf = NaN, the weight factors allow for modulating the behaviour of the log odds mean (see below) and can be set separately for the absolute and weighted coding density (`coding_weight_factor`) and contribution to taxonomic diversity (`tax_weight_factor`) to bias the weight of taxonomic diversity relative to the weight of codedness in the computation of the row means and ultimately in the iterative pruning process.
 
-# Create a sequence of x values from 0 to 1:
-x_values <- seq(0, 1, by = 0.01)
+The first plot below traces the mean of a constant 0.5 and a value x between 0 and 1 of the different mean types (`arithmetic`, `geometric` and `log_odds`). Note how the log odds mean strongly skews towards the values 0 and 1 once x approaches these extremes, while the geometric mean does so only towards the 0. If users intends to strongly weight extremely low (approaching 0) or extremely high (approaching 1) values regarding either contribution to taxonomic diversity or codedness, they should thus favour the log odds or possibly the geometric mean for `densify_steps`.
 
-# Calculate the lom for different x values:
-lom_values <- sapply(x_values, lom)
-lom_values_99 <- sapply(x_values, function(x) lom(x * 0.99))
-lom_values_95 <- sapply(x_values, function(x) lom(x * 0.95))
-lom_values_75 <- sapply(x_values, function(x) lom(x * 0.75))
-lom_values_50 <- sapply(x_values, function(x) lom(x * 0.5))
+The second plot illustrates how different weight factors (here: 0.5, 0.75, 0.95 and 0.99) modulate the behaviour of the log odds mean of a constant 0.5 and all possible values of x.
 
-# Create a plot:
-plot(x_values, lom_values, type = "l", 
-     xlab = "x", ylab = "Log Odds Mean (lom)",
-     main = "Log Odds Mean Variations")
-
-# Add lines for different lom values:
-lines(x_values, lom_values_99, col = "blue")
-lines(x_values, lom_values_95, col = "green")
-lines(x_values, lom_values_75, col = "orange")
-lines(x_values, lom_values_50, col = "purple")
-
-# Add a horizontal line at 1/2:
-abline(h = 1/2, col = "red", lty = 2)
-
-# Add a legend:
-legend("bottomright", legend = c("lom(x)", "lom(x*0.99)", "lom(x*0.95)", "lom(x*0.75)", "lom(x*0.5)", "1/2"),
-       col = c("black", "blue", "green", "orange", "purple", "red"), lty = c(1, 1, 1, 1, 1, 2))
-```
-
-```{r, eval=TRUE}
+```{r mean comparison, eval = TRUE, echo = FALSE, fig.show="hold", out.width="45%", fig.width=6, fig.height=4}
 # Define a function to calculate the arithmetic mean
 arithmetic_mean <- function(x) {
   (1/2 + x) / 2
@@ -400,30 +373,71 @@ lom <- function(x) {
   plogis(mean(qlogis(c(1/2, x))))
 }
 
-# Create a sequence of x values from 0 to 1
-x_values <- seq(0, 1, by = 0.01)
+# Create a sequence of x values from 0 to 1:
+x_values <- seq(0, 1, by = 0.001)
 
-# Calculate the means for each x value
+# Calculate the different means for each x value
 arithmetic_mean_values <- sapply(x_values, arithmetic_mean)
 geometric_mean_values <- sapply(x_values, geometric_mean)
 lom_values <- sapply(x_values, lom)
+lom_values_99 <- sapply(x_values, function(x) lom(x * 0.99))
+lom_values_95 <- sapply(x_values, function(x) lom(x * 0.95))
+lom_values_75 <- sapply(x_values, function(x) lom(x * 0.75))
+lom_values_50 <- sapply(x_values, function(x) lom(x * 0.5))
 
-# Create a plot with specified y-axis limits
-plot(x_values, arithmetic_mean_values, type = "l", 
-     xlab = "x", ylab = "Means", ylim = c(0, 1),
-     main = "Comparison of Means")
+values <- data.frame(x_values = x_values,
+                     arithmetic_mean_values = arithmetic_mean_values,
+                     geometric_mean_values = geometric_mean_values,
+                     lom_values = lom_values,
+                     lom_values_99 = lom_values_99,
+                     lom_values_95 = lom_values_99,
+                     lom_values_75 = lom_values_75,
+                     lom_values_50 = lom_values_50,
+                     one_half = rep(1/2,1001))
 
-# Add lines for the other means
-lines(x_values, geometric_mean_values, col = "blue")
-lines(x_values, lom_values, col = "green")
+par(mar = c(4, 4, .1, .1))
+# Create first plot:
+ggplot(values, aes(x = x_values)) +
+  theme_bw() +
+  geom_line(aes(y = arithmetic_mean_values, color = "Arithmetic Mean"), show.legend = TRUE) + 
+  geom_line(aes(y = geometric_mean_values, color = "Geometric Mean"), show.legend = TRUE) +
+  geom_line(aes(y = lom_values, color = "Log Odds Mean"), show.legend = TRUE) +
+  geom_line(aes(y = one_half, color = "1/2"), linetype = "twodash", show.legend = TRUE) +
+  scale_x_continuous(expand = c(0, 0)) + 
+  scale_y_continuous(expand = c(0, 0)) +
+  scale_color_manual(values = c(
+    "Arithmetic Mean" = "purple",
+    "Geometric Mean" = "steelblue",
+    "Log Odds Mean" = "black",
+    "1/2" = "red"
+  )) +
+  ggtitle("Comparison of Means") +
+  labs(x = "x", y = "Means", color = "Mean variations")
 
-# Add horizontal lines at 1/2 for reference
-abline(h = 1/2, col = "red", lty = 2)
-
-# Add a legend at the top left
-legend("topleft", legend = c("Arithmetic Mean", "Geometric Mean", "Log Odds Mean", "1/2"),
-       col = c("black", "blue", "green", "red"), lty = c(1, 1, 1, 2))
+# Create second plot:
+ggplot(values, aes(x = x_values)) +
+  theme_bw() +
+  geom_line(aes(y = lom_values, color = "lom(x)"), show.legend = TRUE) + 
+  geom_line(aes(y = lom_values_99, color = "lom(x*0.99)"), show.legend = TRUE) +
+  geom_line(aes(y = lom_values_95, color = "lom(x*0.95)"), show.legend = TRUE) +
+  geom_line(aes(y = lom_values_75, color = "lom(x*0.75)"), show.legend = TRUE) +
+  geom_line(aes(y = lom_values_50, color = "lom(x*0.5)"), show.legend = TRUE) +
+  geom_line(aes(y = one_half, color = "1/2"), linetype = "twodash", show.legend = TRUE) +
+  scale_x_continuous(expand = c(0, 0)) + 
+  scale_y_continuous(expand = c(0, 0)) +
+  scale_color_manual(values = c(
+    "lom(x)" = "black", 
+    "lom(x*0.99)" = "blue", 
+    "lom(x*0.95)" = "green", 
+    "lom(x*0.75)" = "orange", 
+    "lom(x*0.5)" = "pink", 
+    "1/2" = "red"
+  )) +
+  ggtitle("Log Odds Mean Variations") +
+  labs(x = "x", y = "Log Odds Mean (lom)", color = "LOM variations")
 ```
+
+The parameters `mean_type`, `coding_weight_score` and `tax_weight_score` thus modulate the pruning process and can (and should) be adjusted to meet the needs of the user. 
 
 # Determining the optimal number of iterations using densify_score
 
@@ -570,20 +584,20 @@ sum(!is.na(pruned_wals_exponents11111))/
 
 Note how both language and variable coding densities have become very high, and how the inclusion of taxonomic diversity for both the pruning process and `densify_prune` result in the inclusion of a number of languages that are not densely coded, but increase taxonomic diversity.
 
-```{r densify_prune plots, echo = TRUE, fig.show="hold", out.width="40%", fig.width=5, fig.height=3}
+```{r densify_prune plots, echo = FALSE, fig.show="hold", out.width="40%", fig.width=5, fig.height=3}
 par(mar = c(4, 4, .1, .1))
 
 ggplot(data.frame(density=apply(pruned_wals_exponents11111, 1, function(x) (length(na.omit(x))))/ncol(pruned_wals_exponents11111)), aes(x=density))+
   geom_histogram(color="black", fill="cadetblue2", bins=20)+
   theme_bw()+
-  labs(title="Pruned WALS, log_odds, 0.99, 0.99, all exponents = 1", 
+  labs(title="Pruned WALS, log_odds, 0.99, 0.99,\nAll exponents = 1", 
        x="coding density per language",
        y="frequency")
 
 ggplot(data.frame(density=apply(pruned_wals_exponents11111, 2, function(x) (length(na.omit(x))))/nrow(pruned_wals_exponents11111)), aes(x=density))+
   geom_histogram(color="black", fill="forestgreen", bins=20)+
   theme_bw()+
-  labs(title="Pruned WALS, log_odds, 0.99, 0.99, all exponents = 1",
+  labs(title="Pruned WALS, log_odds, 0.99, 0.99,\nAll exponents = 1",
        x="coding density per variable",
        y="frequency")
 ```
@@ -600,20 +614,20 @@ ncol(pruned_wals_exponents11001)
 sum(!is.na(pruned_wals_exponents11001))/(ncol(pruned_wals_exponents11001)*nrow(pruned_wals_exponents11001))
 ```
 
-```{r densify_prune 2 plots, echo = TRUE, fig.show="hold", out.width="40%", fig.width=5, fig.height=3}
+```{r densify_prune 2 plots, echo = FALSE, fig.show="hold", out.width="40%", fig.width=5, fig.height=3}
 par(mar = c(4, 4, .1, .1))
 
 ggplot(data.frame(density=apply(pruned_wals_exponents11001, 1, function(x) (length(na.omit(x))))/ncol(pruned_wals_exponents11001)), aes(x=density))+
   geom_histogram(color="black", fill="cadetblue2", bins=20)+
   theme_bw()+
-  labs(title="Pruned WALS, log_odds, 0.99, 0.99, exponents = c(1, 1, 0, 0, 1)", 
+  labs(title="Pruned WALS, log_odds, 0.99, 0.99,\nExponents = c(1, 1, 0, 0, 1)", 
        x="coding density per language",
        y="frequency")
 
 ggplot(data.frame(density=apply(pruned_wals_exponents11001, 2, function(x) (length(na.omit(x))))/nrow(pruned_wals_exponents11001)), aes(x=density))+
   geom_histogram(color="black", fill="forestgreen", bins=20)+
   theme_bw()+
-  labs(title="Pruned WALS, log_odds, 0.99, 0.99, exponents = c(1, 1, 0, 0, 1)",
+  labs(title="Pruned WALS, log_odds, 0.99, 0.99,\nExponents = c(1, 1, 0, 0, 1)",
        x="coding density per variable",
        y="frequency")
 ```
