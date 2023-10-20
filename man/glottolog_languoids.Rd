@@ -3,7 +3,11 @@
 \docType{data}
 \name{glottolog_languoids}
 \alias{glottolog_languoids}
-\title{Languoids file from glottolog v.4.8}
+\alias{temp}
+\title{Languoids file from Glottolog, Version 4.8}
+\format{
+An object of class \code{character} of length 1.
+}
 \source{
 Glottolog, Version 4.8
 }
@@ -22,3 +26,4 @@ https://doi.org/10.5281/zenodo.8131084
 (Available online at http://glottolog.org, Accessed on 2023-09-05.)
 }
 }
+\keyword{datasets}

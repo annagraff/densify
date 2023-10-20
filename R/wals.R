@@ -1,6 +1,6 @@
 #' WALS language-feature matrix
 #'
-#' This dataset is the language-feature matrix generated from WALS Online (retrieved on 5 September 2023).
+#' This dataset is the language-feature matrix generated from WALS Online (retrieved on 20 October 2023).
 #'
 #' @name wals
 #' @docType data
@@ -9,7 +9,7 @@
 #' - Dryer, Matthew S. & Haspelmath, Martin (eds.) 2013.
 #' WALS Online (v2020.3). Zenodo.
 #' https://doi.org/10.5281/zenodo.7385533
-#' (Available online at https://wals.info, Accessed on 2023-09-05.)
+#' (Available online at https://wals.info, Accessed on 2023-10-20.)
 
 #' @usage data(wals)
 #' @examples
@@ -21,7 +21,7 @@
 library(tidyverse)
 
 temp <- tempfile()
-download.file("https://zenodo.org/record/7385533/files/cldf-datasets/wals-v2020.3.zip",temp)
+download.file("https://zenodo.org/records/7385533/files/cldf-datasets/wals-v2020.3.zip?download=1>cldf-datasets/wals-v2020.3.zip",temp)
 wals_languages <- read.csv(unz(temp, "cldf-datasets-wals-878ea47/cldf/languages.csv"))
 wals_values <- read.csv(unz(temp, "cldf-datasets-wals-878ea47/cldf/values.csv"))
 wals_parameters <- read.csv(unz(temp, "cldf-datasets-wals-878ea47/cldf/parameters.csv"))

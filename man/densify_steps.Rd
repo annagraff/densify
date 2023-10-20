@@ -2,7 +2,7 @@
 % Please edit documentation in R/densify_steps.R
 \name{densify_steps}
 \alias{densify_steps}
-\title{Iterative matrix densification according to specified criteria.}
+\title{Iterative matrix densification according to specified criteria}
 \usage{
 densify_steps(
   original_data = wals,
@@ -17,8 +17,8 @@ densify_steps(
 )
 }
 \arguments{
-\item{original_data}{A data frame with the taxa (e.g. languages, as glottocodes) as row names and variable names as column names.
-Any question marks, empty entries, or "NA"s must be represented as NAs. Default is the data from WALS.}
+\item{original_data}{A data frame with observations/taxa (e.g. languages, as glottocodes) as row names and variable names as column names.
+Any question marks, empty entries, or "NA"s must be represented as NA. Default is the data from WALS.}
 
 \item{max_steps}{An integer specifying the maximum number of iterations attempted during densification.
 Default is 1.}
@@ -45,11 +45,10 @@ This parameter must be specified if \code{taxonomy = TRUE} and \code{mean_type =
 \item{verbose}{A logical indicating how verbose the function should be. If \code{verbose = FALSE}, only the iteration number is logged. Default is \code{FALSE}.}
 }
 \value{
-A data frame with details about the matrix after each iteration of densification.
+An iteration log in the form of a data frame with details about the matrix after each iteration of densification.
 }
 \description{
-The output of this densification is a log-file, which specifies details about the matrix after
-each iteration.
+Iteratively densifies an input data frame. The output of this densification is a log-file, specifying details about the matrix after each iteration.
 }
 \examples{
 # Assuming `original_data` and `taxonomy_matrix` are appropriate data frames

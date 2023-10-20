@@ -2,10 +2,10 @@
 % Please edit documentation in R/densify_score.R
 \name{densify_score}
 \alias{densify_score}
-\title{densify_score}
+\title{Quality score computation for each iteration}
 \usage{
 densify_score(
-  documentation,
+  iteration_log,
   exponent_prop_coded_data = 1,
   exponent_available_data_points = 1,
   exponent_lowest_taxon_coding_score = NULL,
@@ -15,7 +15,7 @@ densify_score(
 )
 }
 \arguments{
-\item{documentation}{A data frame containing the output documentation from the \code{densify_steps} function.}
+\item{iteration_log}{A data frame containing the output iteration_log from the \code{densify_steps} function.}
 
 \item{exponent_prop_coded_data}{Exponent for the proportion of coded data. Default is 1.}
 
@@ -33,10 +33,13 @@ densify_score(
 The optimal number of iterations with the highest quality score.
 }
 \description{
-Function to define a quality score for each iteration as documented in the output created in F2 and identify the optimal number of iterations post-hoc. Exponents can be modified.
+Defines a quality score for each iteration as documented in the output created in the \code{densify_steps} function and identifies the optimal number of iterations post-hoc according to modifiable exponents.
 }
 \examples{
-# Assuming `documentation` is a data frame generated from `densify_steps` function
-# densify_score(documentation)
+# Assuming `iteration_log` is a data frame generated from `densify_steps` function
+# densify_score(iteration_log)
 
+}
+\seealso{
+\code{\link{densify_steps}}
 }

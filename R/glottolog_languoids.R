@@ -1,4 +1,4 @@
-#' Languoids file from glottolog v.4.8
+#' Languoids file from Glottolog, Version 4.8
 #'
 #' This dataset is the languoid.csv file from Glottolog, Version 4.8.
 #'

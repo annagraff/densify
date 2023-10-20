@@ -1,13 +1,9 @@
-######################################################
-# F2
-#
-#' Iterative matrix densification according to specified criteria.
+#' Iterative matrix densification according to specified criteria
 #'
-#' The output of this densification is a log-file, which specifies details about the matrix after
-#' each iteration.
+#' Iteratively densifies an input data frame. The output of this densification is a log-file, specifying details about the matrix after each iteration.
 #'
-#' @param original_data A data frame with the taxa (e.g. languages, as glottocodes) as row names and variable names as column names.
-#'   Any question marks, empty entries, or "NA"s must be represented as NAs. Default is the data from WALS.
+#' @param original_data A data frame with observations/taxa (e.g. languages, as glottocodes) as row names and variable names as column names.
+#'   Any question marks, empty entries, or "NA"s must be represented as NA. Default is the data from WALS.
 #'
 #' @param max_steps An integer specifying the maximum number of iterations attempted during densification.
 #'   Default is 1.
@@ -33,7 +29,7 @@
 #'
 #' @param verbose A logical indicating how verbose the function should be. If `verbose = FALSE`, only the iteration number is logged. Default is `FALSE`.
 #'
-#' @return A data frame with details about the matrix after each iteration of densification.
+#' @return An iteration log in the form of a data frame with details about the matrix after each iteration of densification.
 #'
 #' @examples
 #' # Assuming `original_data` and `taxonomy_matrix` are appropriate data frames
@@ -93,8 +89,8 @@ densify_steps <- function(original_data = wals, max_steps = 1, variability_thres
 
   # prepare iterative coding scheme:
 
-  # prepare documentation file with information on initial (full) matrix
-  documentation <- data.frame(iterations = "0 (full)",
+  # prepare iteration_log file with information on initial (full) matrix
+  iteration_log <- data.frame(iterations = "0 (full)",
                               available_data_points = sum(full_matrix),
                               prop_coded_data = sum(full_matrix)/(nrow(full_matrix)*ncol(full_matrix)),
                               n_tax = nrow(full_matrix),
@@ -107,7 +103,7 @@ densify_steps <- function(original_data = wals, max_steps = 1, variability_thres
                               removed_var = "NA")
 
   if(is.data.frame(taxonomy_matrix)){ # if a taxonomy matrix is provided, score the taxonomic index for the input data frame
-    documentation <- cbind(documentation, taxonomic_index = vegan::diversity(table(taxonomy_reorganised$level1)))
+    iteration_log <- cbind(iteration_log, taxonomic_index = vegan::diversity(table(taxonomy_reorganised$level1)))
   }
 
   # determine weighted row and column scores (r_weights and c_weights)
@@ -316,9 +312,9 @@ densify_steps <- function(original_data = wals, max_steps = 1, variability_thres
       }
     }
 
-    # update documentation
+    # update iteration_log
     if(is.data.frame(taxonomy_matrix)){
-      documentation<-rbind(documentation,
+      iteration_log<-rbind(iteration_log,
                            c(iterations,
                              sum(updated_matrix),
                              sum(updated_matrix)/(nrow(updated_matrix)*ncol(updated_matrix)),
@@ -332,7 +328,7 @@ densify_steps <- function(original_data = wals, max_steps = 1, variability_thres
                              paste(removed_vars,collapse=";"),
                              vegan::diversity(table(taxonomy_reorganised$level1))))
     } else{
-      documentation<-rbind(documentation,
+      iteration_log<-rbind(iteration_log,
                            c(iterations,
                              sum(updated_matrix),
                              sum(updated_matrix)/(nrow(updated_matrix)*ncol(updated_matrix)),
@@ -364,5 +360,5 @@ densify_steps <- function(original_data = wals, max_steps = 1, variability_thres
     weight_collection$abs_prop_non_NA <- abs_prop_non_NA
     weight_collection$weighted_coding_score <- signif(r_weights_updated$weighted_coding_score,digits=7)
   }
-  return(documentation)
+  return(iteration_log)
 }

@@ -11,7 +11,7 @@ WALS Online
 data(wals)
 }
 \description{
-This dataset is the language-feature matrix generated from WALS Online (retrieved on 5 September 2023).
+This dataset is the language-feature matrix generated from WALS Online (retrieved on 20 October 2023).
 }
 \examples{
 data(wals)
@@ -23,6 +23,6 @@ wals["stan1295",1] # 100A Alignment of Verbal Person Marking (in German)
 \item Dryer, Matthew S. & Haspelmath, Martin (eds.) 2013.
 WALS Online (v2020.3). Zenodo.
 https://doi.org/10.5281/zenodo.7385533
-(Available online at https://wals.info, Accessed on 2023-09-05.)
+(Available online at https://wals.info, Accessed on 2023-10-20.)
 }
 }

@@ -1,13 +1,16 @@
+#' Flatten input taxonomy
+#'
+#' @description
 #' Flattens a taxonomy and encodes it in a table (with one column per taxonomic level)
 #'
-#' A taxonomy tree is said to be "flattened" if the depth of each of it's leaf nodes is equal to the
-#' tree height. Such tree can be constructed by injecting dummy nodes where appropriate. Example:
+#' @details
+#' A taxonomy tree is said to be "flattened" if the depth of each of it's leaf nodes is equal to the tree height. Such tree can be constructed by injecting dummy nodes where appropriate. Example:
 #'
-#'    A                              A      F''     level 1
+#' \preformatted{   A                              A      F''     level 1
 #'   / \         dummy nodes        / \     |
 #'   B  \       ------------->      B  E'   F'      level 2
 #'  / \  \                         / \  \   |
-#'  C  D  E  F                     C  D  E  F       leaf level
+#'  C  D  E  F                     C  D  E  F       leaf level}
 #'
 #' A flat taxonomy can be trivially encoded in a tabular format as it has nodes at every level. Each
 #' column encodes a taxonomic level. The main purpose of this representation is to query a leaf
@@ -18,10 +21,15 @@
 #' we always align at the top level, which means that the dummy nodes are always inserted at the
 #' bottom, between the leaf and it's closest parent in the original tree.
 #'
-#' @param id Vector of node ids
-#' @param parent_id Vector of node parent ids (must be of same size and type as `id`)
+#' @docType package
 #'
-#' @return a data frame with one row per node id and as many columns as there are levels in the tree
+#' @examples
+#' build_flat_taxonomy_matrix(glottolog_languoids$id, glottolog_languoids$parent_id)
+#'
+#' @param id Vector of node ids.
+#' @param parent_id Vector of node parent ids (must be of same size and type as `id`).
+#'
+#' @return A data frame with one row per node id and as many columns as there are levels in the tree.
 #' @export
 
 build_flat_taxonomy_matrix <- function(id, parent_id) {
