@@ -16,7 +16,7 @@ For details on each function, refer to the help page (see below) and/or resort t
 ~~~~
 library("densify")
 
-?flat_taxonomy_matrix
+?build_flat_taxonomy_matrix
 ?densify_steps
 ?densify_score
 ?densify_prune

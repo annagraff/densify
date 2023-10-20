@@ -85,9 +85,11 @@ densify_score <- function(iteration_log, exponent_prop_coded_data = 1, exponent_
 
   # Plot the quality scores:
   if(plot == TRUE){
-    ggplot(data.frame(iteration = 1:length(quality), quality_score = quality), aes(x = iteration, y = quality_score)) +
-      geom_line() +  # Line plot
+    gg<-ggplot(data.frame(iteration = 1:length(quality), quality_score = quality), aes(x = iteration, y = quality_score)) +
+      geom_point(pch=1) +
+      theme_bw() +
       labs(x = "Iteration", y = "Quality Score", title = "Quality Score at Each Iteration")
+    print(gg)
   }
 
   # Identify the first iteration number with the highest quality score:

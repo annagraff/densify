@@ -47,17 +47,17 @@ affiliations:
 
 # Summary
 
-The R package `densify` takes a data frame as an input, and generates a pruned data frame that reduces the amount of `NA`s (empty cells). The pruning process follows criteria that users can adapt to best fit their needs, including data retention, codedness and taxonomic diversity of rows (if the entities are represented in a taxonomic structure). As such, the software is useful for several purposes, including the densification of sparse input matrices and the subsampling of large input matrices according to a procedure that is sensitive to taxonomic structure.
+The R package `densify` provides a procedure to prune input data frames containing empty cells (or cells with value "?" or NA) to denser sub-matrices with less rows, columns and empty cells. The pruning process, split into three functions, trades off a series of variably weighted concerns, including data retention, coding density (proportion of non-empty cells) and taxonomic diversity of rows (if the entities are represented in a taxonomic structure). Users can adapt the relative weight given to these concerns through various parameters for the densification process to best fit their needs. As such, the software is useful for several purposes, including the densification of sparse input matrices and the subsampling of large input matrices according to a procedure that is sensitive to taxonomic structure.
 
 # Statement of Need
 
-While the software will run on any data frame (with rows representing any observations with or without taxonomic structure), it was designed to prune data frames of linguistic typological data, where the rows are languages (taxa) and the columns typological variables (characters, parameters, features).
+While the software will run on any data frame (with rows representing any entities with or without taxonomic structure and columns representing variables), it was designed to prune data frames of linguistic typological data, where the rows are languages (taxa) and the columns typological variables (sometimes also called characters, parameters or features).
 
-Linguistic typological data is increasingly available in large-scale databases, and many analyses that aim at testing hypotheses at global scales rely on such databases. Some of these resources have complete or near-complete coding density for all variables across all languages in the database, but the dataframne may be too large for certain computationally intensive analyses (e.g. PHOIBLE [@phoible], Grambank [@grambank]). Other databases (e.g. WALS [@wals], AUTOTYP [@AUTOTYP], Lexibank [@Lexibank]) exhibit variables that are coded for very different sets of languages, resulting in sparse language-variable matrices, with large proportions of `NA`s. Combining data from various databases via language identifiers like glottocodes usually increases sparsity because the language samples do not match.
+Linguistic typological data is increasingly available in large-scale databases, and many analyses that aim at testing hypotheses at global scales rely on such databases. Some of these resources have information for nearly all variables across nearly all languages in the database (i.e. they have complete or near-complete coding density), but the dataframne may be too large for certain computationally intensive analyses (e.g. PHOIBLE [@phoible], Grambank [@grambank]). Other databases (e.g. WALS [@wals], AUTOTYP [@AUTOTYP], Lexibank [@Lexibank]) exhibit variables that are coded for very different sets of languages, resulting in sparse language-variable matrices. Combining data from various databases via language identifiers like glottocodes usually increases sparsity because the language samples do not match.
 
-Although there are methods available to operate on such matrices (e.g. `Matrix` [@R-Matrix], `MatrixExtra` [@R-MatrixExtra]), sparse matrices may lack power for certain research questions, such that researchers may prefer to operate on a subset of the data represented in a denser matrix. <!-- Why are the matrix packages relevent here. There is a presupposition I am missing. -->
+Although there are methods available to operate on such matrices (e.g. `Matrix` [@R-Matrix], `MatrixExtra` [@R-MatrixExtra]), sparse matrices may lack power for certain research questions, such that researchers may prefer to operate on a subset of the data represented in a denser matrix. <!-- BB: Why are the matrix packages relevent here. There is a presupposition I am missing.:: ANNA: This is a requirement of the journal for the statement of need section ("A Statement of need section that clearly illustrates the research purpose of the software and places it in the context of related work. A list of key references, including to other software addressing related needs.": https://joss.readthedocs.io/en/latest/submitting.html) -->
 
-When generating subsets of a language-variable matrix, researchers might be particularly interested in maintaining taxonomic diversity in the languages represented, penalizing the removal of language isolates or members of small language families in comparison to languages belonging to clades represented by many other languages in the sample.
+When generating subsets of a language-variable matrix, researchers might be particularly interested in maintaining taxonomic diversity in the languages represented, preferentially removing languages belonging to clades represented by many other languages in the sample and penalizing the removal of so-called language isolates or languages which represent language families with few members.
 
 While certain packages exist to generate sub-matrices from varying input matrices according to principled criteria (e.g. `admmDensestSubmatrix` [@R-admmDensestSubmatrix], which identifies the densest sub-matrix of an input graph of a specified size; or `FSelector` [@R-FSelector], which performs attribute subset selection based on various tests and entropy measures to identify the most relevant attributes of a data input), `densify` provides a flexible, explicit, and taxonomy-sensitive pruning algorithm that focuses both on the removal of rows and columns and does not require specification of the size of the sub-matrix.
 
@@ -67,7 +67,7 @@ While certain packages exist to generate sub-matrices from varying input matrice
 
 ## Preparing input
 
-`densify` requires the input data frame to be a data frame with taxon names as row names and variable names as column names. Any cells with empty entries, not applicable or question marks must be coded as `NA`. If matrix densification should consider taxonomic structure, a flat taxonomy must be provided, listing every taxon present in the initial data frame along with all the nodes connecting it to the root. Such a taxonomy can be generated with the `build_flat_taxonomy_matrix()` function, if all nodes and tips are provided alongside each of their parent nodes. For generating a language taxonomy, glottolog can be used directly.
+`densify` requires the input data frame to be a data frame with rows as taxa or observations (and taxon names as row names) and columns as variables (and variable names as column names). Any cells with empty entries, not applicable or question marks must be coded as NA. If matrix densification should consider taxonomic structure, a flat taxonomy must be provided, listing every taxon present in the initial data frame along with all the nodes connecting it to the root. Such a taxonomy can be generated with the `build_flat_taxonomy_matrix()` function, if all nodes and tips are provided alongside each of their parent nodes. For generating a language taxonomy, glottolog can be used directly.
 
 <!-- I think you need to explain how a non-flat taxonomy looks like, i.e. what the input format is. Readers might assume newick or something like that. Also, to maximize usability, I am wondering whether you could point to tools that convert a newick or similar representation into the ID-parentID format of glottolog? -->
 
@@ -95,51 +95,47 @@ Iterative pruning of the input matrix is performed by the `densify_steps` functi
 
 -   The original data frame. Default: `wals`
 -   An integer specifying the number of iterations performed. Default: 1
--   An integer specifying the threshold for variability in columns. Default: 1
+-   An integer specifying the threshold for variability in variables (columns). Default: 1
 -   The mean type, which can be: "arithmetic", "geometric", "log_odds". Default: "log_odds".
--   Is taxonomy accounted for in the pruning process? Default: `FALSE`
+-   Should taxonomy be accounted for in the pruning process? Default: `FALSE`
 -   The taxonomy matrix, required if taxonomy = `TRUE`, optional otherwise. Default: NULL.
--   The tax_weight_factor, required if mean_type = "log_odds". Default: 0.99
--   The coding_weight_factor, required if mean_type = "log_odds". Default: 0.99
+-   A taxonomy weight factor, required if mean_type = "log_odds" and taxonomy = `TRUE`. Default: 0.99
+-   A coding weight factor, required if mean_type = "log_odds". Default: 0.99
 
 For a more detailed discussion of the parameters, refer to the vignette hosted in the software repository.
 
+The output of the function is an iteration log, documenting key characteristics of the sub-matrix resulting from each iteration. 
+
 ``` r
 set.seed(2023)
-documentation <- densify_steps(original_data = wals, max_steps = nrow(wals)+ncol(wals)-2, variability_threshold=3, mean_type = "log_odds", taxonomy = TRUE, taxonomy_matrix = taxonomy_matrix, tax_weight_factor = 0.99, coding_weight_factor = 0.99)
-head(documentation)
+example_iteration_log <- densify_steps(original_data = wals, max_steps = nrow(wals)+ncol(wals)-2, variability_threshold = 3, mean_type = "log_odds", taxonomy = TRUE, taxonomy_matrix = taxonomy_matrix, tax_weight_factor = 0.99, coding_weight_factor = 0.99)
+head(iteration_log)
 ```
-
-[Line breaks]
-
 ## Retrieving the optimal number of iterations and producing the sub-matrix
 
-Given the pruning documentation output, `densify_score` will identify the optimal sub-matrix via a quality score, computed via user-defined exponents relating to the overall proportion of coded data in the matrix, the number of available data points, the coding density of the least well-coded taxon, the coding density of the least well-coded variable, and a taxonomic diversity index (Shannon diversity of the highest taxonomic level).
+Given the pruning iteration log output, the second function `densify_score` will identify the optimal sub-matrix via a quality score, computed via user-defined exponents relating to the overall proportion of coded data in the matrix, the number of available data points, the coding density of the least well-coded taxon, the coding density of the least well-coded variable, and a taxonomic diversity index (Shannon diversity of the highest taxonomic level).
 
-<!--# I think it would be good to explain what the purpose of the documentation is, how its contents look like, and what it means. Also, in the code below I didn't quite understand why some parameters are set inside the function and some independently. Since the settings are single numbers, I'd do this all inside the function call -->
+Finally, the function `densify_prune` will prune the original matrix to the optimal submatrix, given the outputs of `densify_steps` and `densify_score`.
+
+<!--# I think it would be good to explain what the purpose of the documentation is, how its contents look like, and what it means.-->
 
 ``` r
-exponent_prop_coded_data <- 1
-exponent_available_data_points <- 1
-exponent_lowest_taxon_coding_score <- 1
-exponent_lowest_variable_coding_score <- 1
-exponent_taxonomic_diversity <- 1
-
-optimum <- densify_score(documentation = documentation, 
+example_optimum <- densify_score(iteration_log = example_iteration_log, 
                          exponent_prop_coded_data = 1, 
-                         exponent_available_data_points = 1, ## as same name 
-                         exponent_lowest_taxon_coding_score = exponent_lowest_taxon_coding_score,
-                         exponent_lowest_variable_coding_score = exponent_lowest_variable_coding_score,
-                         exponent_taxonomic_diversity = exponent_taxonomic_diversity)
+                         exponent_available_data_points = 1,
+                         exponent_lowest_taxon_coding_score = 1,
+                         exponent_lowest_variable_coding_score = 1,
+                         exponent_taxonomic_diversity = 1,
+						 plot = TRUE)
                          
-pruned_wals <- densify_prune(wals, documentation, optimum)
-
-# add that the execution takes a few seconds
+pruned_wals <- densify_prune(original_data = wals, 
+							iteration_log = example_iteration_log, 
+							optimum = example_optimum)
 ```
 
 # Conclusions
 
-The R package `densify` provides users with a flexible and explicit method to generate sub-matrices from an input matrix in a mathematically principled way. This paper shows a case example using a standard sparse linguistic dataset (WALS) and the standard linguistic taxonomy provided by Glottolog. Additional examples and usage details are hosted in the software repository on GitHub.
+The R package `densify` provides users with a flexible and explicit method to generate sub-matrices from an input matrix in a mathematically principled way. This paper shows a case example using a standard sparse linguistic dataset (WALS) and the standard linguistic taxonomy provided by Glottolog. Additional examples and usage details are hosted in the vignette and found in the software repository on GitHub.
 
 # Acknowledgements
 

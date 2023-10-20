@@ -1,7 +1,7 @@
 #' Flatten input taxonomy
 #'
 #' @description
-#' Flattens a taxonomy and encodes it in a table (with one column per taxonomic level)
+#' Flattens a taxonomy and encodes it in a table (with one column per taxonomic level).
 #'
 #' @details
 #' A taxonomy tree is said to be "flattened" if the depth of each of it's leaf nodes is equal to the tree height. Such tree can be constructed by injecting dummy nodes where appropriate. Example:

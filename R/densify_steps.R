@@ -20,10 +20,10 @@
 #' @param taxonomy_matrix A data frame containing a taxonomy matrix, which can be retrieved from the `build_flat_taxonomy_matrix` function or provided directly.
 #'   This parameter must be specified if `taxonomy = TRUE` and is optional otherwise (if specified, taxonomic index is computed for each iteration).
 #'
-#' @param tax_weight_factor A numeric value between 0 and 1 that determines the relative weight given to taxonomy in taxon pruning.
+#' @param taxonomy_weight A numeric value between 0 and 1 that determines the relative weight given to taxonomy in taxon pruning.
 #'   This parameter must be specified if `taxonomy = TRUE` and `mean_type = "log_odds"`. Default is 0.99.
 #'
-#' @param coding_weight_factor A numeric value between 0 and 1 that determines the relative weight given to coding quality
+#' @param coding_weight A numeric value between 0 and 1 that determines the relative weight given to coding quality
 #'   (absolute coding score and weighted coding score) in taxon pruning. This parameter must be specified if
 #'  `mean_type = "log_odds"`. Default is 0.99.
 #'
@@ -39,8 +39,8 @@
 #' # mean_type = "log_odds",
 #' # taxonomy = T,
 #' # taxonomy_matrix,
-#' # tax_weight_factor = 0.99,
-#' # coding_weight_factor = 0.99,
+#' # taxonomy_weight = 0.99,
+#' # coding_weight = 0.99,
 #' # verbose = T)
 #'
 #' @import vegan
@@ -50,7 +50,7 @@
 #' @export
 ######################################################
 
-densify_steps <- function(original_data = wals, max_steps = 1, variability_threshold = 1, mean_type = "log_odds", taxonomy = F, taxonomy_matrix, tax_weight_factor = 0.99, coding_weight_factor = 0.99, verbose = FALSE){
+densify_steps <- function(original_data = wals, max_steps = 1, variability_threshold = 1, mean_type = "log_odds", taxonomy = F, taxonomy_matrix, taxonomy_weight = 0.99, coding_weight = 0.99, verbose = FALSE){
 
   if (taxonomy == F){
     warning("Attention, taxonomy disregarded for pruning.\n")
@@ -161,9 +161,9 @@ densify_steps <- function(original_data = wals, max_steps = 1, variability_thres
             relevant_levels<-(unique(as.numeric(node_freq_count[tax,2:(max_node_nr+1)])))
             new_levels<-(c(relevant_levels,rep(1,(max_node_nr-length(relevant_levels))))) # this collapses any unnecessary nodes
             node_freq_count[tax,2:(max_node_nr+1)]<-as.list(new_levels) # update node_freq_count with new node count
-            node_freq_count[tax,"prov_tax_weight"]<-1/(prod(new_levels)^(1/length(new_levels))) # this is 1/(geometric mean of (modified) node level counts)
+            node_freq_count[tax,"prov_taxonomy_weight"]<-1/(prod(new_levels)^(1/length(new_levels))) # this is 1/(geometric mean of (modified) node level counts)
           }
-          weight_collection[node_freq_count$id,"taxonomic_weight"]<-prop.table(node_freq_count$prov_tax_weight)
+          weight_collection[node_freq_count$id,"taxonomic_weight"]<-prop.table(node_freq_count$prov_taxonomy_weight)
         }
       }
     }
@@ -177,14 +177,14 @@ densify_steps <- function(original_data = wals, max_steps = 1, variability_thres
     } else if (mean_type == "geometric"){ # geometric mean
       weight_collection$mean_score <- apply(weight_collection,1,function(x) prod(x) ** (1/length(x)))
     } else if (mean_type == "log_odds" & taxonomy == T) { # log odds mean if taxonomy considered
-      weight_collection$abs_prop_non_NA <- weight_collection$abs_prop_non_NA*coding_weight_factor # multiply all weights by coding_weight_factor
-      weight_collection$weighted_coding_score <- weight_collection$weighted_coding_score*coding_weight_factor # multiply all weights by coding_weight_factor
-      weight_collection$taxonomic_weight <- weight_collection$taxonomic_weight*tax_weight_factor # multiply all weights by tax_weight_factor so that no values are equal to 1 (which would make computing the log-odds impossible)
+      weight_collection$abs_prop_non_NA <- weight_collection$abs_prop_non_NA*coding_weight # multiply all weights by coding_weight
+      weight_collection$weighted_coding_score <- weight_collection$weighted_coding_score*coding_weight # multiply all weights by coding_weight
+      weight_collection$taxonomic_weight <- weight_collection$taxonomic_weight*taxonomy_weight # multiply all weights by taxonomy_weight so that no values are equal to 1 (which would make computing the log-odds impossible)
       mn<-apply(weight_collection["weighted_coding_score"],1,qlogis)+apply(weight_collection["abs_prop_non_NA"],1,qlogis)+apply(weight_collection["taxonomic_weight"],1,qlogis)/3
       weight_collection$mean_score<-exp(mn)/(1+exp(mn))
     } else if (mean_type == "log_odds" & taxonomy == F) { # log odds mean if taxonomy not considered
-      weight_collection$abs_prop_non_NA <- weight_collection$abs_prop_non_NA*coding_weight_factor # multiply all weights by coding_weight_factor
-      weight_collection$weighted_coding_score <- weight_collection$weighted_coding_score*coding_weight_factor # multiply all weights by coding_weight_factor
+      weight_collection$abs_prop_non_NA <- weight_collection$abs_prop_non_NA*coding_weight # multiply all weights by coding_weight
+      weight_collection$weighted_coding_score <- weight_collection$weighted_coding_score*coding_weight # multiply all weights by coding_weight
       mn<-apply(weight_collection["weighted_coding_score"],1,qlogis)+apply(weight_collection["abs_prop_non_NA"],1,qlogis)/2
       weight_collection$mean_score<-exp(mn)/(1+exp(mn))
     }
@@ -287,8 +287,8 @@ densify_steps <- function(original_data = wals, max_steps = 1, variability_thres
       if (verbose == "TRUE"){
         cat("There are phylogenetic weights to be updated.\n")
       }
-      fams_for_tax_weight_update <- unique(dplyr::filter(taxonomy_matrix,id%in%removed_taxa)$level1)
-      for (fam in fams_for_tax_weight_update){ # proceed family-wise
+      fams_for_taxonomy_weight_update <- unique(dplyr::filter(taxonomy_matrix,id%in%removed_taxa)$level1)
+      for (fam in fams_for_taxonomy_weight_update){ # proceed family-wise
         node_freq_count <- dplyr::filter(taxonomy_reorganised,.data$level1%in%fam) # filter out remaining taxa of this family
         if(nrow(node_freq_count)==0){} else if(nrow(node_freq_count)==1){ # if taxon is sole representative of its family, --> weight 1
           weight_collection[node_freq_count$id,"taxonomic_weight"] <- 1
@@ -304,10 +304,10 @@ densify_steps <- function(original_data = wals, max_steps = 1, variability_thres
             relevant_levels <- (unique(as.numeric(node_freq_count[tax,2:(max_node_nr+1)])))
             new_levels <- (c(relevant_levels,rep(1,(max_node_nr-length(relevant_levels))))) # this collapses any unnecessary nodes
             node_freq_count[tax,2:(max_node_nr+1)] <- as.list(new_levels) # update node_freq_count with new node count
-            node_freq_count[tax,"prov_tax_weight"] <- 1/(prod(new_levels)^(1/length(new_levels))) # this is 1/(geometric mean of (modified) node level counts)
+            node_freq_count[tax,"prov_taxonomy_weight"] <- 1/(prod(new_levels)^(1/length(new_levels))) # this is 1/(geometric mean of (modified) node level counts)
           }
-          ## update the taxonomic weight in weight_collection (multiplied by tax_weight_factor to ensure log-odds can be computed if applicable)
-          weight_collection[which(rownames(weight_collection)%in%node_freq_count$id),"taxonomic_weight"]<-prop.table(node_freq_count$prov_tax_weight)
+          ## update the taxonomic weight in weight_collection (multiplied by taxonomy_weight to ensure log-odds can be computed if applicable)
+          weight_collection[which(rownames(weight_collection)%in%node_freq_count$id),"taxonomic_weight"]<-prop.table(node_freq_count$prov_taxonomy_weight)
         }
       }
     }
