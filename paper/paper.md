@@ -112,7 +112,7 @@ set.seed(2023)
 example_iteration_log <- densify_steps(original_data = wals, max_steps = nrow(wals)+ncol(wals)-2, variability_threshold = 3, mean_type = "log_odds", taxonomy = TRUE, taxonomy_matrix = taxonomy_matrix, tax_weight_factor = 0.99, coding_weight_factor = 0.99)
 head(iteration_log)
 ```
-## Retrieving the optimal number of iterations and producing the sub-matrix
+## Finding the optimal number of iterations and producing the sub-matrix
 
 Given the pruning iteration log output, the second function `densify_score` will identify the optimal sub-matrix via a quality score, computed via user-defined exponents relating to the overall proportion of coded data in the matrix, the number of available data points, the coding density of the least well-coded taxon, the coding density of the least well-coded variable, and a taxonomic diversity index (Shannon diversity of the highest taxonomic level).
 
