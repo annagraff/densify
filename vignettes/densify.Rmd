@@ -32,8 +32,6 @@ If the densification process should be sensitive to the taxonomic structure of t
 
 <!--# See my comment on the paper: what would user do if their taxonomy is in a more standard format such as newick? -->
 
-<!--# Also, it would help users if you also gave an example of how to work with a database that is not preloaded in the package, ideally autotyp because it is the least user-friendly and therefore most difficult for beginners. Other databases might have glottocodes in columns, not as rownames. A small point that beginners will struggle with (as I know from teaching). -->
-
 ```{r packages, echo = TRUE, warnings = FALSE, message = FALSE}
 # load packages
 library(densify)

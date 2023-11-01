@@ -69,7 +69,7 @@ While certain packages exist to generate sub-matrices from varying input matrice
 
 `densify` requires the input data frame to be a data frame with rows as taxa or observations (and taxon names as row names) and columns as variables (and variable names as column names). Any cells with empty entries, not applicable or question marks must be coded as NA. If matrix densification should consider taxonomic structure, a flat taxonomy must be provided, listing every taxon present in the initial data frame along with all the nodes connecting it to the root. Such a taxonomy can be generated with the `build_flat_taxonomy_matrix()` function, if all nodes and tips are provided alongside each of their parent nodes. For generating a language taxonomy, glottolog can be used directly.
 
-<!-- I think you need to explain how a non-flat taxonomy looks like, i.e. what the input format is. Readers might assume newick or something like that. Also, to maximize usability, I am wondering whether you could point to tools that convert a newick or similar representation into the ID-parentID format of glottolog? -->
+<!-- I think you need to explain how a non-flat taxonomy looks like, i.e. what the input format is. Readers might assume newick or something like that. Also, to maximize usability, I am wondering whether you could point to tools that convert a newick or similar representation into the ID-parentID format of glottolog? ::-->
 
 ``` r
 install.packages("densify")
@@ -127,7 +127,7 @@ example_optimum <- densify_score(iteration_log = example_iteration_log,
                          exponent_lowest_variable_coding_score = 1,
                          exponent_taxonomic_diversity = 1,
 						 plot = TRUE)
-                         
+
 pruned_wals <- densify_prune(original_data = wals, 
 							iteration_log = example_iteration_log, 
 							optimum = example_optimum)
