@@ -68,7 +68,7 @@ While certain packages exist to generate sub-matrices from varying input matrice
 
 ## Preparing input
 
-`densify` requires the input data frame to be a data frame with rows as taxa or observations (and taxon names as row names) and columns as variables (and variable names as column names). Any cells with empty entries, not applicable or question marks must be coded as NA. If matrix densification should consider taxonomic structure, a flat taxonomy must be provided, listing every taxon present in the initial data frame along with all the nodes connecting it to the root. Such a taxonomy can be generated with the `build_flat_taxonomy_matrix()` function, if all nodes and tips are provided alongside each of their parent nodes. For generating a language taxonomy, glottolog can be used directly.
+`densify` requires the input data frame to have rows representing taxa or observations (and taxon names as row names) and columns representing variables (and variable names as column names). Any cells with empty entries, not applicable or question marks must be coded as NA. If matrix densification should consider taxonomic structure, a flat taxonomy must be provided, listing every taxon present in the initial data frame along with all the nodes connecting it to the root. Such a taxonomy can be generated with the `build_flat_taxonomy_matrix()` function, if all nodes and tips are provided alongside each of their parent nodes. For generating a language taxonomy, glottolog can be used directly.
 
 <!-- I think you need to explain how a non-flat taxonomy looks like, i.e. what the input format is. Readers might assume newick or something like that. Also, to maximize usability, I am wondering whether you could point to tools that convert a newick or similar representation into the ID-parentID format of glottolog? ::-->
 
@@ -80,7 +80,7 @@ library(densify)
 data(wals)
 data(glottolog_languoids)
 
-# the input data frame must be a data frame with the taxon names as row names and variable names as column names; any question marks, empty entries, "NA"s must be coded as NAs
+# the input data frame must have the taxon names as row names and variable names as column names; any question marks, empty entries, "NA"s must be coded as NAs
 wals[wals=="?"] <- NA
 wals[wals=="NA"] <- NA
 head(wals)
