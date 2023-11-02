@@ -466,7 +466,7 @@ Each defined exponent must be a positive number. Setting an exponent to `0` corr
 
 As such, in the example settings below, the following are equivalent: (1), (2) and (3); (4) and (5). 
 
-1.  exponent_prop_coded_data = 1, exponent_available_data_points = 1, exponent_lowest_taxon_coding_score = 0, exponent_lowest_variable_coding_score = 0, exponent_taxonomic_diversity = 0 
+1.  exponent_prop_coded_data = 1, exponent_available_data_points = 1, exponent_lowest_taxon_coding_score = 0, exponent_lowest_variable_coding_score = 0, exponent_taxonomic_diversity = 0
 2.  exponent_prop_coded_data = 1, exponent_available_data_points = 1 
 3.  exponent_prop_coded_data = 2, exponent_available_data_points = 2 
 4.  exponent_prop_coded_data = 0.5, exponent_available_data_points = 1 
