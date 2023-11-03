@@ -447,7 +447,7 @@ The function `densify_score` takes the iteration log from `densify_steps` as an 
 
 <!--# BB:here it would be good to first give an overall explanation of the trade-offs between the various ways of setting the parameters: more data but then also more NAs; more taxonomic diversity, less data, etc. ANNA: Hope this is better now? -->
 
-The quality score is the product of five values, each modifiable by an exponent: (1) the proportion of coded data in the matrix overall, (2) the absolute number of non-missing data points in the matrix, (3) the absolute coding density of the least well-coded row, (4) the proportion of rows for which the least well-coded column is coded, and (5) the taxonomic diversity of the taxa provided in rows (computed as the Shannon entropy of the highest taxonomic level of all taxa present; applicable only if a taxonomy matrix is provided).
+The quality score is the product of five values, each modifiable by an exponent: (1) the proportion of coded data in the matrix overall, (2) the absolute number of non-missing data points in the matrix, (3) the absolute coding density of the least well-coded row, (4) the absolute coding density of the least well-coded column, and (5) the taxonomic diversity of the taxa provided in rows (computed as the Shannon entropy of the highest taxonomic level of all taxa present; applicable only if a taxonomy matrix is provided).
 
 Thus, the following parameters are available to modulate the weight of each of these values to identify the optimal sub-matrix:
 
