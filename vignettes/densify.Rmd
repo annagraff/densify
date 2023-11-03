@@ -565,7 +565,7 @@ optimum31000 # for exponents 3, 1, 0, 0, 0
 
 ## 2.3. Matrix densification: retrieving the pruned matrix using `densify_prune`
 
-The third function to complete matrix denisification is given by `densify_prune`. It subsets the original data frame (parameter `original_data`) to the pruned data frame, given the outputs of `densify_steps` (parameter `iteration_log`) and `densify_score` (parameter `optimum`).
+The third function to complete matrix densification is given by `densify_prune`. It subsets the original data frame (parameter `original_data`) to the pruned data frame, given the outputs of `densify_steps` (parameter `iteration_log`) and `densify_score` (parameter `optimum`).
 
 ```{r densify_prune, echo = TRUE}
 pruned_wals_exponents11111 <- 
