@@ -11,11 +11,12 @@
 #' Leipzig: Max Planck Institute for Evolutionary Anthropology.
 #' https://doi.org/10.5281/zenodo.8131084
 #' (Available online at http://glottolog.org, Accessed on 2023-09-05.)
-
 #' @usage data(glottolog_languoids)
+#'
+NULL
 
-temp <- tempfile()
-download.file("https://cdstar.eva.mpg.de//bitstreams/EAEA0-B701-6328-C3E3-0/glottolog_languoid.csv.zip",temp)
-glottolog_languoids <- read.csv(unz(temp, "languoid.csv"))
-unlink(temp)
-rm(temp)
+# temp <- tempfile()
+# download.file("https://cdstar.eva.mpg.de//bitstreams/EAEA0-B701-6328-C3E3-0/glottolog_languoid.csv.zip",temp)
+# glottolog_languoids <- read.csv(unz(temp, "languoid.csv"))
+# unlink(temp)
+# rm(temp)

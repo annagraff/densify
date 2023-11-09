@@ -11,9 +11,9 @@ test_that("It handles incorrect input values", {
     Taxon4 = c(0, 0, 0, 0)
   )
 
-  taxonomy_matrix <- data.frame(
-    id = 1:4,
-    level1 = c("FamilyA", "FamilyB", "FamilyA", "FamilyC")
+  taxonomy <- data.frame(
+    id = as.character(1:4),
+    parent_id = c("FamilyA", "FamilyB", "FamilyA", "FamilyC")
   )
 
   # Test the densify_steps function with negative max_steps
@@ -32,7 +32,7 @@ test_that("It handles incorrect input values", {
   expect_error(densify_steps(original_data, mean_type = "median"))
 
   # Test the densify_steps function with taxonomy_weight out of range
-  expect_error(densify_steps(original_data, taxonomy = TRUE, taxonomy_matrix = taxonomy_matrix, taxonomy_weight = 1.5))
+  expect_error(densify_steps(original_data, use_taxonomy = TRUE, taxonomy_matrix = taxonomy, taxonomy_weight = 1.5))
 
   # Test the densify_steps function with coding_weight out of range
   expect_error(densify_steps(original_data, coding_weight = -0.5))

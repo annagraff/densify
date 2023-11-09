@@ -19,7 +19,7 @@ test_that("It correctly handles wrong 'optimum' inputs", {
 
   # Test the densify_prune function with out-of-bounds 'optimum'
   expect_warning(densify_prune(original_data, documentation, optimum = 4),
-                 "The 'optimum' value was larger than the number of iterations in documentation.")
+                 "`optimum` is larger than the number of iterations in iteration_log")
 
   # Test the densify_prune function with non-integer 'optimum'
   expect_error(densify_prune(original_data, documentation, optimum = 2.5))
