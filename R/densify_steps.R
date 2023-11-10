@@ -50,21 +50,21 @@
 #'
 #' @export
 densify_steps <- function(
-  original_data = wals, 
-  max_steps = 1, 
-  variability_threshold = 1, 
-  mean_type = "log_odds", 
-  use_taxonomy = FALSE, 
-  taxonomy, 
-  taxonomy_weight = 0.99, 
-  coding_weight = 0.99, 
+  original_data = wals,
+  max_steps = 1,
+  variability_threshold = 1,
+  mean_type = "log_odds",
+  use_taxonomy = FALSE,
+  taxonomy,
+  taxonomy_weight = 0.99,
+  coding_weight = 0.99,
   verbose = FALSE
 ){
   # check the arguments
   use_taxonomy <- rlang::is_true(use_taxonomy)
   verbose      <- rlang::is_true(verbose)
 
-  if (use_taxonomy) {
+  if (!use_taxonomy) {
     rlang::warn("Attention, taxonomy disregarded for pruning.\n")
   } else {
     rlang::check_required(taxonomy)
