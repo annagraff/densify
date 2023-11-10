@@ -21,16 +21,16 @@ knitr::opts_chunk$set(
 
 The `densify` package provides a procedure to generate denser subsets of input data frames according to varying user-defined parameters. The densification process is split up into three functions, `densify_steps`, `densify_score` and `densify_prune`. This tutorial guides users through all functions and parameters to demonstrate their effect on densification to help users select settings according to their needs. 
 
-The data used in this tutorial are the default data provided in the package (the language-variable matrix `wals` obtained from the World Atlas of Language Structures (WALS [@wals]) and the language taxonomy `glottolog_languoids` provided by Glottolog, Version 4.8 [@glottolog]).
+The data used in this tutorial are the default data provided in the package: the language-variable matrix `wals` obtained from WALS, the World Atlas of Language Structures [@wals], and the language taxonomy `glottolog_languoids` provided by Glottolog, Version 4.8 [@glottolog].
 
 # 2. Matrix densification
 ## 2.0. Preparing input
 
 The input for densification needs to be a data frame with rows representing observations or taxa (e.g., languages) and columns representing variables (in linguistic typological databases, these are also often referred to as "features", "characters" or "parameters"). Taxon (or other observation) names must be set as the row names of the data frame, and variable names must be set as the column names. Any cells with empty entries, not applicable or question marks must be coded as `NA`. 
 
-If the densification process should be sensitive to the taxonomic structure of the observations, a flat taxonomy must be provided, listing every taxon present in the initial data frame along with all the nodes connecting it to the root. Such a taxonomy can be generated with the `build_flat_taxonomy_matrix` function, if all nodes and tips are provided alongside each of their parent nodes. For generating a language taxonomy, the "languoids.csv" file from Glottolog can be used directly.
+If the densification process should be sensitive to the taxonomic structure of the observations, a taxonomy must be provided, in which all observations in the data frame inputted for pruning are attested either as tips or nodes. The input taxonomy can have two forms: it can be a `phylo` object (e.g. via [ape::read.nexus]) or an adjacency table (i.e. a data frame containing columns `id` and `parent_id`, with each row encoding one parent-child relationship). For generating a language taxonomy, the "languoids.csv" file from Glottolog, accessible as `glottolog_languoids` in the package, can be used directly. 
 
-<!--# See my comment on the paper: what would user do if their taxonomy is in a more standard format such as newick? -->
+The taxonomic input is parsed internally by the function `densify_steps` to generate a flattened taxonomic representation and then used for densification, if specified. As such, users do not need to convert the input taxonomy into flattened format themselves, but we choose to expose the function `as_flat_taxonomy_matrix` here, since it can be useful for advanced applications.
 
 ```{r packages, echo = TRUE, warnings = FALSE, message = FALSE}
 # load packages
@@ -47,9 +47,9 @@ wals[wals==""] <- NA
 wals[wals=="?"] <- NA
 wals[wals=="NA"] <- NA
 
-# create glottolog taxonomy
-taxonomy_matrix <- build_flat_taxonomy_matrix(id = glottolog_languoids$id, 
-                                              parent_id = glottolog_languoids$parent_id)
+# this is the flat glottolog taxonomy generated within the densify_steps function
+# with the input glottolog_languoids
+flat_taxonomy_matrix <- as_flat_taxonomy_matrix(glottolog_languoids)
 ```
 
 The initial (full) dataset provided by WALS encompasses data on 192 linguistic variables, coded for 2496 languages (representing 317 families) that are attributable to Glottolog. 
@@ -58,7 +58,7 @@ The initial (full) dataset provided by WALS encompasses data on 192 linguistic v
 # number of languages
 nrow(wals) 
 # number of families
-taxonomy_matrix %>% filter(id %in% rownames(wals)) %>% select(level1) %>% unique() %>% nrow()
+flat_taxonomy_matrix %>% filter(id %in% rownames(wals)) %>% select(level1) %>% unique() %>% nrow()
 # number of variables
 ncol(wals) 
 ```
@@ -101,7 +101,7 @@ There are several ways with which quality scores for rows and columns can be com
 
 Thus, to determine the quality score of a column (variable), `densify_steps` computes the weighted column coding density. To determine the quality score of a row (language), on the other hand, one of three possible **mean measures** described in detail below is computed that takes into account (1) the absolute row coding densities, (2) the weighted row coding densities and - if specified - (3) the contribution of a specific row to the taxonomic diversity of the sample.
 
-Row and column quality scores are treated differently for two reasons. First, only rows can have taxonomic structure. Second, in most linguistic typological research applications, the focus of densification resides chiefly on pruning away rows (languages/taxa/observations) rather than columns, given that the former are usually substantially more numerous, and including absolute coding densities in the row quality score primarily has the effect of penalizing scarcely-coded rows in the matrix more strongly. 
+Row and column quality scores are treated differently for two reasons. First, only rows can have taxonomic structure. Second, in most linguistic typological research applications, the focus of densification resides chiefly on pruning away rows (languages/taxa/observations) rather than columns because the former are usually substantially more numerous, and including absolute coding densities in the row quality score primarily has the effect of penalizing scarcely-coded rows in the matrix more strongly. 
 
 Removing rows can have effects not only on coding densities of columns, but also on their informativeness: It is possible for the iterative removal of rows to slowly deplete a variable state, such that a variable (column) no longer displays sufficient or any variability (i.e., a column may still be coded for a substantial number of rows but all remaining coded rows might have the value "FALSE", because all rows with the value "TRUE" have been pruned away). Thus, after each row removal `densify_steps` assesses whether any variables have become uninformative according to a user-defined threshold denoting how many observations must be present in the second-largest variable state, and removes any such column(s) alongside the row in the same iteration. Conversely, it is computationally possible that the removal of a specific column results in a row no longer exhibiting any data points (because it was only coded for the column that was removed). Thus, after each column removal the algorithm assesses whether any rows have become empty and removes any such row(s) alongside the column in the same iteration.
 
@@ -115,16 +115,15 @@ The function `densify_steps` requires the user to define a number of parameters,
 -   `max_steps`: An integer specifying the maximum number of iterations performed. The default number of iterations is set to `1`. We recommend setting max_steps to the maximum possible number of iterations conceivable for a given input matrix (i.e. `nrow(original_data)+ncol(original_data)-2`).  <!--# BB: why not make the recommended number the default? that's common practice:::: ANNA: I wouldn't know how to do this, because "original_data" has to be provided as a separate parameter, and I dont think one can recruit the value of another parameter to generate the default of another parameter in the same variable? 
 ML: I agree with Anna. Moreover, 1 is just safer: You don't want to have to stop the script if you accidentally forgot this parameter. -->
 -   `variability_threshold`: An integer specifying how many observations/taxa the second-most-frequent variable state of any variable must contain for the variable to be maintained in the matrix. The default set to `1`, guaranteeing that a variable must display at least some variability (at least one observation must be different from all others). <!--# BB: pls try to unpack what this means, also consider what a sensible default would be. It's not clear to me::ANNA: I hope this has become clearer, with the re-written section above? -->
--   `taxonomy`: A logical parameter denoting whether the taxonomic structure of rows shall be taken into account in the pruning process or not. The default setting is `FALSE`, because taxonomies may not always be available.
+-   `use_taxonomy`: A logical parameter denoting whether the taxonomic structure of rows shall be taken into account in the pruning process or not. The default setting is `FALSE`, because taxonomies may not always be available.
 -   `mean_type`: This parameter specifies how the measure denoting row quality is computed. It can be one of the following three mean-types: `arithmetic`, `geometric`, `log_odds`. See below for more details. The default setting is `log_odds`. <!--# BB: it won't be obvious in what sense log odds is a kind of mean, better introduce with notion of score above. Perhaps just a matter of terminology but can easily puzzle readers. It will help to introduce the notions "encoding matrix", "coding density", "quality score", "mean" step by step, defining th terms clearly and illustrate with a toy example. ANNA: I hope this has become clearer, with the re-written section above?-->
 -   `verbose`: A logical parameter denoting whether the function output should be concise or detailed. The default setting is for the output to be concise (`FALSE`).
 
 The following parameters are conditionally mandatory:
 
--  `taxonomy_matrix`: The taxonomy matrix encompassing all taxa represented in original_data, in the format described above. If the parameter `taxonomy = TRUE`, it is mandatory. Otherwise, it is optional. The default setting is `NULL`, denoting that no taxonomy matrix is provided.
-<!--# BB:shouldn't this be FALSE?:: ANNA: No, because it is not a logical but a data frame that must is provided -->
+-  `taxonomy`: A taxonomy encompassing all taxa represented in original_data as tips or nodes. It can be a `phylo` object or an adjacency table (a data frame containing columns `id` and `parent_id`, with each row encoding one parent-child relationship). This parameter must be specifid if `use_taxonomy == TRUE` and is optional otherwise (if specified, taxonomic index is computed for each iteration). No taxonomy is provided as a default.
 
--  `taxonomy_weight`: This parameter specifies the weight factor attributed to contribution to taxonomic diversity in the computation of the log_odds mean of rows. It must lie between 0 and 1 (excluding these values) and is mandatory if `mean_type = "log_odds"` and if `taxonomy = TRUE`. Otherwise, it is undefined. The default value is `0.99`. See below for effects in varying weights for the log_odds mean.  <!--# BB:can you say what that intuition this captures?:: ANNA: is this ok?-->
+-  `taxonomy_weight`: This parameter specifies the weight factor attributed to contribution to taxonomic diversity in the computation of the log_odds mean of rows. It must lie between 0 and 1 (excluding these values) and is mandatory if `mean_type = "log_odds"` and if `use_taxonomy = TRUE`. Otherwise, it is undefined. The default value is `0.99`. See below for effects in varying weights for the log_odds mean.  <!--# BB:can you say what that intuition this captures?:: ANNA: is this ok?-->
 -  `coding_weight`: This parameter specifies the weight factor attributed to absolute and weighted coding densities in the computation of the log_odds mean of rows. It must lie between 0 and 1 (excluding these values) and is mandatory if `mean_type = "log_odds"`. Otherwise, it is undefined. The default value is `0.99`. See below for effects in varying weights for the log_odds mean.
 
 While it is possible to run `densify_steps` with several parameter settings on the same input data frame, we strongly recommend motivating parameter settings with the desired characteristics of the output data frame (e.g. how strongly should taxonomic diversity be weighted in relation to coding density of rows?) in mind.
@@ -136,17 +135,17 @@ Setting the parameter `variability_threshold = 1` (the default value) ensures th
 
 For certain comparative analyses, it may be reasonable to set the threshold to an integer n > 1, because such settings ensure that each variable contains at least two values including n or more taxa/observations.  <!--# BB:please explain up front what the numbers stand for, it sounds like it's the number of types/values. If so say so; if not, make sure readers won't misunderstand:: ANNA Has this become clearer now?-->
 
-#### Parameters `taxonomy` and `taxonomy_matrix`
+#### Parameters `use_taxonomy` and `taxonomy`
 
-The logical parameter `taxonomy` denotes whether taxonomic structure among the observations/entities represented in rows should contribute to determining the quality score of rows in each iteration. It is `FALSE` by default because it requires a taxonomy matrix, which is not always applicable or available. 
+The logical parameter `use_taxonomy` denotes whether taxonomic structure among the observations/entities represented in rows should contribute to determining the quality score of rows in each iteration. It is `FALSE` by default because it requires a taxonomy, which is not always applicable or available. 
 
-A taxonomy matrix in the format produced by `build_flat_taxonomy_matrix` must be provided under the parameter `taxonomy_matrix` whenever the parameter `taxonomy = TRUE`. It may (but does not have to) be provided when `taxonomy = FALSE`. Providing a taxonomy matrix when `taxonomy = FALSE` results in taxonomic structure not being considered for computing row quality scores, but a taxonomic diversity score (the Shannon entropy of the highest taxonomic level in the taxonomy) being computed and logged for each sub-matrix in the iteration_log produced by `density_steps`. This way, disconsidering taxonomic diversity in the pruning process does not preclude taxonomic diversity from being considered for identifying the optimal number of iterations using `densify_prune` later (see below).  <!--# BB: unclear, please unpack, step by step:: ANNA: Has this become clearer? -->
+A taxonomy provided as a `phylo` object or as an adjacency table must be provided under the parameter `taxonomy` whenever the parameter `use_taxonomy = TRUE`. It may (but does not have to) be provided when `use_taxonomy = FALSE`. Providing a taxonomy when `use_taxonomy = FALSE` results in taxonomic structure not being considered for computing row quality scores, but a taxonomic diversity score (the Shannon entropy of the highest taxonomic level in the taxonomy) being computed and logged for each sub-matrix in the iteration_log produced by `density_steps`. This way, disconsidering taxonomic diversity in the pruning process does not preclude taxonomic diversity from being considered for identifying the optimal number of iterations using `densify_prune` later (see below).  <!--# BB: unclear, please unpack, step by step:: ANNA: Has this become clearer? -->
 
 #### Parameters `mean_type`, `taxonomy_weight` and `coding_weight`
 
 `densify_steps` offers three methods of computing the mean of row-wise absolute and weighted coding densities as well as contribution to taxonomic diversity of the sample where applicable: Possible values are `arithmetic`, `geometric`, or `log_odds`. 
 
-The arithmetic and geometric means operate as conventionally understood in mathematics: the arithmetic mean utilizes the `base::mean` function, while the geometric mean involves the n-th root of the product. For `mean_type = "arithmetic"` and `mean_type = "geometric"`, the respective means of (1) the absolute and (2) weighted coding densities are computed for each row, if `taxonomy = FALSE`. If `taxonomy = TRUE`, the respective means of the (1) absolute coding density, (2) the weighted coding density and (3) the contribution to taxonomic diversity are computed for each row.
+The arithmetic and geometric means operate as conventionally understood in mathematics: the arithmetic mean utilizes the `base::mean` function, while the geometric mean involves the n-th root of the product. For `mean_type = "arithmetic"` and `mean_type = "geometric"`, the respective means of (1) the absolute and (2) weighted coding densities are computed for each row, if `use_taxonomy = FALSE`. If `use_taxonomy = TRUE`, the respective means of the (1) absolute coding density, (2) the weighted coding density and (3) the contribution to taxonomic diversity are computed for each row.
 
 The log odds mean is computed by taking the logit transform of all inputs, then taking the arithmetic mean and then transforming back. In R, the logit function is available as `qlogis()` and the inverse logit as `plogis()`. We thus compute:
 
@@ -154,11 +153,11 @@ The log odds mean is computed by taking the logit transform of all inputs, then 
 log_odds_mean = plogis(mean(qlogis(inputs)))
 ```
 
-As for the other `mean_type` values, the value `log_odds` specifies for the log odds means of the (1) absolute and (2) weighted coding densities to be computed if `taxonomy = FALSE` and the log odds means of the (1) absolute coding density, (2) the weighted coding density and (3) the contribution to taxonomic diversity to be computed if `taxonomy = TRUE`. However, `mean_type = log_odds` requires specifying the aforementioned additional parameter `coding_weight` and, if `taxonomy = TRUE`, also a separate parameter `taxonomy_weight`. In addition to serving to avoid possible computations like qlogis(0)+qlogis(1) = -Inf+Inf = NaN, the weight factors allow for modulating the behaviour of the log odds mean (see below) and can be set separately for the absolute and weighted coding density (`coding_weight`) and contribution to taxonomic diversity (`taxonomy_weight`) to bias the weight of taxonomic diversity relative to the weight of codedness in the computation of the row means and ultimately in the iterative pruning process.
+As for the other `mean_type` values, the value `log_odds` specifies for the log odds means of the (1) absolute and (2) weighted coding densities to be computed if `use_taxonomy = FALSE` and the log odds means of the (1) absolute coding density, (2) the weighted coding density and (3) the contribution to taxonomic diversity to be computed if `use_taxonomy = TRUE`. However, `mean_type = log_odds` requires specifying the aforementioned additional parameter `coding_weight` and, if `use_taxonomy = TRUE`, also a separate parameter `taxonomy_weight`. In addition to serving to avoid possible computations like qlogis(0)+qlogis(1) = -Inf+Inf = NaN, the weight factors allow for modulating the behaviour of the log odds mean (see below) and can be set separately for the absolute and weighted coding density (`coding_weight`) and contribution to taxonomic diversity (`taxonomy_weight`) to bias the weight of taxonomic diversity relative to the weight of codedness in the computation of the row means and ultimately in the iterative pruning process.
 
 To illustrate the different effects of the three mean types available, the first plot below traces the mean of a constant 0.5 and a value x between 0 and 1 of mean types `arithmetic`, `geometric` and `log_odds`. Note how the log odds mean strongly skews towards the values 0 and 1 once x approaches these extremes, while the geometric mean does so only towards 0. If users intends to strongly weight extremely low (approaching 0) or extremely high (approaching 1) values regarding either contribution to taxonomic diversity or codedness, they should thus favour the log odds or possibly the geometric mean for `densify_steps`.
 
-The second plot illustrates how different weight factors (here: 0.5, 0.75, 0.95 and 0.99) modulate the behaviour of the log odds mean of a constant 0.5 and all possible values of x.
+The second plot illustrates how different weight factors (here: 0.5, 0.75, 0.9, 0.95, 0.99 and 0.999) modulate the behaviour of the log odds mean of a constant 0.5 and all possible values of x.
 
 ```{r mean comparison, eval = TRUE, echo = FALSE, fig.show="hold", out.width="45%", fig.width=6, fig.height=4}
 # Define a function to calculate the arithmetic mean
@@ -183,8 +182,10 @@ x_values <- seq(0, 1, by = 0.001)
 arithmetic_mean_values <- sapply(x_values, arithmetic_mean)
 geometric_mean_values <- sapply(x_values, geometric_mean)
 lom_values <- sapply(x_values, lom)
+lom_values_999 <- sapply(x_values, function(x) lom(x * 0.999))
 lom_values_99 <- sapply(x_values, function(x) lom(x * 0.99))
 lom_values_95 <- sapply(x_values, function(x) lom(x * 0.95))
+lom_values_90 <- sapply(x_values, function(x) lom(x * 0.9))
 lom_values_75 <- sapply(x_values, function(x) lom(x * 0.75))
 lom_values_50 <- sapply(x_values, function(x) lom(x * 0.5))
 
@@ -192,8 +193,10 @@ values <- data.frame(x_values = x_values,
                      arithmetic_mean_values = arithmetic_mean_values,
                      geometric_mean_values = geometric_mean_values,
                      lom_values = lom_values,
+                     lom_values_999 = lom_values_999,
                      lom_values_99 = lom_values_99,
-                     lom_values_95 = lom_values_99,
+                     lom_values_95 = lom_values_95,
+                     lom_values_90 = lom_values_90,
                      lom_values_75 = lom_values_75,
                      lom_values_50 = lom_values_50,
                      one_half = rep(1/2,1001))
@@ -221,8 +224,10 @@ ggplot(values, aes(x = x_values)) +
 ggplot(values, aes(x = x_values)) +
   theme_bw() +
   geom_line(aes(y = lom_values, color = "lom(x)"), show.legend = TRUE) + 
+  geom_line(aes(y = lom_values_999, color = "lom(x*0.999)"), show.legend = TRUE) +
   geom_line(aes(y = lom_values_99, color = "lom(x*0.99)"), show.legend = TRUE) +
   geom_line(aes(y = lom_values_95, color = "lom(x*0.95)"), show.legend = TRUE) +
+  geom_line(aes(y = lom_values_90, color = "lom(x*0.9)"), show.legend = TRUE) +
   geom_line(aes(y = lom_values_75, color = "lom(x*0.75)"), show.legend = TRUE) +
   geom_line(aes(y = lom_values_50, color = "lom(x*0.5)"), show.legend = TRUE) +
   geom_line(aes(y = one_half, color = "1/2"), linetype = "twodash", show.legend = TRUE) +
@@ -230,8 +235,10 @@ ggplot(values, aes(x = x_values)) +
   scale_y_continuous(expand = c(0, 0)) +
   scale_color_manual(values = c(
     "lom(x)" = "black", 
-    "lom(x*0.99)" = "blue", 
+    "lom(x*0.999)" = "blue", 
+    "lom(x*0.99)" = "skyblue", 
     "lom(x*0.95)" = "green", 
+    "lom(x*0.9)" = "yellow", 
     "lom(x*0.75)" = "orange", 
     "lom(x*0.5)" = "pink", 
     "1/2" = "red"
@@ -251,15 +258,15 @@ The following 16 implementations of `densify_steps` vary selected key parameters
 max_steps <- nrow(wals)+ncol(wals)-2
 variability_threshold <- 3
 
-# arithmetic mean, taxonomy = TRUE and taxonomy = FALSE
+# arithmetic mean, use_taxonomy = TRUE and use_taxonomy = FALSE
 set.seed(1234)
 iteration_log_arithmetic_taxtrue_seed1234 <- 
   densify_steps(original_data = wals, 
                 max_steps = max_steps, 
                 variability_threshold = variability_threshold, 
                 mean_type = "arithmetic", 
-                taxonomy = T, 
-                taxonomy_matrix = taxonomy_matrix)
+                use_taxonomy = T, 
+                taxonomy = glottolog_languoids)
 
 set.seed(4321)
 iteration_log_arithmetic_taxfalse_seed4321 <- 
@@ -267,18 +274,18 @@ iteration_log_arithmetic_taxfalse_seed4321 <-
                 max_steps = max_steps, 
                 variability_threshold = variability_threshold, 
                 mean_type = "arithmetic", 
-                taxonomy = F, 
-                taxonomy_matrix = taxonomy_matrix)
+                use_taxonomy = F, 
+                taxonomy = glottolog_languoids)
 
-# geometric mean, taxonomy = TRUE and taxonomy = FALSE
+# geometric mean, use_taxonomy = TRUE and use_taxonomy = FALSE
 set.seed(5678)
 iteration_log_geometric_taxtrue_seed5678 <- 
   densify_steps(original_data = wals, 
                 max_steps = max_steps, 
                 variability_threshold = variability_threshold, 
                 mean_type = "geometric", 
-                taxonomy = T, 
-                taxonomy_matrix = taxonomy_matrix)
+                use_taxonomy = T, 
+                taxonomy = glottolog_languoids)
 
 set.seed(8765)
 iteration_log_geometric_taxfalse_seed8765 <- 
@@ -286,19 +293,19 @@ iteration_log_geometric_taxfalse_seed8765 <-
                 max_steps = max_steps, 
                 variability_threshold = variability_threshold, 
                 mean_type = "geometric", 
-                taxonomy = F, 
-                taxonomy_matrix = taxonomy_matrix)
+                use_taxonomy = F, 
+                taxonomy = glottolog_languoids)
 
 # log_odds mean, varying coding_weight and taxonomy_weight (where applicable) 
-# for both taxonomy = TRUE and taxonomy = FALSE
+# for both use_taxonomy = TRUE and use_taxonomy = FALSE
 set.seed(1111)
 iteration_log_logodds_taxtrue_099099_seed1111 <- 
   densify_steps(original_data = wals, 
                 max_steps = max_steps, 
                 variability_threshold = variability_threshold,
                 mean_type = "log_odds",
-                taxonomy = T,
-                taxonomy_matrix = taxonomy_matrix, 
+                use_taxonomy = T,
+                taxonomy = glottolog_languoids, 
                 taxonomy_weight = 0.99, 
                 coding_weight = 0.99)
 
@@ -308,8 +315,8 @@ iteration_log_logodds_taxtrue_095095_seed2222 <-
                 max_steps = max_steps, 
                 variability_threshold = variability_threshold,
                 mean_type = "log_odds",
-                taxonomy = T,
-                taxonomy_matrix = taxonomy_matrix, 
+                use_taxonomy = T,
+                taxonomy = glottolog_languoids, 
                 taxonomy_weight = 0.95, 
                 coding_weight = 0.95)
 
@@ -319,8 +326,8 @@ iteration_log_logodds_taxtrue_090090_seed3333 <-
                 max_steps = max_steps, 
                 variability_threshold = variability_threshold,
                 mean_type = "log_odds",
-                taxonomy = T,
-                taxonomy_matrix = taxonomy_matrix, 
+                use_taxonomy = T,
+                taxonomy = glottolog_languoids, 
                 taxonomy_weight = 0.90, 
                 coding_weight = 0.90)
 
@@ -330,8 +337,8 @@ iteration_log_logodds_taxtrue_050050_seed4444 <-
                 max_steps = max_steps, 
                 variability_threshold = variability_threshold,
                 mean_type = "log_odds",
-                taxonomy = T,
-                taxonomy_matrix = taxonomy_matrix, 
+                use_taxonomy = T,
+                taxonomy = glottolog_languoids, 
                 taxonomy_weight = 0.50, 
                 coding_weight = 0.50)
 
@@ -341,8 +348,8 @@ iteration_log_logodds_taxtrue_099095_seed1122 <-
                 max_steps = max_steps, 
                 variability_threshold = variability_threshold,
                 mean_type = "log_odds",
-                taxonomy = T,
-                taxonomy_matrix = taxonomy_matrix, 
+                use_taxonomy = T,
+                taxonomy = glottolog_languoids, 
                 taxonomy_weight = 0.99, 
                 coding_weight = 0.95)
 
@@ -352,8 +359,8 @@ iteration_log_logodds_taxtrue_095099_seed2211 <-
                 max_steps = max_steps, 
                 variability_threshold = variability_threshold,
                 mean_type = "log_odds",
-                taxonomy = T,
-                taxonomy_matrix = taxonomy_matrix, 
+                use_taxonomy = T,
+                taxonomy = glottolog_languoids, 
                 taxonomy_weight = 0.95, 
                 coding_weight = 0.99)
 
@@ -363,8 +370,8 @@ iteration_log_logodds_taxtrue_099090_seed1133 <-
                 max_steps = max_steps, 
                 variability_threshold = variability_threshold,
                 mean_type = "log_odds",
-                taxonomy = T,
-                taxonomy_matrix = taxonomy_matrix, 
+                use_taxonomy = T,
+                taxonomy = glottolog_languoids, 
                 taxonomy_weight = 0.99, 
                 coding_weight = 0.90)
 
@@ -374,8 +381,8 @@ iteration_log_logodds_taxtrue_090099_seed3311 <-
                 max_steps = max_steps, 
                 variability_threshold = variability_threshold,
                 mean_type = "log_odds",
-                taxonomy = T,
-                taxonomy_matrix = taxonomy_matrix, 
+                use_taxonomy = T,
+                taxonomy = glottolog_languoids, 
                 taxonomy_weight = 0.90, 
                 coding_weight = 0.99)
 
@@ -385,8 +392,8 @@ iteration_log_logodds_taxfalse_099_seed9999 <-
                 max_steps = max_steps, 
                 variability_threshold = variability_threshold,
                 mean_type = "log_odds", 
-                taxonomy = F, 
-                taxonomy_matrix = taxonomy_matrix, 
+                use_taxonomy = F, 
+                taxonomy = glottolog_languoids, 
                 coding_weight = 0.99)
 
 set.seed(8888)
@@ -395,8 +402,8 @@ iteration_log_logodds_taxfalse_095_seed8888 <-
                 max_steps = max_steps, 
                 variability_threshold = variability_threshold,
                 mean_type = "log_odds", 
-                taxonomy = F, 
-                taxonomy_matrix = taxonomy_matrix, 
+                use_taxonomy = F, 
+                taxonomy = glottolog_languoids, 
                 coding_weight = 0.95)
 
 set.seed(7777)
@@ -405,8 +412,8 @@ iteration_log_logodds_taxfalse_090_seed7777 <-
                 max_steps = max_steps, 
                 variability_threshold = variability_threshold,
                 mean_type = "log_odds", 
-                taxonomy = F, 
-                taxonomy_matrix = taxonomy_matrix, 
+                use_taxonomy = F, 
+                taxonomy = glottolog_languoids, 
                 coding_weight = 0.90)
 set.seed(6666)
 iteration_log_logodds_taxfalse_050_seed6666 <- 
@@ -414,8 +421,8 @@ iteration_log_logodds_taxfalse_050_seed6666 <-
                 max_steps = max_steps, 
                 variability_threshold = variability_threshold,
                 mean_type = "log_odds", 
-                taxonomy = F, 
-                taxonomy_matrix = taxonomy_matrix, 
+                use_taxonomy = F, 
+                taxonomy = glottolog_languoids, 
                 coding_weight = 0.50)
 ```
 
@@ -447,7 +454,7 @@ The function `densify_score` takes the iteration log from `densify_steps` as an 
 
 <!--# BB:here it would be good to first give an overall explanation of the trade-offs between the various ways of setting the parameters: more data but then also more NAs; more taxonomic diversity, less data, etc. ANNA: Hope this is better now? -->
 
-The quality score is the product of five values, each modifiable by an exponent: (1) the proportion of coded data in the matrix overall, (2) the absolute number of non-missing data points in the matrix, (3) the absolute coding density of the least well-coded row, (4) the absolute coding density of the least well-coded column, and (5) the taxonomic diversity of the taxa provided in rows (computed as the Shannon entropy of the highest taxonomic level of all taxa present; applicable only if a taxonomy matrix is provided).
+The quality score is the product of five values, each modifiable by an exponent: (1) the proportion of coded data in the matrix overall, (2) the absolute number of non-missing data points in the matrix, (3) the absolute coding density of the least well-coded row, (4) the absolute coding density of the least well-coded column, and (5) the taxonomic diversity of the taxa provided in rows (computed as the Shannon entropy of the highest taxonomic level of all taxa present; applicable only if a taxonomy is provided).
 
 Thus, the following parameters are available to modulate the weight of each of these values to identify the optimal sub-matrix:
 
@@ -455,7 +462,7 @@ Thus, the following parameters are available to modulate the weight of each of t
 -   `exponent_available_data_points`: By increasing this parameter, the weight of the absolute number of data points present in the matrix is increased for the quality score. Thus, larger matrices (with more rows and columns and thus data points) are given higher quality scores, all other things equal. This parameter is obligatory and set to `1` by default.
 -   `exponent_lowest_taxon_coding_score`: By increasing this parameter, the weight of the coding density of the most sparsely-coded row in the matrix is increased for the quality score. Thus, matrices including rows with low coding densities are given lower quality scores, all other things equal. This parameter is optional, with no default value.
 -   `exponent_lowest_variable_coding_score`: By increasing this parameter, the weight of the coding density of the most sparsely-coded column in the matrix is increased for the quality score. Thus, matrices including columns with low coding densities are given lower quality scores, all other things equal. This parameter is optional, with no default value.
--   `exponent_taxonomic_diversity`: By increasing this parameter, the weight of the taxonomic diversity of included taxa in the matrix is increased for the quality score. Thus, matrices with higher taxonomic diversities are given higher quality scores, all other things equal. This parameter is optional and only conditionally applicable (if a taxonomy matrix is provided), with no default value.
+-   `exponent_taxonomic_diversity`: By increasing this parameter, the weight of the taxonomic diversity of included taxa in the matrix is increased for the quality score. Thus, matrices with higher taxonomic diversities are given higher quality scores, all other things equal. This parameter is optional and only conditionally applicable (if a taxonomy is provided), with no default value.
 
 
 Each defined exponent must be a positive number. Setting an exponent to `0` corresponds to disregarding the corresponding value in the computation of the quality score. The exponents' magnitude in relation to one another translates into the relative weight given to each corresponding value in the computation of quality scores, i.e. increasing an exponent by factor 2 results in the corresponding value weighing twice as much, all other things equal.
@@ -476,7 +483,7 @@ Other users may have an extremely sparse matrix and merely seek to strongly dens
 
 In another example, coding densities may be high and roughly even across rows and columns, and the motivation for pruning resides mainly in selecting a taxonomically diverse sub-sample for an analysis. In such a case, the parameter `exponent_taxonomic_diversity` would be included, while the parameters `exponent_lowest_taxon_coding_score` and `exponent_lowest_variable_coding_score` might be omitted, and the user may even consider to lower the parameter `exponent_available_data_points` relative to `exponent_prop_coded_data`.
 
-To appreciate the effect of the parameters of `densify_score`, compare the following quality score plots and optimum iterations retrieved using the following parameter settings on the same iteration log file (obtained from an implementation of `densify_steps` using the settings `mean = "log_odds", taxonomy = TRUE, taxonomy_weight = 0.99, coding_weight = 0.99`): <!--# BB:Appreciation will be difficult for readers unless they are given an intuitive notion of what the scores mean (cf my comment above; what the figures focus on is essentially how quickly the maximum is reached and if so, that should be said explicitly and linked to the degree to which the resultant matrix will deviate from the data in the end. Could you make this all clearer here? :: ANNA Hope this has improved?-->
+To appreciate the effect of the parameters of `densify_score`, compare the following quality score plots and optimum iterations retrieved using the following parameter settings on the same iteration log file (obtained from an implementation of `densify_steps` using the settings `mean = "log_odds", use_taxonomy = TRUE, taxonomy_weight = 0.99, coding_weight = 0.99`): <!--# BB:Appreciation will be difficult for readers unless they are given an intuitive notion of what the scores mean (cf my comment above; what the figures focus on is essentially how quickly the maximum is reached and if so, that should be said explicitly and linked to the degree to which the resultant matrix will deviate from the data in the end. Could you make this all clearer here? :: ANNA Hope this has improved?-->
 
 ```{r densify_score 10, ones and zeros, echo = TRUE,  fig.show="hold", out.width="40%", fig.width=4, fig.height=2.5}
 optimum11111 <- densify_score(iteration_log_logodds_taxtrue_099099_seed1111, 
@@ -585,7 +592,7 @@ The densified matrix resulting from setting all exponents to 1 encompasses 132 l
 ```{r densify_prune comparison 1, echo = TRUE}
 # number of languages, families and variables, overall coding density
 nrow(pruned_wals_exponents11111) 
-taxonomy_matrix %>% 
+flat_taxonomy_matrix %>% 
   filter(id %in% rownames(pruned_wals_exponents11111)) %>% 
   select(level1) %>% unique() %>% nrow()
 ncol(pruned_wals_exponents11111)
@@ -618,7 +625,7 @@ The densified matrix resulting from setting all exponents but `exponent_lowest_t
 ```{r densify_prune comparison 2, echo = TRUE}
 # number of languages, families and variables, overall coding density
 nrow(pruned_wals_exponents11001) 
-taxonomy_matrix %>% 
+flat_taxonomy_matrix %>% 
   filter(id %in% rownames(pruned_wals_exponents11001)) %>%
   select(level1) %>% unique() %>% nrow()
 ncol(pruned_wals_exponents11001)
@@ -691,10 +698,10 @@ variability_threshold = 3
 
 full_coding_proprotion = sum(!is.na(wals))/(ncol(wals)*nrow(wals))
 full_n_lg = nrow(wals)
-full_n_fam = taxonomy_matrix %>% filter(id %in% rownames(wals)) %>% select(level1) %>% unique() %>% nrow()
+full_n_fam = flat_taxonomy_matrix %>% filter(id %in% rownames(wals)) %>% select(level1) %>% unique() %>% nrow()
 full_n_var = ncol(wals)
 
-logfile <- data.frame(mean.type = "original", variability_threshold = NA, taxonomy = NA, seed = NA, taxonomy_weight = NA, coding_weight = NA, iteration_log_id = NA, exponent_prop_coded_data = NA, exponent_available_data_points = NA, exponent_lowest_taxon_coding_score = NA, exponent_lowest_variable_coding_score = NA, exponent_taxonomic_diversity = NA, full_coding_proprotion = full_coding_proprotion, number_languages = full_n_lg, number_families = full_n_fam, number_variables = full_n_var, increase_factor_coding_proportion = 1, proportion_languages_kept = 1, proportion_families_kept = 1, proportion_variables_kept = 1)
+logfile <- data.frame(mean.type = "original", variability_threshold = NA, use_taxonomy = NA, seed = NA, taxonomy_weight = NA, coding_weight = NA, iteration_log_id = NA, exponent_prop_coded_data = NA, exponent_available_data_points = NA, exponent_lowest_taxon_coding_score = NA, exponent_lowest_variable_coding_score = NA, exponent_taxonomic_diversity = NA, full_coding_proprotion = full_coding_proprotion, number_languages = full_n_lg, number_families = full_n_fam, number_variables = full_n_var, increase_factor_coding_proportion = 1, proportion_languages_kept = 1, proportion_families_kept = 1, proportion_variables_kept = 1)
 
 for (i in 1:length(iteration_log_files)){
   
@@ -718,7 +725,7 @@ for (i in 1:length(iteration_log_files)){
     pruning <- densify_prune(wals, df, scoring)
     cprop <- sum(!is.na(pruning))/(ncol(pruning)*nrow(pruning))
     nlg <- nrow(pruning)
-    nfam <- taxonomy_matrix %>% filter(id %in% rownames(pruning)) %>% select(level1) %>% unique() %>% nrow()
+    nfam <- flat_taxonomy_matrix %>% filter(id %in% rownames(pruning)) %>% select(level1) %>% unique() %>% nrow()
     nvar <- ncol(pruning)
     
     logfile <- rbind(logfile,c(mn, variability_threshold, taxonomy, seed, twf, cwf, docname,
