@@ -14,11 +14,12 @@
 #' @param mean_type A character string specifying the type of mean to be used for calculating the final weights.
 #'   Possible values are "arithmetic", "geometric", or "log_odds". Default is "log_odds".
 #'
-#' @param taxonomy A logical indicating whether taxonomic diversity should be factored in for the pruning/retention of rows.
+#' @param use_taxonomy A logical indicating whether taxonomic diversity should be factored in for the pruning/retention of rows.
 #'   If `TRUE`, taxonomic diversity is considered; if `FALSE`, it is not. Default is `FALSE`.
 #'
-#' @param taxonomy_matrix A data frame containing a taxonomy matrix, which can be retrieved from the `build_flat_taxonomy_matrix` function or provided directly.
-#'   This parameter must be specified if `taxonomy = TRUE` and is optional otherwise (if specified, taxonomic index is computed for each iteration).
+#' @param taxonomy A taxonomy tree. Can be a `phylo` object (e.g. result of [ape::read.tree]) or a data frame with
+#'   columns `id` and `parent_id` (such as [glottolog_languoids]). This parameter must be specifid if `use_taxonomy == TRUE`
+#'   and is optional otherwise (if specified, taxonomic index is computed for each iteration).
 #'
 #' @param taxonomy_weight A numeric value between 0 and 1 that determines the relative weight given to taxonomy in taxon pruning.
 #'   This parameter must be specified if `taxonomy = TRUE` and `mean_type = "log_odds"`. Default is 0.99.
@@ -32,13 +33,13 @@
 #' @return An iteration log in the form of a data frame with details about the matrix after each iteration of densification.
 #'
 #' @examples
-#' # Assuming `original_data` and `taxonomy_matrix` are appropriate data frames
+#' # Assuming `original_data` is an appropriate data frame
 #' # densify_steps(original_data = wals,
 #' # max_steps = 3,
 #' # variability_threshold = 3,
 #' # mean_type = "log_odds",
-#' # taxonomy = T,
-#' # taxonomy_matrix,
+#' # use_taxonomy = TRUE,
+#' # glottolog_languoids,
 #' # taxonomy_weight = 0.99,
 #' # coding_weight = 0.99,
 #' # verbose = T)
@@ -46,18 +47,33 @@
 #' @import vegan
 #' @import tidyverse
 #' @importFrom stats qlogis var
-
+#'
 #' @export
-######################################################
+densify_steps <- function(
+  original_data = wals, 
+  max_steps = 1, 
+  variability_threshold = 1, 
+  mean_type = "log_odds", 
+  use_taxonomy = FALSE, 
+  taxonomy, 
+  taxonomy_weight = 0.99, 
+  coding_weight = 0.99, 
+  verbose = FALSE
+){
+  # check the arguments
+  use_taxonomy <- rlang::is_true(use_taxonomy)
+  verbose      <- rlang::is_true(verbose)
 
-densify_steps <- function(original_data = wals, max_steps = 1, variability_threshold = 1, mean_type = "log_odds", taxonomy = F, taxonomy_matrix, taxonomy_weight = 0.99, coding_weight = 0.99, verbose = FALSE){
-
-  if (taxonomy == F){
-    warning("Attention, taxonomy disregarded for pruning.\n")
+  if (use_taxonomy) {
+    rlang::warn("Attention, taxonomy disregarded for pruning.\n")
+  } else {
+    rlang::check_required(taxonomy)
   }
 
-  if (is.data.frame(taxonomy_matrix) == F){
-    warning("Attention, no taxonomy matrix has been provided.\n")
+  taxonomy_matrix <- if (!missing(taxonomy)) {
+    as_flat_taxonomy_matrix(taxonomy, .x = rlang::caller_arg(taxonomy))
+  } else {
+    NULL
   }
 
   # prepare original_data and taxonomy_matrix, if applicable:
@@ -77,9 +93,9 @@ densify_steps <- function(original_data = wals, max_steps = 1, variability_thres
 
   full_matrix <- densify_prep(original_data)
 
-  if(is.data.frame(taxonomy_matrix)){ # if a taxonomy matrix is provided:
+  if(!is.null(taxonomy_matrix)){ # if a taxonomy matrix is provided:
     # reduce both the matrix and the taxonomy to the glottocodes present in both files
-    full_matrix <- full_matrix[which(rownames(full_matrix)%in%taxonomy_matrix$id),]
+    full_matrix <- full_matrix[which(rownames(full_matrix) %in% taxonomy_matrix$id),]
 
     # reorganise taxonomy_matrix: trim it to the taxa in the initial matrix in the corresponding order; reorganise it so that each tip is listed not just in "id" but also in the last listed level
     taxonomy_reorganised <- taxonomy_matrix %>% dplyr::filter(id %in% rownames(full_matrix))
@@ -102,13 +118,13 @@ densify_steps <- function(original_data = wals, max_steps = 1, variability_thres
                               removed_tax = "NA",
                               removed_var = "NA")
 
-  if(is.data.frame(taxonomy_matrix)){ # if a taxonomy matrix is provided, score the taxonomic index for the input data frame
+  if(!is.null(taxonomy_matrix)){ # if a taxonomy matrix is provided, score the taxonomic index for the input data frame
     iteration_log <- cbind(iteration_log, taxonomic_index = vegan::diversity(table(taxonomy_reorganised$level1)))
   }
 
   # determine weighted row and column scores (r_weights and c_weights)
-  cross_prod = crossprod(full_matrix)
-  ev_cross_prod = eigen(cross_prod)$vectors[,1]
+  cross_prod <- crossprod(full_matrix)
+  ev_cross_prod <- eigen(cross_prod)$vectors[,1]
   r_weights <- (full_matrix %*% (ev_cross_prod))/sum(ev_cross_prod) # the weights are weighted averages
   c_weights <- (t(r_weights) %*% full_matrix)/sum(r_weights) # the weights are weighted averages
 
@@ -117,7 +133,7 @@ densify_steps <- function(original_data = wals, max_steps = 1, variability_thres
   c_weights_updated <- c_weights
 
   # create a data frame collecting different kinds of weights per taxon
-  weight_collection<-r_weights_updated
+  weight_collection <- r_weights_updated
 
   # initialise iterative densifying procedure
   for (iterations in 1:max_steps){
@@ -135,13 +151,13 @@ densify_steps <- function(original_data = wals, max_steps = 1, variability_thres
       break
     }
     # fill up current matrix with taxonomic_weight measures entirely only in the first iteration and if taxonomy is considered for pruning
-    if (iterations==1 & taxonomy==T){
-      if (verbose == "TRUE"){
+    if (iterations==1 && use_taxonomy){
+      if (verbose){
         cat("Computing initial taxonomic weights.\n")
       }
       families <- unique(taxonomy_reorganised$level1)
-      for (f in 1:length(families)){
-        taxa <- dplyr::filter(taxonomy_reorganised, .data$level1%in%families[f])$id
+      for (f in seq_along(families)){
+        taxa <- dplyr::filter(taxonomy_reorganised, .data$level1 %in% families[f])$id
         if(length(taxa)==1){ # if taxon is sole representative of its family, --> weight 1
           weight_collection[taxa,"taxonomic_weight"] <- 1
         }
@@ -157,7 +173,7 @@ densify_steps <- function(original_data = wals, max_steps = 1, variability_thres
 
           # sometimes taxa have nodes that can be collapsed, given the taxon sample. where this is the case, collapse the nodes accordingly
           # (e.g. if we have 2 low-level sub-taxa as the sole representatives of a larger clade within a family, they will have several (identical) nodes that are unnecessary and which distort their relative taxonomic position to taxa in another clade of this family)
-          for (tax in 1:nrow(node_freq_count)){
+          for (tax in seq_len(nrow(node_freq_count))) {
             relevant_levels<-(unique(as.numeric(node_freq_count[tax,2:(max_node_nr+1)])))
             new_levels<-(c(relevant_levels,rep(1,(max_node_nr-length(relevant_levels))))) # this collapses any unnecessary nodes
             node_freq_count[tax,2:(max_node_nr+1)]<-as.list(new_levels) # update node_freq_count with new node count
@@ -167,22 +183,22 @@ densify_steps <- function(original_data = wals, max_steps = 1, variability_thres
         }
       }
     }
-    if (verbose == "TRUE"){
+    if (verbose){
       cat("Computing final weights for all taxa\n")
     }
 
     # compute a final weight for each taxon via the mean of the absolute proportion of non-NA, the weighted coding score and the taxonomic weight
-    if (mean_type == "arithmetic"){ # arithmetic mean
+    if (mean_type == "arithmetic") { # arithmetic mean
       weight_collection$mean_score <- apply(weight_collection,1,mean)
     } else if (mean_type == "geometric"){ # geometric mean
       weight_collection$mean_score <- apply(weight_collection,1,function(x) prod(x) ** (1/length(x)))
-    } else if (mean_type == "log_odds" & taxonomy == T) { # log odds mean if taxonomy considered
+    } else if (mean_type == "log_odds" && use_taxonomy) { # log odds mean if taxonomy considered
       weight_collection$abs_prop_non_NA <- weight_collection$abs_prop_non_NA*coding_weight # multiply all weights by coding_weight
       weight_collection$weighted_coding_score <- weight_collection$weighted_coding_score*coding_weight # multiply all weights by coding_weight
       weight_collection$taxonomic_weight <- weight_collection$taxonomic_weight*taxonomy_weight # multiply all weights by taxonomy_weight so that no values are equal to 1 (which would make computing the log-odds impossible)
       mn<-apply(weight_collection["weighted_coding_score"],1,qlogis)+apply(weight_collection["abs_prop_non_NA"],1,qlogis)+apply(weight_collection["taxonomic_weight"],1,qlogis)/3
       weight_collection$mean_score<-exp(mn)/(1+exp(mn))
-    } else if (mean_type == "log_odds" & taxonomy == F) { # log odds mean if taxonomy not considered
+    } else if (mean_type == "log_odds" && !use_taxonomy) { # log odds mean if taxonomy not considered
       weight_collection$abs_prop_non_NA <- weight_collection$abs_prop_non_NA*coding_weight # multiply all weights by coding_weight
       weight_collection$weighted_coding_score <- weight_collection$weighted_coding_score*coding_weight # multiply all weights by coding_weight
       mn<-apply(weight_collection["weighted_coding_score"],1,qlogis)+apply(weight_collection["abs_prop_non_NA"],1,qlogis)/2
@@ -210,7 +226,7 @@ densify_steps <- function(original_data = wals, max_steps = 1, variability_thres
 
       updated_matrix <- updated_matrix[-which(rownames(updated_matrix)==removed_taxa),] # update matrix by pruning away worst taxon
       weight_collection <- weight_collection[-which(rownames(weight_collection)==removed_taxa),] # update weight collection by pruning away worst taxon
-      if(is.data.frame(taxonomy_matrix)){taxonomy_reorganised <- taxonomy_reorganised[taxonomy_reorganised$id%in%removed_taxa==F,]} # update taxonomy_reorganised by pruning away worst taxon if taxonomy provided
+      if(!is.null(taxonomy_matrix)){taxonomy_reorganised <- taxonomy_reorganised[taxonomy_reorganised$id%in%removed_taxa==F,]} # update taxonomy_reorganised by pruning away worst taxon if taxonomy provided
 
     }
 
@@ -241,11 +257,11 @@ densify_steps <- function(original_data = wals, max_steps = 1, variability_thres
     # make sure that all variables are/remain sufficiently variable --> the second-most-frequent variable state must contain at least N taxa (N=variability_threshold)
     # if any variables are not/no longer sufficiently variable, remove them
 
-    if (verbose == "TRUE"){
+    if (verbose){
       cat("Ensuring variable variablity.\n")
     }
 
-    pruned_matrix <- original_data[which(rownames(original_data)%in%rownames(updated_matrix)),which(colnames(original_data)%in%colnames(updated_matrix))]
+    pruned_matrix <- original_data[which(rownames(original_data) %in% rownames(updated_matrix)), which(colnames(original_data)%in%colnames(updated_matrix))]
     nrlevels <- data.frame(variable=colnames(pruned_matrix),
                            number_of_variable_states=apply(pruned_matrix,2,function(x)length(table(as.factor(x)))),
                            count_second_largest_variable_state=apply(pruned_matrix,2,function(x)sort(table(as.factor(x)),decreasing=T)[2]))
@@ -255,7 +271,7 @@ densify_steps <- function(original_data = wals, max_steps = 1, variability_thres
       removed_vars <- c(removed_vars,uninformative_variables)[-which(is.na(c(removed_vars,uninformative_variables)))]
       updated_matrix <- updated_matrix[,-which(colnames(updated_matrix)%in%uninformative_variables)] # update matrix by pruning away uninformative variables
       c_weights_updated <- c_weights_updated[-which(colnames(updated_matrix)%in%uninformative_variables)] # update weights by pruning away uninformative variables
-      if (verbose == "TRUE"){
+      if (verbose) {
         cat("; remove the following uninformative variables", uninformative_variables,"\n")
       }
     }
@@ -266,7 +282,7 @@ densify_steps <- function(original_data = wals, max_steps = 1, variability_thres
     }
 
     # if removing variables results in uninformative taxa, these must also be removed
-    if(min(rowSums(updated_matrix))==0){
+    if(min(rowSums(updated_matrix))==0) {
       uninformative_taxa <- names(which(rowSums(updated_matrix)==0))
       removed_taxa <- c(removed_taxa,uninformative_taxa)[-which(is.na(c(removed_taxa,uninformative_taxa)))]
       updated_matrix <- updated_matrix[-which(rownames(updated_matrix)%in%uninformative_taxa),] # update matrix by pruning away worst taxon
@@ -277,13 +293,13 @@ densify_steps <- function(original_data = wals, max_steps = 1, variability_thres
       }
     }
 
-    if (nrow(updated_matrix)==0){
+    if (nrow(updated_matrix) == 0) {
       cat("Trimming aborted - there are no taxa left.")
       break
     }
 
     # if any taxa were removed, the phylogenetic weights for remaining taxa of their families must be updated!
-    if ((length(removed_taxa))!=0 & taxonomy == T){
+    if ((length(removed_taxa))!=0 && use_taxonomy){
       if (verbose == "TRUE"){
         cat("There are phylogenetic weights to be updated.\n")
       }
@@ -300,7 +316,7 @@ densify_steps <- function(original_data = wals, max_steps = 1, variability_thres
           }
           # sometimes taxa have nodes that can be collapsed, given the taxon sample. where this is the case, collapse the nodes accordingly
           # (e.g. if we have 2 low-level dialects as the sole representatives of a clade within a family, they will have several (identical) nodes that are unnecessary and which distort their relative taxonomic position to taxa in another clade of this family)
-          for (tax in 1:nrow(node_freq_count)){
+          for (tax in seq_len(nrow(node_freq_count))) {
             relevant_levels <- (unique(as.numeric(node_freq_count[tax,2:(max_node_nr+1)])))
             new_levels <- (c(relevant_levels,rep(1,(max_node_nr-length(relevant_levels))))) # this collapses any unnecessary nodes
             node_freq_count[tax,2:(max_node_nr+1)] <- as.list(new_levels) # update node_freq_count with new node count
@@ -313,7 +329,7 @@ densify_steps <- function(original_data = wals, max_steps = 1, variability_thres
     }
 
     # update iteration_log
-    if(is.data.frame(taxonomy_matrix)){
+    if(!is.null(taxonomy_matrix)) {
       iteration_log<-rbind(iteration_log,
                            c(iterations,
                              sum(updated_matrix),
@@ -327,7 +343,7 @@ densify_steps <- function(original_data = wals, max_steps = 1, variability_thres
                              paste(removed_taxa,collapse=";"),
                              paste(removed_vars,collapse=";"),
                              vegan::diversity(table(taxonomy_reorganised$level1))))
-    } else{
+    } else {
       iteration_log<-rbind(iteration_log,
                            c(iterations,
                              sum(updated_matrix),
@@ -342,7 +358,7 @@ densify_steps <- function(original_data = wals, max_steps = 1, variability_thres
                              paste(removed_vars,collapse=";")))
     }
 
-    if (verbose == "TRUE"){
+    if (verbose) {
       cat("Recomputing weighted means.\n\n")
     }
 

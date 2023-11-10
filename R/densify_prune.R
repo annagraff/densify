@@ -16,23 +16,30 @@
 #' # pruned_densified <- densify_prune(original_data, iteration_log, optimum = 2)
 #' @import dplyr
 #' @export
-
 densify_prune <- function(original_data, iteration_log, optimum = 1) {
   # Validate inputs:
   if (!is.data.frame(original_data)) {
-    stop("The 'original_data' parameter must be a data frame.")
+    rlang::abort("`original_data` must be a data frame")
   }
   if (!is.data.frame(iteration_log)) {
-    stop("The 'iteration_log' parameter must be a data frame.")
+    rlang::abort("`iteration_log` must be a data frame")
   }
-  if (!is.integer(optimum) || optimum < 1) {
-    stop("The 'optimum' parameter must be a strictly positive integer.")
+  if (!rlang::is_integerish(optimum) || optimum < 1) {
+    rlang::abort("'optimum' must be a strictly positive integer")
   }
+  optimum <- as.integer(optimum)
 
   # Ensure 'optimum' is not greater than the number of iterations in 'iteration_log':
   num_iterations <- nrow(iteration_log)
+
+  print(optimum)
+  print(num_iterations)
+
   if (optimum > num_iterations) {
-    warning("The 'optimum' value was larger than the number of iterations in iteration_log.")
+    rlang::warn(c(
+      "`optimum` is larger than the number of iterations in iteration_log",
+      "!" = sprintf("resetting to the number of iterations %s", num_iterations)
+    ))
     optimum <- num_iterations
   }
 
@@ -46,5 +53,5 @@ densify_prune <- function(original_data, iteration_log, optimum = 1) {
   # Create the pruned matrix by removing specified languages and variables:
   pruned_matrix <- original_data[which(rownames(original_data)%in%prune_taxa==F),which(colnames(original_data)%in%prune_vars==F)]
 
-  return(pruned_matrix)
+  pruned_matrix
 }

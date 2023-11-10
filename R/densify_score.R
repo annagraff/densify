@@ -27,7 +27,6 @@
 #' @importFrom stats na.omit
 #' @import ggplot2
 #' @export
-
 densify_score <- function(iteration_log, exponent_prop_coded_data = 1, exponent_available_data_points = 1, exponent_lowest_taxon_coding_score = NULL, exponent_lowest_variable_coding_score = NULL, exponent_taxonomic_diversity = NULL, plot = FALSE) {
   # Validate input parameters:
   if (!is.numeric(exponent_prop_coded_data) ||

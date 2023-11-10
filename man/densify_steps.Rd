@@ -9,10 +9,10 @@ densify_steps(
   max_steps = 1,
   variability_threshold = 1,
   mean_type = "log_odds",
-  taxonomy = F,
-  taxonomy_matrix,
-  tax_weight_factor = 0.99,
-  coding_weight_factor = 0.99,
+  use_taxonomy = FALSE,
+  taxonomy,
+  taxonomy_weight = 0.99,
+  coding_weight = 0.99,
   verbose = FALSE
 )
 }
@@ -29,16 +29,17 @@ Default is 1.}
 \item{mean_type}{A character string specifying the type of mean to be used for calculating the final weights.
 Possible values are "arithmetic", "geometric", or "log_odds". Default is "log_odds".}
 
-\item{taxonomy}{A logical indicating whether taxonomic diversity should be factored in for the pruning/retention of rows.
+\item{use_taxonomy}{A logical indicating whether taxonomic diversity should be factored in for the pruning/retention of rows.
 If \code{TRUE}, taxonomic diversity is considered; if \code{FALSE}, it is not. Default is \code{FALSE}.}
 
-\item{taxonomy_matrix}{A data frame containing a taxonomy matrix, which can be retrieved from the \code{build_flat_taxonomy_matrix} function or provided directly.
-This parameter must be specified if \code{taxonomy = TRUE} and is optional otherwise (if specified, taxonomic index is computed for each iteration).}
+\item{taxonomy}{A taxonomy tree. Can be a \code{phylo} object (e.g. result of \link[ape:read.tree]{ape::read.tree}) or a data frame with
+columns \code{id} and \code{parent_id} (such as \link{glottolog_languoids}). This parameter must be specifid if \code{use_taxonomy == TRUE}
+and is optional otherwise (if specified, taxonomic index is computed for each iteration).}
 
-\item{tax_weight_factor}{A numeric value between 0 and 1 that determines the relative weight given to taxonomy in taxon pruning.
+\item{taxonomy_weight}{A numeric value between 0 and 1 that determines the relative weight given to taxonomy in taxon pruning.
 This parameter must be specified if \code{taxonomy = TRUE} and \code{mean_type = "log_odds"}. Default is 0.99.}
 
-\item{coding_weight_factor}{A numeric value between 0 and 1 that determines the relative weight given to coding quality
+\item{coding_weight}{A numeric value between 0 and 1 that determines the relative weight given to coding quality
 (absolute coding score and weighted coding score) in taxon pruning. This parameter must be specified if
 \code{mean_type = "log_odds"}. Default is 0.99.}
 
@@ -51,15 +52,15 @@ An iteration log in the form of a data frame with details about the matrix after
 Iteratively densifies an input data frame. The output of this densification is a log-file, specifying details about the matrix after each iteration.
 }
 \examples{
-# Assuming `original_data` and `taxonomy_matrix` are appropriate data frames
+# Assuming `original_data` is an appropriate data frame
 # densify_steps(original_data = wals,
 # max_steps = 3,
 # variability_threshold = 3,
 # mean_type = "log_odds",
-# taxonomy = T,
-# taxonomy_matrix,
-# tax_weight_factor = 0.99,
-# coding_weight_factor = 0.99,
+# use_taxonomy = TRUE,
+# glottolog_languoids,
+# taxonomy_weight = 0.99,
+# coding_weight = 0.99,
 # verbose = T)
 
 }
