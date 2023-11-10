@@ -63,13 +63,11 @@ While certain packages exist to generate sub-matrices from varying input matrice
 
 # Usage
 
-`densify` provides the data from The World Atlas of Language Structures (WALS [@wals]) and the language taxonomy provided by Glottolog v. 4.8 [@glottolog] as example data. The vignette features a detailed demonstration of the utility and flexibility of `densify` to subsample an input matrix according to varying needs, using this data.
+`densify` provides the data from The World Atlas of Language Structures (WALS) [@wals] and the language taxonomy provided by Glottolog v. 4.8 [@glottolog] as example data. The vignette features a detailed demonstration of the utility and flexibility of `densify` to subsample an input matrix according to varying needs, using this data.
 
 ## Preparing input
 
-`densify` requires the input data frame to have rows representing taxa or observations (and taxon names as row names) and columns representing variables (and variable names as column names). Any cells with empty entries, not applicable or question marks must be coded as NA. If matrix densification should consider taxonomic structure, a flat taxonomy must be provided, listing every taxon present in the initial data frame along with all the nodes connecting it to the root. Such a taxonomy can be generated with the `build_flat_taxonomy_matrix()` function, if all nodes and tips are provided alongside each of their parent nodes. For generating a language taxonomy, glottolog can be used directly.
-
-<!-- I think you need to explain how a non-flat taxonomy looks like, i.e. what the input format is. Readers might assume newick or something like that. Also, to maximize usability, I am wondering whether you could point to tools that convert a newick or similar representation into the ID-parentID format of glottolog? ::-->
+`densify` requires the input data frame to have rows representing taxa or observations (and taxon names as row names) and columns representing variables (and variable names as column names). Any cells with empty entries, not applicable or question marks must be coded as NA. If matrix densification should consider taxonomic structure, a taxonomy must be provided as a `phylo` object or as an adjacency table (i.e. a data frame containing columns `id` and `parent_id`, with each row encoding one parent-child relationship). Every taxon in the input data frame must be included in the taxonomy (as a tip or node). If a language taxonomy is to be provided, glottolog (`glottolog_languoids`) can be used directly.
 
 ``` r
 install.packages("densify")
@@ -79,14 +77,13 @@ library(densify)
 data(wals)
 data(glottolog_languoids)
 
-# the input data frame must have the taxon names as row names and variable names as column names; any question marks, empty entries, "NA"s must be coded as NAs
+# any question marks, empty entries, "NA"s must be coded as NA
 wals[wals=="?"] <- NA
 wals[wals=="NA"] <- NA
 head(wals)
 
-# generate flat taxonomy using glottolog
-taxonomy_matrix <- build_flat_taxonomy_matrix(id = glottolog_languoids$id, parent_id = glottolog_languoids$parent_id)
-head(taxonomy_matrix)
+# all taxa must be present in the taxonomy used for pruning
+wals <- wals[which(rownames(wals) %in% glottolog_languoids$id), ]
 ```
 
 ## Pruning
@@ -98,8 +95,8 @@ Iterative pruning of the input matrix is performed by the `densify_steps` functi
 -   An integer specifying the threshold for variability in variables (columns). Default: 1
 -   The mean type, which can be: "arithmetic", "geometric", "log_odds". Default: "log_odds".
 -   Should taxonomy be accounted for in the pruning process? Default: `FALSE`
--   The taxonomy matrix, required if taxonomy = `TRUE`, optional otherwise. Default: NULL.
--   A taxonomy weight factor, required if mean_type = "log_odds" and taxonomy = `TRUE`. Default: 0.99
+-   The taxonomy, required if use_taxonomy = `TRUE`, optional otherwise. No default.
+-   A taxonomy weight factor, required if mean_type = "log_odds" and use_taxonomy = `TRUE`. Default: 0.99
 -   A coding weight factor, required if mean_type = "log_odds". Default: 0.99
 
 For a more detailed discussion of the parameters, refer to the vignette hosted in the software repository.
@@ -108,8 +105,8 @@ The output of the function is an iteration log, documenting key characteristics 
 
 ``` r
 set.seed(2023)
-example_iteration_log <- densify_steps(original_data = wals, max_steps = nrow(wals)+ncol(wals)-2, variability_threshold = 3, mean_type = "log_odds", taxonomy = TRUE, taxonomy_matrix = taxonomy_matrix, tax_weight_factor = 0.99, coding_weight_factor = 0.99)
-head(iteration_log)
+example_iteration_log <- densify_steps(original_data = wals, max_steps = nrow(wals)+ncol(wals)-2, variability_threshold = 3, mean_type = "log_odds", use_taxonomy = TRUE, taxonomy = glottolog_languoids, taxonomy_weight = 0.99, coding_weight = 0.99)
+head(example_iteration_log)
 ```
 ## Finding the optimal number of iterations and producing the sub-matrix
 
