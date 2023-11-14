@@ -266,7 +266,7 @@ densify_steps <- function(
                            number_of_variable_states=apply(pruned_matrix,2,function(x)length(table(as.factor(x)))),
                            count_second_largest_variable_state=apply(pruned_matrix,2,function(x)sort(table(as.factor(x)),decreasing=T)[2]))
 
-    if (sum(nrlevels$count_second_largest_variable_state%in%c(NA,1:variability_threshold))!=0){ # only act if there is a variable that needs removal
+    if (sum(nrlevels$count_second_largest_variable_state%in%c(NA,0:variability_threshold))!=0){ # only act if there is a variable that needs removal
       uninformative_variables <- rownames(dplyr::filter(nrlevels,.data$count_second_largest_variable_state%in%c(NA,1:variability_threshold)))
       removed_vars <- c(removed_vars,uninformative_variables)[-which(is.na(c(removed_vars,uninformative_variables)))]
       updated_matrix <- updated_matrix[,-which(colnames(updated_matrix)%in%uninformative_variables)] # update matrix by pruning away uninformative variables
