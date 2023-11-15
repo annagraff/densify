@@ -35,7 +35,7 @@ relationship), or by passing in \code{id} and \code{parent_id} vectors explicitl
 A taxonomy tree is said to be "flattened" if the depth of each of it's leaf nodes is equal to the
 tree height. Such tree can be constructed by injecting dummy nodes where appropriate. Example:
 
-\preformatted{   
+\preformatted{
    A                              A      F''     level 1
   / \         dummy nodes        / \     |
   B  \       ------------->      B  E'   F'      level 2
@@ -53,6 +53,6 @@ implementation we always align at the top level, which means that the dummy node
 inserted at the bottom, between the leaf and it's closest parent in the original tree.
 }
 \examples{
-build_flat_taxonomy_matrix(glottolog_languoids)
+as_flat_taxonomy_matrix(glottolog_languoids)
 
 }
