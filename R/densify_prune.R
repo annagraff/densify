@@ -17,7 +17,7 @@
 #' @import dplyr
 #' @export
 densify_prune <- function(original_data, iteration_log, optimum = 1) {
-  # Validate inputs:
+  # validate inputs:
   if (!is.data.frame(original_data)) {
     rlang::abort("`original_data` must be a data frame")
   }
@@ -29,28 +29,23 @@ densify_prune <- function(original_data, iteration_log, optimum = 1) {
   }
   optimum <- as.integer(optimum)
 
-  # Ensure 'optimum' is not greater than the number of iterations in 'iteration_log':
-  num_iterations <- nrow(iteration_log)
-
-  print(optimum)
-  print(num_iterations)
-
-  if (optimum > num_iterations) {
+  # ensure 'optimum' is not greater than the number of iterations in 'iteration_log':
+  if (optimum > nrow(iteration_log)) {
     rlang::warn(c(
       "`optimum` is larger than the number of iterations in iteration_log",
-      "!" = sprintf("resetting to the number of iterations %s", num_iterations)
+      "!" = sprintf("resetting to the number of iterations %s", nrow(iteration_log))
     ))
-    optimum <- num_iterations
+    optimum <- nrow(iteration_log)
   }
 
-  # Extract relevant iteration_log up to the optimum iteration:
+  # extract relevant iteration_log up to the optimum iteration:
   iteration_log <- dplyr::slice(iteration_log, 1:optimum)
 
-  # Process removed languages and variables:
+  # process removed languages and variables:
   prune_taxa <- unique(unlist(strsplit(iteration_log$removed_tax, ";")))[unique(unlist(strsplit(iteration_log$removed_tax, ";"))) != "NA"]
   prune_vars <- unique(unlist(strsplit(iteration_log$removed_var, ";")))[unique(unlist(strsplit(iteration_log$removed_var, ";"))) != "NA"]
 
-  # Create the pruned matrix by removing specified languages and variables:
+  # create the pruned matrix by removing specified languages and variables:
   pruned_matrix <- original_data[which(rownames(original_data)%in%prune_taxa==F),which(colnames(original_data)%in%prune_vars==F)]
 
   pruned_matrix

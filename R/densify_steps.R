@@ -6,7 +6,7 @@
 #'   Any question marks, empty entries, or "NA"s must be represented as NA. Default is the data from WALS.
 #'
 #' @param max_steps An integer specifying the maximum number of iterations attempted during densification.
-#'   Default is 1.
+#'   Default is the maximum conceivable number of iterations, i.e. nrow(original_data)+ncol(original_data)-2.
 #'
 #' @param variability_threshold specifying how many taxa the second-most-frequent variable state of any variable must contain for the variable to be maintained in the matrix.
 #'   Default is 1.
@@ -51,7 +51,7 @@
 #' @export
 densify_steps <- function(
   original_data = wals,
-  max_steps = 1,
+  max_steps = nrow(original_data)+ncol(original_data)-2,
   variability_threshold = 1,
   mean_type = "log_odds",
   use_taxonomy = FALSE,
