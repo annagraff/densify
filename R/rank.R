@@ -36,6 +36,10 @@ rank_results.densify_result <- function(object, ..., score = n_data_points * cod
   vec_rank(scores, direction = "desc", incomplete = "na", ties = "min")
 }
 
+#' @importFrom generics rank_results
+#' @export
+generics::rank_results
+
 #' Obtain densified data frame that maximises a quality score
 #'
 #' Returns the densified data frame from the densify iteration step that maximises a quality score. In case of ties, 
@@ -73,6 +77,12 @@ prune.densify_result <- function(object, ..., score = n_data_points * coding_den
   data
 }
 
+#' @importFrom generics prune
+#' @export
+generics::prune
+
+
+
 
 eval_densify_results_quality_score <- function(densify_results, quo, ..., .caller = call_name(caller_call())) {
   local_error_call(caller_env())
@@ -102,6 +112,7 @@ eval_densify_results_quality_score <- function(densify_results, quo, ..., .calle
 
   score
 }
+
 
 
 

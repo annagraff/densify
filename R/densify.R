@@ -187,6 +187,7 @@ rename.densify_result <- function(.data, ...) {
   NextMethod()
 }
 
+#' @importFrom pillar tbl_format_header
 #' @export
 tbl_format_header.densify_result <- function(x, setup, ...) {
   cli::cli_fmt({
@@ -203,6 +204,7 @@ tbl_format_header.densify_result <- function(x, setup, ...) {
   })
 }
 
+#' @importFrom pillar tbl_format_footer
 #' @export
 tbl_format_footer.densify_result <- function(x, setup, ...) {
   arg <- caller_arg(x)
@@ -216,7 +218,6 @@ tbl_format_footer.densify_result <- function(x, setup, ...) {
 
   c(NextMethod(), out)
 }
-
 
 
 # Build a new entry in the densify log 

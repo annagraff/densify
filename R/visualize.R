@@ -62,3 +62,8 @@ visualize.densify_result <- function(x, ..., score = n_data_points * coding_dens
 #' @rdname visualize.densify_result
 #' @export
 plot.densify_result <- visualize.densify_result
+
+#' @importFrom generics visualize
+#' @export
+generics::visualize
+
