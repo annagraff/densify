@@ -2,24 +2,44 @@ Package: densify
 Title: Densifying Input Data Frame
 Version: 0.0.0.9000
 Authors@R: 
-    person(given = "Anna", family = "Graff", email = "anna.graff@uzh.ch", role = c("aut", "cre")) 
-    person(given = "Marc", family = "Lischka", email = "marc.lischka@math.uzh.ch", role = c("aut", "cre"))
-Description: This package provides functions to densify data frames with NAs.
+    c(
+        person(
+            given = "Anna", 
+            family = "Graff", 
+            email = "anna.graff@uzh.ch", 
+            role = c("aut", "cre")
+        ),
+        person(
+            given = "Marc", 
+            family = "Lischka", 
+            email = "marc.lischka@math.uzh.ch", 
+            role = c("aut")
+        ),
+        person(
+            given = "Taras", 
+            family = "Zaharko", 
+            email = "taras.zakharko@uzh.ch", 
+            role = c("aut")
+        )
+    )
+Description: This package provides functions to densify data frames with missing values.
 License: MIT + file LICENSE
 Depends: R (>= 3.5.0)
 Imports: 
-    tidyverse,
-    dplyr,
-    vegan,
-    vctrs,
-    rlang,
-    ggplot2,
+    vctrs (>= 0.6.4),
+    rlang (>= 1.1.0),
+    tidyselect (>= 1.2.0),
+    pillar (>= 1.9.0),
+    generics (>= 0.1.3),
+    cli (>= 3.6.0),
+    tibble,
     stats
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.0
 LazyData: true
 Suggests: 
+    ggplot2,
     knitr,
     rmarkdown,
     testthat (>= 3.0.0)

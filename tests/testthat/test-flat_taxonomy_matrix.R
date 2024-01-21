@@ -1,6 +1,4 @@
 
-context("Test as_flat_taxonomy_matrix function")
-
 test_that("It correctly flattens a taxonomy and controls arguments", {
   # Test case with valid input data
   id        <- c("A", "B", "C", "D", "E", "F")
@@ -17,14 +15,14 @@ test_that("It correctly flattens a taxonomy and controls arguments", {
   )
 
   # Test the build_flat_taxonomy_matrix function
-  expect_identical(arrange(as_flat_taxonomy_matrix(id = id, parent_id = parent_id), id), expected_output)
-  expect_identical(arrange(as_flat_taxonomy_matrix(newick), id), expected_output)
+  expect_identical(dplyr::arrange(as_flat_taxonomy_matrix(id = id, parent_id = parent_id), id), expected_output)
+  expect_identical(dplyr::arrange(as_flat_taxonomy_matrix(newick), id), expected_output)
 
   # Test cases with empty id and parent_id vectors
   empty_taxonomy <- as_flat_taxonomy_matrix(id = character(), parent_id = character())
 
   # Check if the result is a data frame
-  expect_is(empty_taxonomy, "data.frame")
+  expect_s3_class(empty_taxonomy, "data.frame")
 
   # Check if the data frame is empty
   expect_true(nrow(empty_taxonomy) == 0L)

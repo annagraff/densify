@@ -131,17 +131,17 @@ check_as_flat_taxonomy_matrix_args <- function(x, ..., id, parent_id, .x = rlang
     data <- vctrs::vec_recycle_common(id = id, parent_id = parent_id)
 
     is.factor(data$id) || is.character(data$id) || rlang::abort(c(
-      "topology data `id` must be a vector of character values",
+      "taxonomy data `id` must be a vector of character values",
       "!" = sprintf("<%s> found", class(data$id)[[1L]]),
       "",
-      "i" = "see ?as_flat_typology_matrix for details"
+      "i" = "see ?as_flat_taxonomy_matrix for details"
     ))
 
     is.factor(data$parent_id) || is.character(data$parent_id) || rlang::abort(c(
-      "topology data `parent_id` must be a vector of character values",
+      "taxonomy data `parent_id` must be a vector of character values",
       "!" = sprintf("<%s> found", class(data$parent_id)[[1L]]),
       "",
-      "i" = "see ?as_flat_typology_matrix for details"
+      "i" = "see ?as_flat_taxonomy_matrix for details"
     ))    
 
     data
@@ -160,25 +160,25 @@ check_as_flat_taxonomy_matrix_args <- function(x, ..., id, parent_id, .x = rlang
   if (rlang::is_bare_list(x) || is.data.frame(x)) {
     rlang::has_name(x, "id") &&
     rlang::has_name(x, "parent_id") || rlang::abort(c(
-      sprintf("topology data `%s` must contain named components `id` and `parent_id`", .x),
+      sprintf("taxonomy data `%s` must contain named components `id` and `parent_id`", .x),
       "",
-      "i" = "see ?as_flat_typology_matrix for details"
+      "i" = "see ?as_flat_taxonomy_matrix for details"
     ))
 
     data <- vctrs::vec_recycle_common(id = x$id, parent_id = x$parent_id, .arg = .x)
 
     is.factor(data$id) || is.character(data$id) || rlang::abort(c(
-      sprintf("topology data `%s$id` must be a vector of character values", .x),
+      sprintf("taxonomy data `%s$id` must be a vector of character values", .x),
       "!" = sprintf("<%s> found", class(data$id)[[1L]]),
       "",
-      "i" = "see ?as_flat_typology_matrix for details"
+      "i" = "see ?as_flat_taxonomy_matrix for details"
     ))
 
     is.factor(data$parent_id) || is.character(data$parent_id) || rlang::abort(c(
-      sprintf("topology data `%s$parent_id` must be a vector of character values", .x),
+      sprintf("taxonomy data `%s$parent_id` must be a vector of character values", .x),
       "!" = sprintf("<%s> found", class(data$parent_id)[[1L]]),
       "",
-      "i" = "see ?as_flat_typology_matrix for details"
+      "i" = "see ?as_flat_taxonomy_matrix for details"
     ))
 
     data
@@ -186,7 +186,7 @@ check_as_flat_taxonomy_matrix_args <- function(x, ..., id, parent_id, .x = rlang
     rlang::abort(c(
       sprintf("`%s` is expected to be a phylo object or data frame with columns `id` and `parent_id`", .x),
       "",
-      "i" = "see ?as_flat_typology_matrix for details"
+      "i" = "see ?as_flat_taxonomy_matrix for details"
     ))
   }
 }

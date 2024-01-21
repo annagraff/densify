@@ -3,15 +3,13 @@
 \docType{data}
 \name{glottolog_languoids}
 \alias{glottolog_languoids}
-\title{Languoids file from Glottolog, Version 4.8}
+\title{Glottolog languoid taxonomy, Version 4.8}
 \source{
 Glottolog, Version 4.8
 }
-\usage{
-data(glottolog_languoids)
-}
 \description{
-This dataset is the languoid.csv file from Glottolog, Version 4.8.
+This dataset is the languoid.csv file from Glottolog, Version 4.8. It can be used as \code{taxonomy} argument for the
+\link{densify} function if your dataset uses glottocodes and you want to perform taxonomy-aware data pruning.
 }
 \references{
 \itemize{
