@@ -9,13 +9,13 @@
 #' @param cols  <[`tidy-select`][tidyselect::language]> specification of variable columns to densify (default is all columns are treated as variable
 #'   columns). Columns not specified here will be preserved during densification.
 #'
-#' @param taxonomy A taxonomy tree, which can be a `phylo` object (e.g. result of [ape::read.tree] or a data frame columns `id` and `parent_id`
+#' @param taxonomy A taxonomy tree, which can be a `phylo` object (e.g. result of [ape::read.tree] or a data frame with columns `id` and `parent_id`
 #'   (such as [glottolog_languoids]). A taxonomy must be provided as a named argument if you want to consider the taxonomic diversity for densification.
 #'
 #' @param taxon_id  The name of the column with taxa identifiers. The `data` must contain such a column if a taxonomy is supplied. If not supplied,
 #'   the function will try to make an educated guess based on the column contents.
 #'
-#' @param scoring A character strict specifying the type of scoring used for calculating the importance weights. Possible values are are "arithmetic",
+#' @param scoring A character string specifying the type of scoring used for calculating the importance weights. Possible values are are "arithmetic",
 #'   "geometric", or "log_odds". Default is "log_odds".
 #'
 #' @param min_variability An integer specifying the minimal threshold of the second-most-frequent state of any variable. Variables below this threshold
