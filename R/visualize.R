@@ -56,8 +56,9 @@ visualize.densify_result <- function(x, ..., score = n_data_points * coding_dens
     ggplot2::geom_text(ggplot2::aes(x = best_step, y = best_score, label = score_label), hjust = "inward", family = "sans", size = 3, fontface = "plain") +
     ggplot2::guides(color = ggplot2::guide_colourbar(title = "")) +
     ggplot2::scale_x_continuous(n.breaks = 20L, limits = range(frame$step)) +
-    ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45))
-}
+    ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45)) +
+    ggplot2::theme_bw()
+  }
 
 #' @rdname visualize.densify_result
 #' @export

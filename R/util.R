@@ -44,7 +44,7 @@ rowapply <- function(matrix, fn, ..., .ptype = list()) {
 # }
 
 
-# Computes a binary indicator matrix (1 for presence, 0 for absense of data) for the dataset
+# Computes a binary indicator matrix (1 for presence, 0 for absence of data) for the dataset
 binary_indicator_matrix <- function(data, ...) {
   # save the data frame dimension
   dim <- c(nrow(data), ncol(data))

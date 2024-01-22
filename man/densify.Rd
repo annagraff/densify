@@ -24,7 +24,7 @@ columns). Columns not specified here will be preserved during densification.}
 \item{taxonomy}{A taxonomy tree, which can be a \code{phylo} object (e.g. result of \link[ape:read.tree]{ape::read.tree} or a data frame columns \code{id} and \code{parent_id}
 (such as \link{glottolog_languoids}). A taxonomy must be provided as a named argument if you want to consider the taxonomic diversity for densification.}
 
-\item{taxon_id}{The name of the column with taxa identifiers. The \code{data} must contain such a colun if a taxonomy is supplied. If not supplied,
+\item{taxon_id}{The name of the column with taxa identifiers. The \code{data} must contain such a column if a taxonomy is supplied. If not supplied,
 the function will try to make an educated guess based on the column contents.}
 
 \item{scoring}{A character strict specifying the type of scoring used for calculating the importance weights. Possible values are are "arithmetic",
@@ -41,7 +41,7 @@ A specially formatted tibble of iterative densification results, \link{densify_r
 }
 \description{
 Iteratively densifies an input data frame, returning a specially formatted tible (\link{densify_result}) describing the result of each densification step.
-Densified data can be retrieved using function \link[=prune.densify_result]{prune}, or manually by invoking \link{as_tibble} on the values in the column \code{data}. The desnification results
+Densified data can be retrieved using function \link[=prune.densify_result]{prune}, or manually by invoking \link{as_tibble} on the values in the column \code{data}. The densification results
 can also be inspected using \link[=visualize.densify_result]{visualize}
 }
 \examples{

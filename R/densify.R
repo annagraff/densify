@@ -1,28 +1,28 @@
-#' Iterative matrix densification 
+#' Iterative matrix densification
 #'
-#' Iteratively densifies an input data frame, returning a specially formatted tible ([densify_result]) describing the result of each densification step. 
-#' Densified data can be retrieved using function [prune][prune.densify_result], or manually by invoking [as_tibble] on the values in the column `data`. The desnification results
+#' Iteratively densifies an input data frame, returning a specially formatted tible ([densify_result]) describing the result of each densification step.
+#' Densified data can be retrieved using function [prune][prune.densify_result], or manually by invoking [as_tibble] on the values in the column `data`. The densification results
 #' can also be inspected using [visualize][visualize.densify_result]
 #'
-#' @param data A data frame with observations/taxa (such as languages) in rows and variables in columns. 
+#' @param data A data frame with observations/taxa (such as languages) in rows and variables in columns.
 #'
-#' @param cols  <[`tidy-select`][tidyselect::language]> specification of variable columns to densify (default is all columns are treated as variable 
-#'   columns). Columns not specified here will be preserved during densification. 
-#'   
-#' @param taxonomy A taxonomy tree, which can be a `phylo` object (e.g. result of [ape::read.tree] or a data frame columns `id` and `parent_id` 
-#'   (such as [glottolog_languoids]). A taxonomy must be provided as a named argument if you want to consider the taxonomic diversity for densification. 
-#'   
-#' @param taxon_id  The name of the column with taxa identifiers. The `data` must contain such a colun if a taxonomy is supplied. If not supplied, 
-#'   the function will try to make an educated guess based on the column contents. 
+#' @param cols  <[`tidy-select`][tidyselect::language]> specification of variable columns to densify (default is all columns are treated as variable
+#'   columns). Columns not specified here will be preserved during densification.
 #'
-#' @param scoring A character strict specifying the type of scoring used for calculating the importance weights. Possible values are are "arithmetic", 
+#' @param taxonomy A taxonomy tree, which can be a `phylo` object (e.g. result of [ape::read.tree] or a data frame columns `id` and `parent_id`
+#'   (such as [glottolog_languoids]). A taxonomy must be provided as a named argument if you want to consider the taxonomic diversity for densification.
+#'
+#' @param taxon_id  The name of the column with taxa identifiers. The `data` must contain such a column if a taxonomy is supplied. If not supplied,
+#'   the function will try to make an educated guess based on the column contents.
+#'
+#' @param scoring A character strict specifying the type of scoring used for calculating the importance weights. Possible values are are "arithmetic",
 #'   "geometric", or "log_odds". Default is "log_odds".
 #'
-#' @param min_variability An integer specifying the minimal threshold of the second-most-frequent state of any variable. Variables below this threshold 
+#' @param min_variability An integer specifying the minimal threshold of the second-most-frequent state of any variable. Variables below this threshold
 #'   will be discarded. Supply `NA` to disable variability pruning. Default is `NA`.
 #'
-#' @param consider_taxonomic_diversity A logical scalar specifying whether the taxonomic diversity of the taxa should be considered for the 
-#'   densification process. Defaults to `TRUE` if taxonomy is supplied. 
+#' @param consider_taxonomic_diversity A logical scalar specifying whether the taxonomic diversity of the taxa should be considered for the
+#'   densification process. Defaults to `TRUE` if taxonomy is supplied.
 #'
 #' @return A specially formatted tibble of iterative densification results, [densify_result]
 #'
@@ -32,12 +32,12 @@
 #'
 #' @export
 densify <- function(
-  data, 
-  cols,  
-  ..., 
+  data,
+  cols,
+  ...,
   taxonomy,
   taxon_id,
-  scoring = c("log_odds", "arithmetic", "geometric"), 
+  scoring = c("log_odds", "arithmetic", "geometric"),
   min_variability = NA,
   consider_taxonomic_diversity
   #limits = list(coding_density = 0.8, size = 0.5)
@@ -54,14 +54,14 @@ densify <- function(
 
   # match taxonomy and data by taxon
   if (!is_null(taxonomy)) taxonomy <- match_taxa(data, taxonomy, taxon_id)
-  
+
   # init the pruning state
   state <- init_pruning_state(
-    data, 
+    data,
     vars,
-    ids = if(!is.null(taxon_id)) data[[taxon_id]], 
-    taxonomy = taxonomy, 
-    taxonomic_diversity = consider_taxonomic_diversity, 
+    ids = if(!is.null(taxon_id)) data[[taxon_id]],
+    taxonomy = taxonomy,
+    taxonomic_diversity = consider_taxonomic_diversity,
     scoring_fn = scoring_fn
   )
 
@@ -70,7 +70,7 @@ densify <- function(
 
   # pruning steps will be recorded here
   densify_log <- vec_ptype(make_log_entry_for_pruning_state(state, pruned_data_factory))
-  
+
   # utility that displays current coding density of the pruning process
   current_coding_density <- function() {
     if ((n <- nrow(densify_log)) == 0 || !is.finite(densify_log$coding_density[[n]])) return("")
@@ -85,7 +85,7 @@ densify <- function(
 
   # start the progress bar
   cli::cli_progress_bar(
-    type = "custom", 
+    type = "custom",
     format = "{cli::pb_spin} Pruned {cli::pb_current} dimensions ({cli::pb_rate}) {current_coding_density()} | {cli::pb_elapsed}"
   )
 
@@ -105,12 +105,12 @@ densify <- function(
       reason = "low score"
     )
 
-    # prune the datum 
+    # prune the datum
     state <- prune_indices(state, lowest_score)
 
     # prune uninformative taxa that might have resulted from removal
-    state <- prune_non_informative_data(state, 
-      check_taxa = lowest_score$axis == 2L, 
+    state <- prune_non_informative_data(state,
+      check_taxa = lowest_score$axis == 2L,
       check_vars = lowest_score$axis == 1L,
       min_variability = min_variability,
       .changes = setter(changes, .compose = vec_rbind)
@@ -127,30 +127,30 @@ densify <- function(
 
 #' Result of densify function
 #'
-#' A tibble that contains the information about each pruning step performed by [densify] along with some useful 
+#' A tibble that contains the information about each pruning step performed by [densify] along with some useful
 #' statistics. Use [rank_results][rank_results.densify_result] to rank the densify results according to a quality score, [prune][prune.densify_result] to retrieve a
 #' subjectively best result, and [visualize][visualize.densify_result] to visually compare the quality scores between different pruning steps.
-#' You can also do custom evaluation on the results tibble, e.g. by using `dplyr` and retrieve the pruned datasets from the 
-#' column `data`. 
+#' You can also do custom evaluation on the results tibble, e.g. by using `dplyr` and retrieve the pruned datasets from the
+#' column `data`.
 #'
-#' @format A tibble with the following columns: 
+#' @format A tibble with the following columns:
 #' \describe{
 #'   \item{.step}{densify process iteration step}
 #'   \item{n_data_points}{number of total non-missing data points in the pruned data}
 #'   \item{n_rows}{number of rows (taxa) in the pruned data}
 #'   \item{n_cols}{numbr of variables in the pruned data (note: number refers specifically to variables, extra columns are always preserved)}
 #'   \item{coding_density}{proportion of non-missing data points relative to the data size}
-#'   \item{row_coding_density_min}{minimum proportion of non-missin data points for each row}
-#'   \item{row_coding_density_avg}{mean proportion of non-missin data points for each row}
-#'   \item{row_coding_density_max}{maximum proportion of non-missin data points for each row}
-#'   \item{col_coding_density_min}{minimum proportion of non-missin data points for each variable column}
-#'   \item{col_coding_density_avg}{mean proportion of non-missin data points for each variable column}
-#'   \item{col_coding_density_max}{Maximum proportion of non-missin data points for each variable column}
+#'   \item{row_coding_density_min}{minimum proportion of non-missing data points, considering each row}
+#'   \item{row_coding_density_avg}{mean proportion of non-missing data points, considering each row}
+#'   \item{row_coding_density_max}{maximum proportion of non-missing data points, considering each row}
+#'   \item{col_coding_density_min}{minimum proportion of non-missing data points, considering each column}
+#'   \item{col_coding_density_avg}{mean proportion of non-missing data points, considering each column}
+#'   \item{col_coding_density_max}{maximum proportion of non-missing data points, considering each column}
 #'   \item{taxonomic_index}{Shannon diversity index for top-level taxa (if taxonomy has been supplied)}
 #'   \item{data}{a list containing promise objects that evaluate to pruned datasets (use [as.data.frame] to evaluate a promise)}
 #'   \item{changes}{a tibble containing information about the pruned data dimensions}
 #' }
-#' 
+#'
 #'
 #' @name densify_result
 #' @rdname densify_result
@@ -191,7 +191,7 @@ rename.densify_result <- function(.data, ...) {
 #' @export
 tbl_format_header.densify_result <- function(x, setup, ...) {
   cli::cli_fmt({
-    
+
 
     cli::cli_text("# Densify result with {nrow(x)} pruning steps")
 
@@ -220,26 +220,26 @@ tbl_format_footer.densify_result <- function(x, setup, ...) {
 }
 
 
-# Build a new entry in the densify log 
+# Build a new entry in the densify log
 #
 # - changes is a data frame describing the changes in the state
 # - data is the original data frame
 make_log_entry_for_pruning_state <- function(state, pruned_data_factory, changes = data_frame()) {
   new_data_frame(list2(
     !!!get_pruning_state_stats(state),
-    data = list(pruned_data_factory(state$indices$rows, state$indices$cols)), 
+    data = list(pruned_data_factory(state$indices$rows, state$indices$cols)),
     changes = list(tibble::new_tibble(changes))
   ), class = c("tbl_df", "tbl"))
 }
 
 
 
-#  █████  ██████   ██████       ██████ ██   ██ ███████  ██████ ██   ██ ██ ███    ██  ██████  
-# ██   ██ ██   ██ ██           ██      ██   ██ ██      ██      ██  ██  ██ ████   ██ ██       
-# ███████ ██████  ██   ███     ██      ███████ █████   ██      █████   ██ ██ ██  ██ ██   ███ 
-# ██   ██ ██   ██ ██    ██     ██      ██   ██ ██      ██      ██  ██  ██ ██  ██ ██ ██    ██ 
-# ██   ██ ██   ██  ██████       ██████ ██   ██ ███████  ██████ ██   ██ ██ ██   ████  ██████  
-#                                                                                          
+#  █████  ██████   ██████       ██████ ██   ██ ███████  ██████ ██   ██ ██ ███    ██  ██████
+# ██   ██ ██   ██ ██           ██      ██   ██ ██      ██      ██  ██  ██ ████   ██ ██
+# ███████ ██████  ██   ███     ██      ███████ █████   ██      █████   ██ ██ ██  ██ ██   ███
+# ██   ██ ██   ██ ██    ██     ██      ██   ██ ██      ██      ██  ██  ██ ██  ██ ██ ██    ██
+# ██   ██ ██   ██  ██████       ██████ ██   ██ ███████  ██████ ██   ██ ██ ██   ████  ██████
+#
 #
 # Functions for validating and processing densify() arguments
 
@@ -247,7 +247,7 @@ check_data <- function(data, ..., .arg = caller_arg(data)) {
   local_error_call(caller_env())
 
   is.data.frame(data) || cli::cli_abort(c(
-    "{.arg {(.arg)}} must be a data frame", 
+    "{.arg {(.arg)}} must be a data frame",
     i = "got {.code {as_label(data)}}")
   )
 
@@ -273,17 +273,17 @@ check_taxonomy <- function(taxonomy, ..., .arg = caller_arg(taxonomy)) {
 
 check_variables <- function(data, quoted_cols, taxon_id, ..., .arg) {
   local_error_call(caller_env())
-  
+
   vars <- if(!quo_is_missing(quoted_cols)) {
     tidyselect::eval_select(quoted_cols, data, allow_rename = FALSE, error_call = caller_env())
   } else {
     cli::cli_warn(c(
-      "!" = "in {.fun densify}: no {.arg {(.arg)}} argument specified, using all columns as variables", 
+      "!" = "in {.fun densify}: no {.arg {(.arg)}} argument specified, using all columns as variables",
       i = "use {.code {(.arg)} = <tidy column spec>} to silence this warning"),
       call = caller_env()
     )
     set_names(seq_len(ncol(data)), names(data))
-  }  
+  }
 
   if (any(taxon_id %in% names(vars))) {
     if (!quo_is_missing(quoted_cols)) {
@@ -307,17 +307,17 @@ check_variables <- function(data, quoted_cols, taxon_id, ..., .arg) {
 
 
 check_taxon_id <- function(taxon_id, data, taxonomy, ..., .arg = caller_arg(taxon_id)) {
-  local_error_call(caller_env())  
+  local_error_call(caller_env())
 
   # taxon id is provided
   if (!missing(taxon_id)) {
     is_string(taxon_id) || cli::cli_abort(c(
-      "{.arg {(.arg)}} must be be a name of a column", 
+      "{.arg {(.arg)}} must be be a name of a column",
       i = "got {.code {as_label(data)}}"
     ))
 
     has_name(data, taxon_id) || cli::cli_abort(c(
-      "no column named {.var {taxon_id}} in the data", 
+      "no column named {.var {taxon_id}} in the data",
       i = "{.code {(.arg)} = {as_label(taxon_id)} }"
     ))
   } else {
@@ -327,7 +327,7 @@ check_taxon_id <- function(taxon_id, data, taxonomy, ..., .arg = caller_arg(taxo
     if (is.null(taxonomy)) return(NULL)
 
     # try to guess the taxon id
-    overlaps <- lapply(as.list(data), function(values) {      
+    overlaps <- lapply(as.list(data), function(values) {
       tryCatch(sum(vec_in(values, rownames(taxonomy), na_equal = FALSE)), error = function(cnd) 0L)
     })
 
@@ -339,7 +339,7 @@ check_taxon_id <- function(taxon_id, data, taxonomy, ..., .arg = caller_arg(taxo
 
     taxon_id <- names(data)[[best]]
     cli::cli_warn(c(
-      "!" = "in {.fun densify}: using column {.arg {taxon_id}} as taxon id", 
+      "!" = "in {.fun densify}: using column {.arg {taxon_id}} as taxon id",
       i = "specify {.code {(.arg)} = <column name>} to silence this warning")
     )
   }
@@ -361,9 +361,9 @@ check_taxon_id <- function(taxon_id, data, taxonomy, ..., .arg = caller_arg(taxo
 
 
 get_scoring_function <- function(method) {
-  switch(method, 
-    arithmetic = row_scores_arithmetic, 
-    geometric = row_scores_geometric, 
+  switch(method,
+    arithmetic = row_scores_arithmetic,
+    geometric = row_scores_geometric,
     log_odds = row_scores_log_odds,
     cli::cli_abort("unknown scoring method {.val {as_label(method)}}", .internal = TRUE)
   )
@@ -371,14 +371,14 @@ get_scoring_function <- function(method) {
 
 
 match_taxa <- function(
-  data, 
-  taxonomy, 
-  taxon_id, 
-  ..., 
-  .data_arg = caller_arg(data), 
+  data,
+  taxonomy,
+  taxon_id,
+  ...,
+  .data_arg = caller_arg(data),
   .taxonomy_arg = caller_arg(taxonomy)
 ) {
-  local_error_call(caller_env())  
+  local_error_call(caller_env())
 
   # locate taxa in the taxonomy
   matches <- tryCatch(
