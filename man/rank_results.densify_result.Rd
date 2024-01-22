@@ -7,7 +7,7 @@
 \method{rank_results}{densify_result}(object, ..., score = n_data_points * coding_density)
 }
 \arguments{
-\item{score}{an expression that computes a densification quality score. Default score aims to maximise both
+\item{score}{an expression that computes a densification quality score. Default score aims to maximize the product of
 the number of data points and the coding density. See \link{densify_result} for available statistics that can
 be used to compute a suitable score}
 

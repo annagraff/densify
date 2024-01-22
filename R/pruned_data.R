@@ -1,4 +1,4 @@
-# Return a function that constructes pruned data frame promises
+# Return a function that constructs pruned data frame promises
 #
 # We use this design to work around serialization issues of lazy expressions,
 # R serializes references to the same data multiple times, which results in bad

@@ -1,12 +1,12 @@
-#' Visualise the distrubution of quality scores across densify results
+#' Visualize the distribution of quality scores across densify results
 #'
-#' Produces a `ggplot2` visualisation showing the distribution of a quality score across the iteration steps
-#' of the densification process and shows the result with the maximal score. The user can provide their own 
+#' Produces a `ggplot2` visualization showing the distribution of a quality score across the iteration steps
+#' of the densification process and shows the result with the maximum score. The user can provide their own
 #' quality score formula in `score`, which can use any statistics provided in a [densify_result] tibble.
 #'
 #' @param x a [densify_result] object
-#' @param score an expression that computes a densification quality score. Default score aims to maximise both
-#'   the number of data points and the coding density. See [densify_result] for available statistics that can 
+#' @param score an expression that computes a densification quality score. Default score aims to maximize both
+#'   the number of data points and the coding density. See [densify_result] for available statistics that can
 #'   be used to compute a suitable score
 #'
 #' @return a `ggplot2` plot
@@ -33,13 +33,13 @@ visualize.densify_result <- function(x, ..., score = n_data_points * coding_dens
 
   # visualization frame
   frame <- data_frame(idx = seq_len(nrow(x)), step = x$.step, score = score)
-  
+
   # maximal value
   best <- which.max(frame$score)
   best_score <- frame$score[best]
   best_step <- frame$step[best]
 
-  
+
   score_label <- cli::format_inline(
     "  max score is {prettyNum(best_score)}\n",
     "  step {best_step}\n",
@@ -49,7 +49,7 @@ visualize.densify_result <- function(x, ..., score = n_data_points * coding_dens
   cli::cli_alert_info("use {.code tibble::as_tibble({caller_arg(x)}$data[[{frame$idx[[best]]}]])} to obtain the pruned data frame")
 
 
-  ggplot2::ggplot(vec_slice(frame, vec_detect_complete(frame)), ggplot2::aes(x = step, y = score, color = score)) + 
+  ggplot2::ggplot(vec_slice(frame, vec_detect_complete(frame)), ggplot2::aes(x = step, y = score, color = score)) +
     ggplot2::geom_path() +
     ggplot2::geom_vline(ggplot2::aes(xintercept = best_step), linetype = "dashed", col = "goldenrod1") +
     ggplot2::ylab(as_label(score_quo)) +

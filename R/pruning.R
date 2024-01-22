@@ -2,10 +2,10 @@
 #
 # The pruning state tracks currently pruned data, variable levels, taxonomy, and importance weights
 #
-# - data and taxonomy are matched by rows (i.e. i-th row in the data describes the 
+# - data and taxonomy are matched by rows (i.e. i-th row in the data describes the
 # i-th taxon in the taxonomy)
 init_pruning_state <- function(data, vars, ids, taxonomy, ..., taxonomic_diversity, scoring_fn) {
-  # build a data frame that obly contains variables
+  # build a data frame that only contains variables
   # row names track taxa ids
   var_frame <- new_data_frame(unclass(data)[vars])
   rownames(var_frame) <- ids
@@ -18,7 +18,7 @@ init_pruning_state <- function(data, vars, ids, taxonomy, ..., taxonomic_diversi
     taxonomy = taxonomy,
     # data variable levels (for variability computation)
     data_levels = encode_unique_levels(var_frame),
-    # row and colum mapping to the original data (vars tracks mapping of variable columns to data columns)
+    # row and column mapping to the original data (vars tracks mapping of variable columns to data columns)
     indices = list(rows = seq_len(nrow(data)), cols = seq_len(ncol(data)), vars = vars),
     # parameters
     params = list(
@@ -35,9 +35,9 @@ init_pruning_state <- function(data, vars, ids, taxonomy, ..., taxonomic_diversi
 
 # Prune the rows and/or columns and return the new pruning state
 #
-#  - column indices refer to variable indices, not original data indices 
+#  - column indices refer to variable indices, not original data indices
 prune_indices <- function(state, indices) {
-  updated_families <- character(0)  
+  updated_families <- character(0)
 
   # elements to prune
   rows <- indices$index[indices$axis == 1L]
@@ -57,7 +57,7 @@ prune_indices <- function(state, indices) {
 
     # update the data row indices
     state$indices$rows <- state$indices$rows[-rows]
-  } 
+  }
 
   # prune columns
   if (length(cols) > 0L) {
@@ -65,15 +65,15 @@ prune_indices <- function(state, indices) {
     state$matrix <- state$matrix[, -cols, drop = FALSE]
     if (!is.null(state$data_levels)) state$data_levels <- state$data_levels[-cols]
 
-    # update the weights 
+    # update the weights
     state$weights$cols$weights <- vec_slice(state$weights$cols$weights, -cols)
 
     # update the data column indices (cols need to be translated to original data columns via vars mapping)
     state$indices$cols <- state$indices$cols[-state$indices$vars[cols]]
 
-    # update the vars column to data column maping (prefix sum is used to update the indices)
+    # update the vars column to data column mapping (prefix sum is used to update the indices)
     state$indices$vars <- (state$indices$vars - cumsum(which_mask(cols, length(state$indices$vars))))[-cols]
-  } 
+  }
 
   # update the weights and scores
   state$weights <- update_importance_weights_for_pruning_state(state$weights, state)
@@ -82,11 +82,11 @@ prune_indices <- function(state, indices) {
 }
 
 
-# Prunes non-informative taxa and variables below the threashold
+# Prunes non-informative taxa and variables below the threshold
 prune_non_informative_data <- function(state, check_taxa = TRUE, check_vars = TRUE, min_variability = NA_integer_, ..., .changes) {
   changes <- NULL
 
-  # repeat until we prune everything we can 
+  # repeat until we prune everything we can
   while(check_taxa || check_vars) {
     # check rows (taxa) with no data coverage
     if (check_taxa  && length(indices <- which(rowSums(state$matrix) == 0)) > 0L) {
@@ -129,7 +129,7 @@ prune_non_informative_data <- function(state, check_taxa = TRUE, check_vars = TR
       if (!missing(.changes)) {
         changes <- vec_rbind(changes, data_frame(
           axis = 2L,
-          index = indices,          
+          index = indices,
           type = "variable",
           id = dimnames(state$matrix)[[2L]][indices],
           score = state$weights$cols$scores[indices],
@@ -148,16 +148,15 @@ prune_non_informative_data <- function(state, check_taxa = TRUE, check_vars = TR
   state
 }
 
-
 # Recalculates the importance weights for a pruning state
 #
-# - `updated_families` is used to optimize taxoomic diversity index calculation
+# - `updated_families` is used to optimize taxonomic diversity index calculation
 #
 # The importance weights consists of the following factors
-# 
+#
 # - absolute coding density (percentage of variables with data) for individual taxa (rows)
 # - relative coding density (matrix-weighted) for individual taxa (rows)
-# - [if requested] taxonomic diversity index for for individual taxa (rows) 
+# - [if requested] taxonomic diversity index  for individual taxa (rows)
 # - relative coding density (matrix-weighted) for individual variables (columns)
 update_importance_weights_for_pruning_state <- function(weights, state, updated_families = character(0)) {
   m <- state$matrix
@@ -277,7 +276,7 @@ get_pruning_state_stats <- function(state) {
   } else {
     NA_real_
   }
-    
+
   new_data_frame(stats)
 }
 

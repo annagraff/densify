@@ -3,7 +3,7 @@
 \name{visualize.densify_result}
 \alias{visualize.densify_result}
 \alias{plot.densify_result}
-\title{Visualise the distrubution of quality scores across densify results}
+\title{Visualize the distribution of quality scores across densify results}
 \usage{
 \method{visualize}{densify_result}(x, ..., score = n_data_points * coding_density)
 
@@ -12,7 +12,7 @@
 \arguments{
 \item{x}{a \link{densify_result} object}
 
-\item{score}{an expression that computes a densification quality score. Default score aims to maximise both
+\item{score}{an expression that computes a densification quality score. Default score aims to maximize both
 the number of data points and the coding density. See \link{densify_result} for available statistics that can
 be used to compute a suitable score}
 }
@@ -20,7 +20,7 @@ be used to compute a suitable score}
 a \code{ggplot2} plot
 }
 \description{
-Produces a \code{ggplot2} visualisation showing the distribution of a quality score across the iteration steps
-of the densification process and shows the result with the maximal score. The user can provide their own
+Produces a \code{ggplot2} visualization showing the distribution of a quality score across the iteration steps
+of the densification process and shows the result with the maximum score. The user can provide their own
 quality score formula in \code{score}, which can use any statistics provided in a \link{densify_result} tibble.
 }

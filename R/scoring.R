@@ -23,20 +23,20 @@ identify_lowest_scores <- function(weights) {
 
 # Calculates the taxonomic diversity index
 #
-# The index calculation is per group (usually the top-level clade, i.e. family), with the parameter 
-# `group_indices` mapping groups to leafs taxa. This parameter can also be used to limit
-# the calculation to certain groups only (we use it to speed up updates) 
+# The index calculation is per group (usually the top-level clade, i.e. family), with the parameter
+# `group_indices` mapping groups to leaf taxa. This parameter can also be used to limit
+# the calculation to certain groups only (we use it to speed up updates)
 calculate_taxonomic_diversity <- function(taxonomy, group_indices) {
-  # no groups, nothign to compute
+  # no groups, nothing to compute
   if (length(group_indices) == 0L) return(vctrs::vec_init(double(), nrow(taxonomy)))
 
   # replace each node by how often it occurs in the sample
-  # these counts form the basis for the diversity measure (we prioritise retaining data from smaller branches)
+  # these counts form the basis for the diversity measure (we prioritize retaining data from smaller branches)
   #
-  # uneven taxonomies are equalised by counting NA nodes in the flat taxonomy as unique 
+  # uneven taxonomies are equalized by counting NA nodes in the flat taxonomy as unique
   counts <- calculate_counts(taxonomy[unlist(group_indices), , drop = FALSE])
 
-  # balance the taxonomic structure by only considering the unique levels 
+  # balance the taxonomic structure by only considering the unique levels
   prods <- rowapply(counts, function(x) prod(unique(x)), .ptype = double())
 
   # the taxonomic weights for each taxon are reciprocal geometric means of the (balanced) node level counts
@@ -46,19 +46,19 @@ calculate_taxonomic_diversity <- function(taxonomy, group_indices) {
   # scatter the weights back into the correct rows using group indices
   weights <- vctrs::vec_assign(vctrs::vec_init(double(), nrow(taxonomy)), unlist(group_indices), weights)
 
-  # normalize the weights within individual groups 
+  # normalize the weights within individual groups
   for (group in group_indices) weights[group] <- weights[group]/sum(weights[group])
 
   weights
 }
 
 
-# Rowwise score using arithmetic mean
+# Row-wise score using arithmetic mean
 row_scores_arithmetic <- function(matrix) {
   rowMeans(matrix)
 }
 
-# Rowwise score using geomeric mean
+# Row-wise score using geometric mean
 row_scores_geometric <- function(matrix) {
   ncol(matrix) > 1L || return(matrix)
 
@@ -73,11 +73,11 @@ row_scores_geometric <- function(matrix) {
 }
 
 
-# Rowwise score using log odds
+# Row-wise score using log odds
 row_scores_log_odds <- function(matrix) {
   ncol(matrix) > 1L || return(matrix)
 
-  # clamp the vaue range 
+  # clamp the value range
   matrix[matrix > 0.99] <- 0.99
   matrix[matrix < 0.01] <- 0.01
 

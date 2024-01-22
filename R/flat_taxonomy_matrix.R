@@ -10,12 +10,12 @@
 #' The input taxonomy can be provided either as a `phylo` object (e.g. via [ape::read.nexus]), as a
 #' data frame that contains columns `id` and `parent_id` (each row encodes one parent-child
 #' relationship), or by passing in `id` and `parent_id` vectors explicitly. The vectors `id` and
-#' `parent_id` must be of type character. 
+#' `parent_id` must be of type character.
 #'
 #' A taxonomy tree is said to be "flattened" if the depth of each of it's leaf nodes is equal to the
 #' tree height. Such tree can be constructed by injecting dummy nodes where appropriate. Example:
 #'
-#' \preformatted{   
+#' \preformatted{
 #'    A                              A      F''     level 1
 #'   / \         dummy nodes        / \     |
 #'   B  \       ------------->      B  E'   F'      level 2
@@ -30,21 +30,21 @@
 #' Note that there can be multiple flattened representations for a given tree, since it is not
 #' guaranteed that nodes at different levels can be aligned in the unique way. In our
 #' implementation we always align at the top level, which means that the dummy nodes are always
-#' inserted at the bottom, between the leaf and it's closest parent in the original tree. 
+#' inserted at the bottom, between the leaf and it's closest parent in the original tree.
 #'
 #' @docType package
 #'
 #' @examples
-#' build_flat_taxonomy_matrix(glottolog_languoids)
+#' as_flat_taxonomy_matrix(glottolog_languoids)
 #'
 #' @param x An object of class `phylo` (e.g. result of [ape::read.tree]) or a data frame with
-#'   columns `id` and `parent_id`.  
+#'   columns `id` and `parent_id`.
 #'
 #' @param id Character vector of node ids. This cannot be supplied at the same time as `x`.
 #'
-#' @param parent_id Character vector of node parent ids. This cannot be supplied at the same 
+#' @param parent_id Character vector of node parent ids. This cannot be supplied at the same
 #'   time as `x`.
-#' 
+#'
 #' @param .x Optional label for the argument `x` to use in error messages
 #
 #' @return A data frame with one row per node id and as many columns as there are levels in the tree.
@@ -112,7 +112,7 @@ check_as_flat_taxonomy_matrix_args <- function(x, ..., id, parent_id, .x = rlang
   rlang::check_dots_empty()
 
   # check arguments
-  (missing(x) != any(missing(id), missing(parent_id))) && 
+  (missing(x) != any(missing(id), missing(parent_id))) &&
   (missing(id) == missing(parent_id)) || rlang::abort(c(
     "either `x` or both `id` and `parent_id` must be supplied",
     "x" = if(!missing(x)) {
@@ -142,7 +142,7 @@ check_as_flat_taxonomy_matrix_args <- function(x, ..., id, parent_id, .x = rlang
       "!" = sprintf("<%s> found", class(data$parent_id)[[1L]]),
       "",
       "i" = "see ?as_flat_taxonomy_matrix for details"
-    ))    
+    ))
 
     data
   } else
@@ -156,7 +156,7 @@ check_as_flat_taxonomy_matrix_args <- function(x, ..., id, parent_id, .x = rlang
     if(length(roots) > 0L) edge <- unique(rbind(cbind(NA_integer_, roots), edge))
 
     list(id = labels[edge[, 2L]], parent_id = labels[edge[, 1L]])
-  } else 
+  } else
   if (rlang::is_bare_list(x) || is.data.frame(x)) {
     rlang::has_name(x, "id") &&
     rlang::has_name(x, "parent_id") || rlang::abort(c(

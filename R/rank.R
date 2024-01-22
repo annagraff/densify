@@ -1,14 +1,14 @@
 #' Densify results ranking based on a quality score
 #'
-#' Ranks densify results by a quality score from lowest to highest. Ties receive the same rank. The user can provide their own 
+#' Ranks densify results by a quality score from lowest to highest. Ties receive the same rank. The user can provide their own
 #' quality score formula in `score`, which can use any statistics provided in a [densify_result] tibble.
 #'
 #' @param x a [densify_result] object
-#' @param score an expression that computes a densification quality score. Default score aims to maximise both
-#'   the number of data points and the coding density. See [densify_result] for available statistics that can 
+#' @param score an expression that computes a densification quality score. Default score aims to maximize the product of
+#'   the number of data points and the coding density. See [densify_result] for available statistics that can
 #'   be used to compute a suitable score
 #'
-#' @return an integer vector of ranks corresponding to the densify iterations 
+#' @return an integer vector of ranks corresponding to the densify iterations
 #'
 #' @importFrom generics rank_results
 #' @export
@@ -40,15 +40,15 @@ rank_results.densify_result <- function(object, ..., score = n_data_points * cod
 #' @export
 generics::rank_results
 
-#' Obtain densified data frame that maximises a quality score
+#' Obtain densified data frame that maximizes a quality score
 #'
-#' Returns the densified data frame from the densify iteration step that maximises a quality score. In case of ties, 
-#' first result is returned. The user can provide their own  quality score formula in `score`, which can use any statistics 
+#' Returns the densified data frame from the densify iteration step that maximizes a quality score. In case of ties,
+#' first result is returned. The user can provide their own  quality score formula in `score`, which can use any statistics
 #' provided in a [densify_result] tibble.
 #'
 #' @param x a [densify_result] object
-#' @param score an expression that computes a densification quality score. Default score aims to maximise both
-#'   the number of data points and the coding density. See [densify_result] for available statistics that can 
+#' @param score an expression that computes a densification quality score. Default score aims to maximize both
+#'   the number of data points and the coding density. See [densify_result] for available statistics that can
 #'   be used to compute a suitable score
 #'
 #' @return the densified data frame
@@ -70,7 +70,7 @@ prune.densify_result <- function(object, ..., score = n_data_points * coding_den
   }
 
   # return the pruned data set
-  data <- as.data.frame(object$data[[best]]) 
+  data <- as.data.frame(object$data[[best]])
   if (nrow(data) == 0L) {
     cli::cli_warn("in {.fn prune}: returning empty data frame")
   }
