@@ -43,11 +43,11 @@ generics::rank_results
 #' Obtain densified data frame that maximizes a quality score
 #'
 #' Returns the densified data frame from the densify iteration step that maximizes a quality score. In case of ties,
-#' first result is returned. The user can provide their own  quality score formula in `score`, which can use any statistics
+#' first result is returned. The user can provide their own quality score formula in `score`, which can use any statistics
 #' provided in a [densify_result] tibble.
 #'
 #' @param x a [densify_result] object
-#' @param score an expression that computes a densification quality score. Default score aims to maximize both
+#' @param score an expression that computes a densification quality score. Default score aims to maximize the product of
 #'   the number of data points and the coding density. See [densify_result] for available statistics that can
 #'   be used to compute a suitable score
 #'
@@ -112,8 +112,6 @@ eval_densify_results_quality_score <- function(densify_results, quo, ..., .calle
 
   score
 }
-
-
 
 
 extract_symbols <- function(expr) {
