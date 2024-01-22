@@ -16,10 +16,10 @@ For details on each function, refer to the help page (see below) and/or resort t
 ~~~~
 library("densify")
 
-?build_flat_taxonomy_matrix
-?densify_steps
-?densify_score
-?densify_prune
+?densify
+?visualize
+?prune
+
 ~~~~
 
 ## Contributing
