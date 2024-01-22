@@ -21,13 +21,13 @@ densify(
 \item{cols}{<\code{\link[tidyselect:language]{tidy-select}}> specification of variable columns to densify (default is all columns are treated as variable
 columns). Columns not specified here will be preserved during densification.}
 
-\item{taxonomy}{A taxonomy tree, which can be a \code{phylo} object (e.g. result of \link[ape:read.tree]{ape::read.tree} or a data frame columns \code{id} and \code{parent_id}
+\item{taxonomy}{A taxonomy tree, which can be a \code{phylo} object (e.g. result of \link[ape:read.tree]{ape::read.tree} or a data frame with columns \code{id} and \code{parent_id}
 (such as \link{glottolog_languoids}). A taxonomy must be provided as a named argument if you want to consider the taxonomic diversity for densification.}
 
 \item{taxon_id}{The name of the column with taxa identifiers. The \code{data} must contain such a column if a taxonomy is supplied. If not supplied,
 the function will try to make an educated guess based on the column contents.}
 
-\item{scoring}{A character strict specifying the type of scoring used for calculating the importance weights. Possible values are are "arithmetic",
+\item{scoring}{A character string specifying the type of scoring used for calculating the importance weights. Possible values are are "arithmetic",
 "geometric", or "log_odds". Default is "log_odds".}
 
 \item{min_variability}{An integer specifying the minimal threshold of the second-most-frequent state of any variable. Variables below this threshold
