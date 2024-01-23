@@ -269,10 +269,10 @@ get_pruning_state_stats <- function(state) {
 
   # Shannon diversity index for the top-level taxon
   stats$taxonomic_index <- if(!is.null(taxonomy <- state$taxonomy)) {
-    counts <- if (nrow(taxonomy) > 0L) vec_count(taxonomy[[1L]])$count else integer()
+    counts <- if (nrow(taxonomy) > 0L) vec_count(taxonomy[,1])$count else integer()
     props <- counts/sum(counts)
 
-    sum(- props * log(props))
+    -sum(props * log(props))
   } else {
     NA_real_
   }
