@@ -106,7 +106,7 @@ Iterative pruning of the input matrix is performed by the `densify()` function, 
 
 For a more detailed discussion of the parameters, refer to the vignette hosted in the software repository.
 
-The output of the function is a densify\_result object, documenting several summary statistics of the sub-matrix resulting from each iteration. These include the number of available data points, the overall proportion of coded data in the matrix, the coding densities of the least well-coded taxon and variable, the coding densities of the most well-coded taxon and variable, the average coding densities of the all taxa and variables, and a taxonomic diversity index (Shannon diversity of the highest taxonomic level).
+The output of the function is a densify\_result object, documenting several summary statistics of the sub-matrix resulting from each iteration. These include the number of available data points, the overall proportion of coded data in the matrix, the coding densities of the least well-coded taxon and variable, the coding densities of the most well-coded taxon and variable, the median coding densities of the all taxa and variables, and a taxonomic diversity index (Shannon diversity of the highest taxonomic level).
 
 ``` r
 set.seed(2023)
