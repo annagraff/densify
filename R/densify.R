@@ -40,7 +40,6 @@ densify <- function(
   scoring = c("log_odds", "arithmetic", "geometric"),
   min_variability = 1,
   consider_taxonomic_diversity
-  #limits = list(coding_density = 0.8, size = 0.5)
 ) {
   # argument validation and processing
   data <- check_data(data)
@@ -90,7 +89,7 @@ densify <- function(
   )
 
   # prune data until conditions are satisfied
-  while (nrow(state$matrix) > 0L && ncol(state$matrix) > 0L ) {
+  while (densify_log$coding_density[[nrow(densify_log)]] < 1) {
     # select the datum dimension with the lowest score
     lowest_score <- identify_lowest_scores(state$weights)
 
