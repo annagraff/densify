@@ -69,7 +69,7 @@ row_scores_geometric <- function(matrix) {
   }
 
   # geometric mean
-  prod^(1/ncols(matrix))
+  prod^(1/ncol(matrix))
 }
 
 
