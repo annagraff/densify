@@ -12,10 +12,10 @@ A tibble with the following columns:
 \item{n_cols}{numbr of variables in the pruned data (note: number refers specifically to variables, extra columns are always preserved)}
 \item{coding_density}{proportion of non-missing data points relative to the data size}
 \item{row_coding_density_min}{minimum proportion of non-missing data points, considering each row}
-\item{row_coding_density_avg}{mean proportion of non-missing data points, considering each row}
+\item{row_coding_density_median}{median proportion of non-missing data points, considering each row}
 \item{row_coding_density_max}{maximum proportion of non-missing data points, considering each row}
 \item{col_coding_density_min}{minimum proportion of non-missing data points, considering each column}
-\item{col_coding_density_avg}{mean proportion of non-missing data points, considering each column}
+\item{col_coding_density_median}{median proportion of non-missing data points, considering each column}
 \item{col_coding_density_max}{maximum proportion of non-missing data points, considering each column}
 \item{taxonomic_index}{Shannon diversity index for top-level taxa (if taxonomy has been supplied)}
 \item{data}{a list containing promise objects that evaluate to pruned datasets (use \link{as.data.frame} to evaluate a promise)}

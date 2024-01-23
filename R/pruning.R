@@ -237,8 +237,8 @@ get_pruning_state_stats <- function(state) {
     row_sums <- rowSums(m)
     col_sums <- colSums(m)
     total    <- sum(row_sums)
-    row_prop <- row_sums/nrows
-    col_prop <- col_sums/ncols
+    row_prop <- row_sums/ncols
+    col_prop <- col_sums/nrows
 
     list(
       n_data_points  = total,
@@ -246,10 +246,10 @@ get_pruning_state_stats <- function(state) {
       n_cols = ncols,
       coding_density = total/(nrow(m)*ncol(m)),
       row_coding_density_min = min(row_prop),
-      row_coding_density_avg = mean(row_prop),
+      row_coding_density_median = median(row_prop),
       row_coding_density_max = max(row_prop),
       col_coding_density_min = min(col_prop),
-      col_coding_density_avg = mean(col_prop),
+      col_coding_density_median = median(col_prop),
       col_coding_density_max = max(col_prop)
     )
   } else {
