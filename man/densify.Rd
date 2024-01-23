@@ -11,7 +11,7 @@ densify(
   taxonomy,
   taxon_id,
   scoring = c("log_odds", "arithmetic", "geometric"),
-  min_variability = NA,
+  min_variability = 1,
   consider_taxonomic_diversity
 )
 }
@@ -31,7 +31,7 @@ the function will try to make an educated guess based on the column contents.}
 "geometric", or "log_odds". Default is "log_odds".}
 
 \item{min_variability}{An integer specifying the minimal threshold of the second-most-frequent state of any variable. Variables below this threshold
-will be discarded. Supply \code{NA} to disable variability pruning. Default is \code{NA}.}
+will be discarded. Supply \code{NA} to disable variability pruning. Default is \code{1}.}
 
 \item{consider_taxonomic_diversity}{A logical scalar specifying whether the taxonomic diversity of the taxa should be considered for the
 densification process. Defaults to \code{TRUE} if taxonomy is supplied.}

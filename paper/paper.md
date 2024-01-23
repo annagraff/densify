@@ -98,7 +98,7 @@ Iterative pruning of the input matrix is performed by the `densify()` function, 
 -   A taxonomy tree as a phylo object or a data frame with columns `id` and `parent_id` (`taxonomy`). No default.
 -	The name fo the column identifying taxa (`taxon_id`).
 -	A string specifying the scoring type used for calculating row-wise importance weights (`scoring`). Possible values are `"arithmetic"`, `"geometric"`, `"log_odds"`. Default: `"log_odds"`.
--   An optional integer specifying the threshold for variability in variables (`min_variability`). Default: NA <!-- AG: Should we make the default 1? -->
+-   An optional integer specifying the threshold for variability in variables (`min_variability`). Default: `1`.
 -	A logical argument denoting whether taxonomic diversity of taxa should be considered in the pruning process (`consider_taxonomic_diversity`). Default: `TRUE`, if taxonomy provided.
 
 <!-- -   A taxonomy weight factor, required if `mean_type = "log_odds"` and `consider_taxonomic_diversity = TRUE`. Default: 0.99

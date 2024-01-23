@@ -19,7 +19,7 @@
 #'   "geometric", or "log_odds". Default is "log_odds".
 #'
 #' @param min_variability An integer specifying the minimal threshold of the second-most-frequent state of any variable. Variables below this threshold
-#'   will be discarded. Supply `NA` to disable variability pruning. Default is `NA`.
+#'   will be discarded. Supply `NA` to disable variability pruning. Default is `1`.
 #'
 #' @param consider_taxonomic_diversity A logical scalar specifying whether the taxonomic diversity of the taxa should be considered for the
 #'   densification process. Defaults to `TRUE` if taxonomy is supplied.
@@ -38,7 +38,7 @@ densify <- function(
   taxonomy,
   taxon_id,
   scoring = c("log_odds", "arithmetic", "geometric"),
-  min_variability = NA,
+  min_variability = 1,
   consider_taxonomic_diversity
   #limits = list(coding_density = 0.8, size = 0.5)
 ) {
