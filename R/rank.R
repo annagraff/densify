@@ -58,7 +58,7 @@ generics::rank_results
 prune.densify_result <- function(object, ..., score = n_data_points * coding_density) {
   check_dots_unnamed()
 
-  ranks <- rank_results(object, score == {{score}})
+  ranks <- rank_results(object, score = {{score}})
 
   # chose the highest ranked result
   best <- which(ranks == 1L)
