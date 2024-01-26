@@ -24,6 +24,12 @@
 #' @param consider_taxonomic_diversity A logical scalar specifying whether the taxonomic diversity of the taxa should be considered for the
 #'   densification process. Defaults to `TRUE` if taxonomy is supplied.
 #'
+#' @param limits A named list specifying the limit conditions for the densification process termination. Available limit conditions are 
+#'   `min_coding_density` (a number between 0 and 1 specifying the target coding density), `min_prop_rows` (a number between 0 and 1 specifying the
+#'   minimal proportion of rows that have to be retained in the data), and `min_prop_cols` (a number between 0 and 1 specifying the
+#'   minimal proportion of variable columns that have to be retained in the data). More then one condition can be specified simultaneously, `densify()`
+#'   will stop if any condition is reached.
+#'
 #' @return A specially formatted tibble of iterative densification results, [densify_result]
 #'
 #' @examples
@@ -39,7 +45,8 @@ densify <- function(
   taxon_id,
   scoring = c("log_odds", "arithmetic", "geometric"),
   min_variability = 1,
-  consider_taxonomic_diversity
+  consider_taxonomic_diversity,
+  limits = list(min_coding_density = 1, min_prop_rows = NA, min_prop_cols = NA)
 ) {
   # argument validation and processing
   data <- check_data(data)
@@ -47,6 +54,7 @@ densify <- function(
   taxon_id <- check_taxon_id(taxon_id, data, taxonomy)
   vars <- check_variables(data, enquo(cols), taxon_id, ..., .arg = "cols")
   scoring_fn <- get_scoring_function(arg_match(scoring))
+  limits <- check_limits(limits, nrow(data), length(vars))
 
   # match other arguments
   consider_taxonomic_diversity <- maybe_missing(consider_taxonomic_diversity, !is_null(taxonomy))
@@ -88,8 +96,8 @@ densify <- function(
     format = "{cli::pb_spin} Pruned {cli::pb_current} dimensions ({cli::pb_rate}) {current_coding_density()} | {cli::pb_elapsed}"
   )
 
-  # prune data until conditions are satisfied
-  while (densify_log$coding_density[[nrow(densify_log)]] < 1) {
+  # prune data until limit conditions are satisfied
+  while (check_densify_limit_condition(densify_log, limits)) {
     # select the datum dimension with the lowest score
     lowest_score <- identify_lowest_scores(state$weights)
 
@@ -270,6 +278,8 @@ check_taxonomy <- function(taxonomy, ..., .arg = caller_arg(taxonomy)) {
 }
 
 
+
+
 check_variables <- function(data, quoted_cols, taxon_id, ..., .arg) {
   local_error_call(caller_env())
 
@@ -358,6 +368,50 @@ check_taxon_id <- function(taxon_id, data, taxonomy, ..., .arg = caller_arg(taxo
   taxon_id
 }
 
+check_limits <- function(limits, nrows, ncols, ..., .arg = caller_arg(limits)) {
+  local_error_call(caller_env())
+
+  is.null(limits) || is.list(limits) || cli::cli_abort(c(
+    "{.arg {(.arg)}} must be a list",
+    i = "got {.code {as_label(limits)}}"
+  ))
+
+  known_limits <- names(eval(formals(densify)$limits))
+
+  all(names(limits) %in% known_limits) || cli::cli_abort(c(
+    "{.arg {(.arg)}} contains invalid parameter{?s} {.field {setdiff(names(limits), known_limits)}}",
+    i = "valid parameter names are  {.field {known_limits}}"
+  ))
+
+  is.null(limits$min_coding_density) ||
+  is.na(limits$min_coding_density) ||
+  is_between(limits$min_coding_density, 0, 1) || cli::cli_abort(c(
+    "{.arg {(.arg)}$min_coding_density} must be a numeric scalar in the range [0, 1]",
+    i = "got {.code {as_label(limits$min_coding_density)}}"
+  ))
+
+  is.null(limits$min_prop_rows) ||
+  is.na(limits$min_prop_rows) ||
+  is_between(limits$min_prop_rows, 0, 1) || cli::cli_abort(c(
+    "{.arg {(.arg)}$min_prop_rows} must be a numeric scalar in the range [0, 1]",
+    i = "got {.code {as_label(limits$min_prop_rows)}}"
+  ))
+  limits$min_prop_rows <- limits$min_prop_rows*nrows
+  if(!is_true(is.finite(limits$min_prop_rows))) limits$min_prop_rows <- 0
+
+  is.null(limits$min_prop_cols) ||
+  is.na(limits$min_prop_cols) ||
+  is_between(limits$min_prop_cols, 0, 1) || cli::cli_abort(c(
+    "{.arg {(.arg)}$min_prop_cols} must be a numeric scalar in the range [0, 1]",
+    i = "got {.code {as_label(limits$min_prop_cols)}}"
+  ))
+  limits$min_prop_cols <- limits$min_prop_cols*ncols
+  if(!is_true(is.finite(limits$min_prop_cols))) limits$min_prop_cols <- 0
+
+  limits
+}
+
+
 
 get_scoring_function <- function(method) {
   switch(method,
@@ -403,3 +457,14 @@ match_taxa <- function(
   vec_slice(taxonomy, matches)
 }
 
+# check that the limit conditions don't apply
+check_densify_limit_condition <- function(result, limits) {
+  last <- nrow(result)
+
+  !any(
+    result$coding_density[[last]] >= limits$min_coding_density,
+    result$n_rows[[last]] <= limits$min_prop_rows,
+    result$n_cols[[last]] <= limits$min_prop_cols,
+    na.rm = TRUE
+  )
+}

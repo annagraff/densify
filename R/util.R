@@ -92,5 +92,11 @@ which_mask <- function(idx, n = max(idx)) {
   mask
 }
 
-#
+# check that the value is not NULL or NA
+is_value <- function(x) !is_null(x) && !is.na(x)
+
+# x is between a and b
+is_between <- function(x, a, b) {
+  is_bare_numeric(x, 1L) && is_true(x >= a && x <= b)
+}
 
