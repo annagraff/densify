@@ -77,13 +77,14 @@ row_scores_geometric <- function(matrix) {
 row_scores_log_odds <- function(matrix) {
   ncol(matrix) > 1L || return(matrix)
 
-  # clamp the value range
-  matrix[matrix > 0.99] <- 0.99
-  matrix[matrix < 0.01] <- 0.01
-
-
   # logistic transformation
-  matrix <- matrix(qlogis(matrix), ncol = ncol(matrix), nrow = nrow(matrix))
+  # note: clamp the logit value to [-10, +10]
+  x <- pmax(pmin(as.vector(matrix), 0.9999546), 1 - 0.9999546) 
+  x <- log(x/(1-x))
+
+
+  # average and transform back
+  matrix <- matrix(x, ncol = ncol(matrix), nrow = nrow(matrix))
   means <- rowMeans(matrix)
   scores <- exp(means)/(1+exp(means))
 
