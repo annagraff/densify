@@ -14,7 +14,7 @@
     Condition
       Warning:
       ! in `densify()`: using column `Glottocode` as taxon id
-      i specify `"Glottocode" = <column name>` to silence this warning
+      i specify `taxon_id = <column name>` to silence this warning
       Warning in `densify()`:
       ! in `densify()`: no `cols` argument specified, using all columns as variables
       i use `cols = <tidy column spec>` to silence this warning

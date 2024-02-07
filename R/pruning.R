@@ -4,7 +4,7 @@
 #
 # - data and taxonomy are matched by rows (i.e. i-th row in the data describes the
 # i-th taxon in the taxonomy)
-init_pruning_state <- function(data, vars, ids, taxonomy, ..., taxonomic_diversity, scoring_fn) {
+init_pruning_state <- function(data, vars, ids, taxonomy, ..., scoring_fn, scoring_weights) {
   # build a data frame that only contains variables
   # row names track taxa ids
   var_frame <- new_data_frame(unclass(data)[vars])
@@ -22,8 +22,8 @@ init_pruning_state <- function(data, vars, ids, taxonomy, ..., taxonomic_diversi
     indices = list(rows = seq_len(nrow(data)), cols = seq_len(ncol(data)), vars = vars),
     # parameters
     params = list(
-      taxonomic_diversity = taxonomic_diversity,
-      scoring_fn = scoring_fn
+      scoring_fn = scoring_fn,
+      scoring_weights = scoring_weights
     )
   )
 
@@ -184,7 +184,7 @@ update_importance_weights_for_pruning_state <- function(weights, state, updated_
   col_weighted <- (t(row_weighted) %*% m)/sum(row_weighted)
 
   # taxonomic weights are only computed if needed
-  row_taxonomic <- if (is_true(state$params$taxonomic_diversity)) {
+  row_taxonomic <- if (state$params$scoring_weights$taxonomy > 0) {
     # previous weights
     prev_weights <- if(!is.null(weights)) weights$rows$weights[, 3L, drop = TRUE]
 
@@ -195,6 +195,7 @@ update_importance_weights_for_pruning_state <- function(weights, state, updated_
       groups <- vec_group_loc(state$taxonomy[, 1L])
       group_indices <- if (is.null(weights)) groups$loc else groups$loc[groups$key %in% unique(updated_families)]
 
+      # calculate new wights
       updated_weights <- calculate_taxonomic_diversity(state$taxonomy, group_indices)
 
       # update the taxonomic weights
@@ -210,6 +211,11 @@ update_importance_weights_for_pruning_state <- function(weights, state, updated_
       prev_weights
     }
   }
+
+  # scale the weights
+  row_absolute  <- row_absolute*state$params$scoring_weights$coding
+  row_weighted  <- row_weighted*state$params$scoring_weights$coding
+  row_taxonomic <- row_taxonomic*state$params$scoring_weights$taxonomy
 
   # new weights
   row_weights <- cbind(as.vector(row_absolute), as.vector(row_weighted), as.vector(row_taxonomic), deparse.level = 0L)

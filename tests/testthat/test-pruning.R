@@ -14,7 +14,14 @@ test_that("init_pruning_state initializes correctly", {
 
   ids <- c("taxon1", "taxon2", "taxon3", "taxon4")
 
-  state <- init_pruning_state(data, vars, ids, taxonomy, taxonomic_diversity = FALSE, scoring_fn = rowSums)
+  state <- init_pruning_state(
+    data, 
+    vars, 
+    ids, 
+    taxonomy, 
+    scoring_fn = rowSums, 
+    scoring_weights = list(coding = 1, taxonomy = 0)
+  )
 
 
   expect_type(state, "list")
@@ -74,7 +81,14 @@ test_that("prune_indices prunes rows and columns correctly", {
 
   ids <- c("taxon1", "taxon2", "taxon3", "taxon4")
 
-  state <- init_pruning_state(data, vars, ids, taxonomy, taxonomic_diversity = FALSE, scoring_fn = rowSums)
+  state <- init_pruning_state(
+    data, 
+    vars, 
+    ids, 
+    taxonomy, 
+    scoring_fn = rowSums, 
+    scoring_weights = list(coding = 1, taxonomy = 0)
+  )
 
   # Prune rows and columns
   indices <- data.frame(axis = c(1, 2, 1), index = c(2, 1, 3))
@@ -106,7 +120,14 @@ test_that("prune_non_informative_data prunes correctly", {
   vars <- c(2L, 3L, 4L)
   ids <- c("taxon1", "taxon2", "taxon3", "taxon4")
 
-  state <- init_pruning_state(data, vars, ids, taxonomy, taxonomic_diversity = FALSE, scoring_fn = rowSums)
+  state <- init_pruning_state(
+    data, 
+    vars, 
+    ids, 
+    taxonomy, 
+    scoring_fn = rowSums, 
+    scoring_weights = list(coding = 1, taxonomy = 0)
+  )
 
   # Prune non-informative data
   changes <- NULL

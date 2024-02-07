@@ -24,7 +24,7 @@ test_that("densify with minimum variability threshold", {
 
 # Test case 5: Densify without taxonomic diversity consideration
 test_that("densify without taxonomic diversity consideration", {
-  result <- densify(WALS[1:10, 1:10], cols = -Glottocode, taxonomy = glottolog_languoids, taxon_id = "Glottocode", consider_taxonomic_diversity = FALSE)
+  result <- densify(WALS[1:10, 1:10], cols = -Glottocode, taxonomy = glottolog_languoids, taxon_id = "Glottocode", scoring_weights = list(taxonomy = NA))
   expect_s3_class(result, "densify_result")
 })
 
@@ -62,4 +62,13 @@ test_that("densify with invalid taxon_id (should result in an error)", {
   WALS$Glottocode[c(1, 4, 45)] <- c("fake1234556", "fake3414", "fake34521")
 
   expect_error(densify(WALS, cols = -Glottocode, taxonomy = glottolog_languoids, taxon_id = "Glottocode"))
+})
+
+
+# Test case 12: Densify with invalid scoring weights
+test_that("densify with invalid scoring weights (should result in an error)", {
+  expect_error(densify(WALS, cols = -Glottocode, scoring_weights = 15))
+  expect_error(densify(WALS, cols = -Glottocode, scoring_weights = list(bad_param = 0.5)))
+  expect_error(densify(WALS, cols = -Glottocode, taxonomy = glottolog_languoids, taxon_id = "Glottocode", scoring_weights = list(taxonomy = 15)))  
+  expect_error(densify(WALS, cols = -Glottocode, scoring_weights = list(taxonomy = 1)))  
 })

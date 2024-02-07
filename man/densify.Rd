@@ -12,7 +12,8 @@ densify(
   taxon_id,
   scoring = c("log_odds", "arithmetic", "geometric"),
   min_variability = 1,
-  consider_taxonomic_diversity
+  limits = list(min_coding_density = 1, min_prop_rows = NA, min_prop_cols = NA),
+  scoring_weights = list(coding = 1, taxonomy = 1)
 )
 }
 \arguments{
@@ -33,8 +34,17 @@ the function will try to make an educated guess based on the column contents.}
 \item{min_variability}{An integer specifying the minimal threshold of the second-most-frequent state of any variable. Variables below this threshold
 will be discarded. Supply \code{NA} to disable variability pruning. Default is \code{1}.}
 
-\item{consider_taxonomic_diversity}{A logical scalar specifying whether the taxonomic diversity of the taxa should be considered for the
-densification process. Defaults to \code{TRUE} if taxonomy is supplied.}
+\item{limits}{A named list specifying the limit conditions for the densification process termination. Available limit conditions are
+\code{min_coding_density} (a number between 0 and 1 specifying the target coding density), \code{min_prop_rows} (a number between 0 and 1 specifying the
+minimal proportion of rows that have to be retained in the data), and \code{min_prop_cols} (a number between 0 and 1 specifying the
+minimal proportion of variable columns that have to be retained in the data). More then one condition can be specified simultaneously, \code{densify()}
+will stop if any condition is reached.}
+
+\item{scoring_weights}{A named list specifying additional weighting factors to be applied during importance score calculation. Supported parameters
+are \code{coding} and \code{taxonomy}, which apply to coding and taxonomic importance weights, respectively. The values for these parameters must be a
+number between 0 and 1. Specify 0 (or \code{NULL}, or \code{NA}) to disable the respective weight calculation. Use these parameters to tweak the relative
+importance between the available coding and taxonomic diversity. Note: the weighting factor is applied before the scoring function, experimentation
+will be required to find a good balance of parameters for \code{scoring = "log_odds"}. See the vignette for more details.}
 }
 \value{
 A specially formatted tibble of iterative densification results, \link{densify_result}

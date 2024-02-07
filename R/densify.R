@@ -21,14 +21,17 @@
 #' @param min_variability An integer specifying the minimal threshold of the second-most-frequent state of any variable. Variables below this threshold
 #'   will be discarded. Supply `NA` to disable variability pruning. Default is `1`.
 #'
-#' @param consider_taxonomic_diversity A logical scalar specifying whether the taxonomic diversity of the taxa should be considered for the
-#'   densification process. Defaults to `TRUE` if taxonomy is supplied.
-#'
 #' @param limits A named list specifying the limit conditions for the densification process termination. Available limit conditions are 
 #'   `min_coding_density` (a number between 0 and 1 specifying the target coding density), `min_prop_rows` (a number between 0 and 1 specifying the
 #'   minimal proportion of rows that have to be retained in the data), and `min_prop_cols` (a number between 0 and 1 specifying the
 #'   minimal proportion of variable columns that have to be retained in the data). More then one condition can be specified simultaneously, `densify()`
 #'   will stop if any condition is reached.
+#'
+#' @param scoring_weights A named list specifying additional weighting factors to be applied during importance score calculation. Supported parameters 
+#'   are `coding` and `taxonomy`, which apply to coding and taxonomic importance weights, respectively. The values for these parameters must be a
+#'   number between 0 and 1. Specify 0 (or `NULL`, or `NA`) to disable the respective weight calculation. Use these parameters to tweak the relative
+#'   importance between the available coding and taxonomic diversity. Note: the weighting factor is applied before the scoring function, experimentation
+#'   will be required to find a good balance of parameters for `scoring = "log_odds"`. See the vignette for more details.
 #'
 #' @return A specially formatted tibble of iterative densification results, [densify_result]
 #'
@@ -45,19 +48,19 @@ densify <- function(
   taxon_id,
   scoring = c("log_odds", "arithmetic", "geometric"),
   min_variability = 1,
-  consider_taxonomic_diversity,
-  limits = list(min_coding_density = 1, min_prop_rows = NA, min_prop_cols = NA)
+  limits = list(min_coding_density = 1, min_prop_rows = NA, min_prop_cols = NA),
+  scoring_weights = list(coding = 1, taxonomy = 1)
 ) {
   # argument validation and processing
+  check_dots_empty()
+
   data <- check_data(data)
   taxonomy <- check_taxonomy(taxonomy)
   taxon_id <- check_taxon_id(taxon_id, data, taxonomy)
-  vars <- check_variables(data, enquo(cols), taxon_id, ..., .arg = "cols")
+  vars <- check_variables(data, enquo(cols), taxon_id, .arg = "cols")
   scoring_fn <- get_scoring_function(arg_match(scoring))
   limits <- check_limits(limits, nrow(data), length(vars))
-
-  # match other arguments
-  consider_taxonomic_diversity <- maybe_missing(consider_taxonomic_diversity, !is_null(taxonomy))
+  weights <- check_scoring_weights(scoring_weights, !is.null(taxonomy))
 
   # match taxonomy and data by taxon
   if (!is_null(taxonomy)) taxonomy <- match_taxa(data, taxonomy, taxon_id)
@@ -68,8 +71,8 @@ densify <- function(
     vars,
     ids = if(!is.null(taxon_id)) data[[taxon_id]],
     taxonomy = taxonomy,
-    taxonomic_diversity = consider_taxonomic_diversity,
-    scoring_fn = scoring_fn
+    scoring_fn = scoring_fn,
+    scoring_weights = weights
   )
 
   # factory for pruned data promise creation
@@ -252,6 +255,7 @@ make_log_entry_for_pruning_state <- function(state, pruned_data_factory, changes
 
 check_data <- function(data, ..., .arg = caller_arg(data)) {
   local_error_call(caller_env())
+  .arg <- .arg
 
   is.data.frame(data) || cli::cli_abort(c(
     "{.arg {(.arg)}} must be a data frame",
@@ -264,6 +268,7 @@ check_data <- function(data, ..., .arg = caller_arg(data)) {
 
 check_taxonomy <- function(taxonomy, ..., .arg = caller_arg(taxonomy)) {
   local_error_call(caller_env())
+  .arg <- .arg
 
   # no taxonomy specified, which is ok
   if(missing(taxonomy)) return(NULL)
@@ -282,6 +287,7 @@ check_taxonomy <- function(taxonomy, ..., .arg = caller_arg(taxonomy)) {
 
 check_variables <- function(data, quoted_cols, taxon_id, ..., .arg) {
   local_error_call(caller_env())
+  .arg <- .arg
 
   vars <- if(!quo_is_missing(quoted_cols)) {
     tidyselect::eval_select(quoted_cols, data, allow_rename = FALSE, error_call = caller_env())
@@ -317,6 +323,7 @@ check_variables <- function(data, quoted_cols, taxon_id, ..., .arg) {
 
 check_taxon_id <- function(taxon_id, data, taxonomy, ..., .arg = caller_arg(taxon_id)) {
   local_error_call(caller_env())
+  .arg <- .arg
 
   # taxon id is provided
   if (!missing(taxon_id)) {
@@ -370,6 +377,7 @@ check_taxon_id <- function(taxon_id, data, taxonomy, ..., .arg = caller_arg(taxo
 
 check_limits <- function(limits, nrows, ncols, ..., .arg = caller_arg(limits)) {
   local_error_call(caller_env())
+  .arg <- .arg
 
   is.null(limits) || is.list(limits) || cli::cli_abort(c(
     "{.arg {(.arg)}} must be a list",
@@ -389,6 +397,8 @@ check_limits <- function(limits, nrows, ncols, ..., .arg = caller_arg(limits)) {
     "{.arg {(.arg)}$min_coding_density} must be a numeric scalar in the range [0, 1]",
     i = "got {.code {as_label(limits$min_coding_density)}}"
   ))
+  if(!is_true(is.finite(limits$min_coding_density))) limits$min_coding_density <- 0
+
 
   is.null(limits$min_prop_rows) ||
   is.na(limits$min_prop_rows) ||
@@ -412,6 +422,53 @@ check_limits <- function(limits, nrows, ncols, ..., .arg = caller_arg(limits)) {
 }
 
 
+check_scoring_weights <- function(weights, has_taxonomy, ..., .arg = caller_arg(weights)) {
+  local_error_call(caller_env())
+  .arg <- .arg
+
+  # check if the weights has beed supplied by the user or whether it's a default value
+  # we need this to work around default taxomomic weight dependent on taxonomy argument
+  if (!.arg %in% call_args_names(sys.call(-1L))) {
+    weights <- list(coding = 1, taxonomy = ifelse(has_taxonomy, 1, 0))
+  }
+
+  is.null(weights) || is.list(weights) || is_named(weights) || cli::cli_abort(c(
+    "{.arg {(.arg)}} must be a named list",
+    i = "got {.code {as_label(weights)}}"
+  ))
+
+  known_weights <- c("coding", "taxonomy")
+
+  all(names(weights) %in% known_weights) || cli::cli_abort(c(
+    "{.arg {(.arg)}} contains invalid parameter{?s} {.field {setdiff(names(weights), known_weights)}}",
+    i = "valid parameter names are  {.field {known_weights}}"
+  ))
+
+  is_null(weights$coding) ||
+  is_na(weights$coding) ||
+  is_between(weights$coding, 0, 1) || cli::cli_abort(c(
+    "{.arg {(.arg)}$coding} must be a numeric scalar in the range [0, 1]",
+    i = "got {.code {as_label(weights$coding)}}"
+  ))
+  if (!has_name(weights, "coding")) weights$coding <- 1
+  if(!is_true(is.finite(weights$coding))) weights$coding <- 0
+
+  is_null(weights$taxonomy) ||
+  is_na(weights$taxonomy) ||
+  is_between(weights$taxonomy, 0, 1) || cli::cli_abort(c(
+    "{.arg {(.arg)}$taxonomy} must be a numeric scalar in the range [0, 1]",
+    i = "got {.code {as_label(weights$taxonomy)}}"
+  ))
+  if (!has_name(weights, "taxonomy")) weights$taxonomy <- ifelse(has_taxonomy, 1, 0)
+  if(!is_true(is.finite(weights$taxonomy))) weights$taxonomy <- 0
+
+  if (!has_taxonomy && weights$taxonomy != 0) cli::cli_abort(c(
+    "{.arg {(.arg)}$taxonomy} weight is non-zero, but no taxonomy supplied",
+    i = "taxonomy must be supplied to perform taxonomic scoring"
+  ))
+
+  weights
+}
 
 get_scoring_function <- function(method) {
   switch(method,
@@ -422,7 +479,6 @@ get_scoring_function <- function(method) {
   )
 }
 
-
 match_taxa <- function(
   data,
   taxonomy,
@@ -432,6 +488,8 @@ match_taxa <- function(
   .taxonomy_arg = caller_arg(taxonomy)
 ) {
   local_error_call(caller_env())
+  .data_arg  <- .data_arg 
+  .taxonomy_arg <- .taxonomy_arg
 
   # locate taxa in the taxonomy
   matches <- tryCatch(

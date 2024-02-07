@@ -97,6 +97,6 @@ is_value <- function(x) !is_null(x) && !is.na(x)
 
 # x is between a and b
 is_between <- function(x, a, b) {
-  is_bare_numeric(x, 1L) && is_true(x >= a && x <= b)
+  is_bare_numeric(x) && length(x) == 1L && is_true(x >= a && x <= b)
 }
 
