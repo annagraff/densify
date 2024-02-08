@@ -195,7 +195,7 @@ update_importance_weights_for_pruning_state <- function(weights, state, updated_
       groups <- vec_group_loc(state$taxonomy[, 1L])
       group_indices <- if (is.null(weights)) groups$loc else groups$loc[groups$key %in% unique(updated_families)]
 
-      # calculate new wights
+      # calculate new weights
       updated_weights <- calculate_taxonomic_diversity(state$taxonomy, group_indices)
 
       # update the taxonomic weights
