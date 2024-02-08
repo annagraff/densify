@@ -6,7 +6,7 @@ tags:
 - linguistic data
 - diversity samples
 - R
-date: "22 January 2024"
+date: "8 February 2024"
 output: pdf_document
 citation_author: Graff et al.
 authors:
@@ -94,28 +94,27 @@ Iterative pruning of the input matrix is performed by the `densify()` function, 
 -->
 
 -   The original data frame with observations in rows and variables in columns (`data`). No default.
--	A specification of which columns should be densified (`cols`). Default: all columns densified.
+-	  A specification of which columns should be densified (`cols`). Default: all columns densified.
 -   A taxonomy tree as a phylo object or a data frame with columns `id` and `parent_id` (`taxonomy`). No default.
--	The name fo the column identifying taxa (`taxon_id`).
--	A string specifying the scoring type used for calculating row-wise importance weights (`scoring`). Possible values are `"arithmetic"`, `"geometric"`, `"log_odds"`. Default: `"log_odds"`.
+-	  The name fo the column identifying taxa (`taxon_id`).
+-	  A string specifying the scoring type used for calculating row-wise importance weights (`scoring`). Possible values are `"arithmetic"`, `"geometric"`, `"log_odds"`. Default: `"log_odds"`.
 -   An optional integer specifying the threshold for variability in variables (`min_variability`). Default: `1`.
--	A logical argument denoting whether taxonomic diversity of taxa should be considered in the pruning process (`consider_taxonomic_diversity`). Default: `TRUE`, if taxonomy provided.
-
-<!-- -   A taxonomy weight factor, required if `mean_type = "log_odds"` and `consider_taxonomic_diversity = TRUE`. Default: 0.99
--   A coding weight factor, required if `mean_type = "log_odds"`. Default: 0.99-->
+-   An optional list denoting conditions for densification to end (`limits`). Available conditions are `min_coding_density` (denoting target matrix coding density), `min_prop_rows` (denoting the minimal proportion of rows that have to be retained in the data) and `min_prop_cols` (denoting the minimal proportion of columns that have to be retained in the data). Default: `min_coding_density = 1`.
+-   An optional list denoting additional weighting factors during importance score calculation. Available parameters are `coding` and `taxonomy`, $\in (0, 1)$. They tweak the relative importance of coding density and taxonomic diversity in the pruning process. Setting the value to 0, `NA` or `NULL` disables the corresponding weight calculation. Default: `coding = 1, taxonomy = 1`.
 
 For a more detailed discussion of the parameters, refer to the vignette hosted in the software repository.
 
 The output of the function is a densify\_result object, documenting several summary statistics of the sub-matrix resulting from each iteration. These include the number of available data points, the overall proportion of coded data in the matrix, the coding densities of the least well-coded taxon and variable, the coding densities of the most well-coded taxon and variable, the median coding densities of the all taxa and variables, and a taxonomic diversity index (Shannon diversity of the highest taxonomic level).
 
 ``` r
-set.seed(2023)
+set.seed(2024)
 example_result <- densify(data = WALS, 
                           taxonomy = glottolog_languoids, 
                           taxon_id = "Glottocode", 
                           scoring = "log_odds", 
-                          min_variability = 3, 
-                          consider_taxonomic_diversity = TRUE)
+                          min_variability = 3,
+                          limits = list(min_coding_density = 1),
+                          scoring_weights = list(coding = 1, taxonomy = 1))
 head(example_result)
 ```
 ## Finding the optimal number of iterations and producing the sub-matrix
@@ -131,21 +130,22 @@ example_optimum_1 <- prune(example_result,
 example_optimum_2 <- prune(example_result, 
                            score = n_data_points*coding_density*taxonomic_index^3)
 
-# use rank_results() to obtain the same optima alongside 
+# use rank_results() to obtain the same optima, alongside further ranking
 example_ranks_1 <- rank_results(example_result, 
                                 score = n_data_points*coding_density)
 example_ranks_2 <- rank_results(example_result, 
                                 score = n_data_points*coding_density*taxonomic_index^3)
 ```
 
-The relative ranking of sub-matrices given the specified quality score can also be visualized using `visualize()` or `plot()`.
+The relative ranking of sub-matrices given the specified quality score can also be visualized using `visualize()`.
 
 ``` r
-# use visualize() to illustrate quality scores and optimum (first score)
+# use visualize() to illustrate quality scores and optimum 
+# using a first score
 visualize(example_result, score = n_data_points*coding_density)
 
-# use plot() to illustrate quality scores and optimum (second score)
-plot(example_result, score = n_data_points*coding_density*taxonomic_index^3)
+# using a second score
+visualize(example_result, score = n_data_points*coding_density*taxonomic_index^3)
 ```
 
 # Conclusions
