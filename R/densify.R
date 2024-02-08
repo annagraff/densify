@@ -21,13 +21,13 @@
 #' @param min_variability An integer specifying the minimal threshold of the second-most-frequent state of any variable. Variables below this threshold
 #'   will be discarded. Supply `NA` to disable variability pruning. Default is `1`.
 #'
-#' @param limits A named list specifying the limit conditions for the densification process termination. Available limit conditions are 
+#' @param limits A named list specifying the limit conditions for the densification process termination. Available limit conditions are
 #'   `min_coding_density` (a number between 0 and 1 specifying the target coding density), `min_prop_rows` (a number between 0 and 1 specifying the
 #'   minimal proportion of rows that have to be retained in the data), and `min_prop_cols` (a number between 0 and 1 specifying the
 #'   minimal proportion of variable columns that have to be retained in the data). More then one condition can be specified simultaneously, `densify()`
 #'   will stop if any condition is reached.
 #'
-#' @param scoring_weights A named list specifying additional weighting factors to be applied during importance score calculation. Supported parameters 
+#' @param scoring_weights A named list specifying additional weighting factors to be applied during importance score calculation. Supported parameters
 #'   are `coding` and `taxonomy`, which apply to coding and taxonomic importance weights, respectively. The values for these parameters must be a
 #'   number between 0 and 1. Specify 0 (or `NULL`, or `NA`) to disable the respective weight calculation. Use these parameters to tweak the relative
 #'   importance between the available coding and taxonomic diversity. Note: the weighting factor is applied before the scoring function, experimentation
@@ -488,7 +488,7 @@ match_taxa <- function(
   .taxonomy_arg = caller_arg(taxonomy)
 ) {
   local_error_call(caller_env())
-  .data_arg  <- .data_arg 
+  .data_arg  <- .data_arg
   .taxonomy_arg <- .taxonomy_arg
 
   # locate taxa in the taxonomy
@@ -526,3 +526,4 @@ check_densify_limit_condition <- function(result, limits) {
     na.rm = TRUE
   )
 }
+
