@@ -100,7 +100,7 @@ Iterative pruning of the input matrix is performed by the `densify()` function, 
 -	  A string specifying the scoring type used for calculating row-wise importance weights (`scoring`). Possible values are `"arithmetic"`, `"geometric"`, `"log_odds"`. Default: `"log_odds"`.
 -   An optional integer specifying the threshold for variability in variables (`min_variability`). Default: `1`.
 -   An optional list denoting conditions for densification to end (`limits`). Available conditions are `min_coding_density` (denoting target matrix coding density), `min_prop_rows` (denoting the minimal proportion of rows that have to be retained in the data) and `min_prop_cols` (denoting the minimal proportion of columns that have to be retained in the data). Default: `min_coding_density = 1`.
--   An optional list denoting additional weighting factors during importance score calculation. Available parameters are `coding` and `taxonomy`, $\in (0, 1)$. They tweak the relative importance of coding density and taxonomic diversity in the pruning process. Setting the value to 0, `NA` or `NULL` disables the corresponding weight calculation. Default: `coding = 1, taxonomy = 1`.
+-   An optional list denoting additional weighting factors during importance score calculation. Available parameters are `coding` and `taxonomy`, $\in [0, 1]$. They tweak the relative importance of coding density and taxonomic diversity in the pruning process. Setting the value to 0, `NA` or `NULL` disables the corresponding weight calculation. Default: `coding = 1, taxonomy = 1`.
 
 For a more detailed discussion of the parameters, refer to the vignette hosted in the software repository.
 
