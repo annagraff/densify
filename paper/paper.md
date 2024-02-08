@@ -16,11 +16,10 @@ authors:
   corresponding: yes
   affiliation: 1, 2, 3
 - name: Marc Lischka
-  orcid: XXXXXXXX
-  equal-contrib: yes
+  orcid: 0009-0007-9493-2392
   affiliation: 4
 - name: Taras Zakharko
-  orcid: XXXXX
+  orcid: 0000-0001-7601-8424
   affiliation: 1, 3
 - name: Reinhard Furrer
   orcid: "0000-0002-6319-2332"
@@ -130,7 +129,7 @@ example_optimum_1 <- prune(example_result,
 example_optimum_2 <- prune(example_result, 
                            score = n_data_points*coding_density*taxonomic_index^3)
 
-# use rank_results() to obtain the same optima, alongside further ranking
+# use rank_results() to obtain a vector indicating the rank of each sub-matrix
 example_ranks_1 <- rank_results(example_result, 
                                 score = n_data_points*coding_density)
 example_ranks_2 <- rank_results(example_result, 

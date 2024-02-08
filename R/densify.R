@@ -426,8 +426,8 @@ check_scoring_weights <- function(weights, has_taxonomy, ..., .arg = caller_arg(
   local_error_call(caller_env())
   .arg <- .arg
 
-  # check if the weights has beed supplied by the user or whether it's a default value
-  # we need this to work around default taxomomic weight dependent on taxonomy argument
+  # check if the weights has been supplied by the user or whether it's a default value
+  # we need this to work around default taxonomic weight dependent on taxonomy argument
   if (!.arg %in% call_args_names(sys.call(-1L))) {
     weights <- list(coding = 1, taxonomy = ifelse(has_taxonomy, 1, 0))
   }
@@ -459,6 +459,7 @@ check_scoring_weights <- function(weights, has_taxonomy, ..., .arg = caller_arg(
     "{.arg {(.arg)}$taxonomy} must be a numeric scalar in the range [0, 1]",
     i = "got {.code {as_label(weights$taxonomy)}}"
   ))
+
   if (!has_name(weights, "taxonomy")) weights$taxonomy <- ifelse(has_taxonomy, 1, 0)
   if(!is_true(is.finite(weights$taxonomy))) weights$taxonomy <- 0
 
