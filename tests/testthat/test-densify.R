@@ -72,3 +72,27 @@ test_that("densify with invalid scoring weights (should result in an error)", {
   expect_error(densify(WALS, cols = -Glottocode, taxonomy = glottolog_languoids, taxon_id = "Glottocode", scoring_weights = list(taxonomy = 15)))  
   expect_error(densify(WALS, cols = -Glottocode, scoring_weights = list(taxonomy = 1)))  
 })
+
+
+# Test case 13: Densify with empty data
+test_that("densify with empty data (should give a warning)", {
+  expect_snapshot(result <- densify(WALS[0, , drop = FALSE]))  
+  expect_s3_class(result, "densify_result")
+  expect_vector(result, size = 1L)
+  expect_vector(as.data.frame(result$data[[1L]]), size = 0L)
+})
+
+
+# Test case 14: Densify with empty column selection
+test_that("densify with empty column selection (should give a warning)", {
+  expect_snapshot(result <- densify(WALS, tidyselect::starts_with("no_such_column")))
+  expect_s3_class(result, "densify_result")
+  expect_vector(result, size = 1L)
+  expect_identical(as.data.frame(result$data[[1L]]), WALS)
+})
+
+
+# Test case 15: Densify with invalid columns
+test_that("densify with invalid columns (should result in an error)", {
+  expect_snapshot(result <- densify(WALS, c(no_such_column1, no_such_column2)), error = TRUE)
+})

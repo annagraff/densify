@@ -13,7 +13,7 @@ calculate_variability <- function(vars, n) {
 
 # Replace values in the table by their unique level ids
 encode_unique_levels <- function(data) {
-  out <- NULL
+  out <- list()
   ids0 <- vec_init(integer(), nrow(data))
 
   # replace all columns by vectors of their unique levels
@@ -26,7 +26,7 @@ encode_unique_levels <- function(data) {
     out <- c(out, list(ids))
   }
 
-  names(out) <- paste0(".", seq_along(out))
+  names(out) <- paste0(rep(".", length(out)), seq_along(out))
   new_data_frame(out)
 }
 

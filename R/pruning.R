@@ -87,7 +87,7 @@ prune_non_informative_data <- function(state, check_taxa = TRUE, check_vars = TR
   changes <- NULL
 
   # repeat until we prune everything we can
-  while(check_taxa || check_vars) {
+  while ((check_taxa || check_vars) && prod(dim(state$matrix)) > 0L) {
     # check rows (taxa) with no data coverage
     if (check_taxa  && length(indices <- which(rowSums(state$matrix) == 0)) > 0L) {
       # update the change list

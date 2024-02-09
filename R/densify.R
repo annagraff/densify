@@ -79,7 +79,7 @@ densify <- function(
   pruned_data_factory <- make_pruned_data_factory(data)
 
   # pruning steps will be recorded here
-  densify_log <- vec_ptype(make_log_entry_for_pruning_state(state, pruned_data_factory))
+  densify_log <- make_log_entry_for_pruning_state(state, pruned_data_factory)
 
   # utility that displays current coding density of the pruning process
   current_coding_density <- function() {
@@ -175,23 +175,22 @@ densify_result <- function(densify_log) {
   densify_log
 }
 
-#' @export
+
 select.densify_result <- function(.data, ...) {
   cli::cli_warn(c(
     "executing {.fn select} on densify results drops the {.attr densify_result} class",
     i = "manually convert to tible with {.fn as_tibble} to silence this warning"
-  ))
+  ), call = caller_call())
 
   .data <- tibble::new_tibble(unclass(.data))
   NextMethod()
 }
 
-#' @export
 rename.densify_result <- function(.data, ...) {
   cli::cli_warn(c(
     "executing {.fn rename} on densify results drops the {.attr densify_result} class",
     i = "manually convert to tible with {.fn as_tibble} to silence this warning"
-  ))
+  ), call = caller_call())
 
   .data <- tibble::new_tibble(unclass(.data))
   NextMethod()
@@ -262,6 +261,12 @@ check_data <- function(data, ..., .arg = caller_arg(data)) {
     i = "got {.code {as_label(data)}}")
   )
 
+  if (nrow(data) == 0L || ncol(data) == 0L) {
+     cli::cli_warn(c(
+      "!" = "in {.fun densify}: empty dataset supplied"
+    ), call = caller_call())
+  }
+
   data
 }
 
@@ -283,8 +288,6 @@ check_taxonomy <- function(taxonomy, ..., .arg = caller_arg(taxonomy)) {
 }
 
 
-
-
 check_variables <- function(data, quoted_cols, taxon_id, ..., .arg) {
   local_error_call(caller_env())
   .arg <- .arg
@@ -294,9 +297,8 @@ check_variables <- function(data, quoted_cols, taxon_id, ..., .arg) {
   } else {
     cli::cli_warn(c(
       "!" = "in {.fun densify}: no {.arg {(.arg)}} argument specified, using all columns as variables",
-      i = "use {.code {(.arg)} = <tidy column spec>} to silence this warning"),
-      call = caller_env()
-    )
+      i = "use {.code {(.arg)} = <tidy column spec>} to silence this warning"
+    ), call = caller_call())
     set_names(seq_len(ncol(data)), names(data))
   }
 
@@ -304,12 +306,18 @@ check_variables <- function(data, quoted_cols, taxon_id, ..., .arg) {
     if (!quo_is_missing(quoted_cols)) {
       cli::cli_warn(c(
         "!" = "in {.fun densify}: removing taxon id {.var {taxon_id}} from the variable selection",
-        i = "please adjust {.code {(.arg)} = <tidy column spec>} to silence this warning",
-        call = caller_env()
-      ))
+        i = "please adjust {.code {(.arg)} = <tidy column spec>} to silence this warning"
+      ), call = caller_call())
     }
 
     vars <- vars[!names(vars) %in% taxon_id]
+  }
+
+  if (length(vars) == 0L) {
+     cli::cli_warn(c(
+      "!" = "in {.fun densify}: no variables selected, returning empty data frame",
+      i = "please adjust {.code {(.arg)} = <tidy column spec>}"
+    ), call = caller_call())
   }
 
 
@@ -356,8 +364,8 @@ check_taxon_id <- function(taxon_id, data, taxonomy, ..., .arg = caller_arg(taxo
     taxon_id <- names(data)[[best]]
     cli::cli_warn(c(
       "!" = "in {.fun densify}: using column {.arg {taxon_id}} as taxon id",
-      i = "specify {.code {(.arg)} = <column name>} to silence this warning")
-    )
+      i = "specify {.code {(.arg)} = <column name>} to silence this warning"
+    ), call = caller_call())
   }
 
   # check that taxon id does not contain any NAs
