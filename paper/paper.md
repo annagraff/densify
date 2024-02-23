@@ -37,7 +37,7 @@ affiliations:
   index: 2
 - name: University of Zurich, Center for the Interdisciplinary Study of Language Evolution
   index: 3
-- name: University of Zurich, Department of Mathematics
+- name: University of Zurich, Department of Mathematical Modeling and Machine Learning
   index: 4
 ---
 
