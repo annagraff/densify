@@ -7,7 +7,6 @@
 densify(
   data,
   cols,
-  ...,
   taxonomy,
   taxon_id,
   scoring = c("log_odds", "arithmetic", "geometric"),

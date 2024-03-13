@@ -80,6 +80,7 @@ setter <- function(var, ..., .compose = function(old, new) new) {
 }
 
 type_label <- function(x) {
+  L <- NULL
   if (is.data.frame(x)) class(x)[[L]] else vec_ptype_full(x)
 }
 

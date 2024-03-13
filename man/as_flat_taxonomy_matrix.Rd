@@ -5,7 +5,7 @@
 \alias{as_flat_taxonomy_matrix}
 \title{Flatten a taxonomy and encode it as a matrix with one column per taxonomic level}
 \usage{
-as_flat_taxonomy_matrix(x, ..., id, parent_id, .x = rlang::caller_arg(x))
+as_flat_taxonomy_matrix(x, id, parent_id, .x = rlang::caller_arg(x))
 }
 \arguments{
 \item{x}{An object of class \code{phylo} (e.g. result of \link[ape:read.tree]{ape::read.tree}) or a data frame with
@@ -21,12 +21,13 @@ time as \code{x}.}
 \value{
 A data frame with one row per node id and as many columns as there are levels in the tree.
 }
-\details{
+\description{
 This function converts a taxonomy tree (a phylo object or an adjacency table) into a flat
-representation. This is used internally by \link{densify_steps} to traverse the taxonomy tree. The
+representation. This is used internally by \link{densify} to traverse the taxonomy tree. The
 package user does not need to invoke this function directly, but we chose to expose it since it
 can be useful for advanced applications.
-
+}
+\details{
 The input taxonomy can be provided either as a \code{phylo} object (e.g. via \link[ape:read.nexus]{ape::read.nexus}), as a
 data frame that contains columns \code{id} and \code{parent_id} (each row encodes one parent-child
 relationship), or by passing in \code{id} and \code{parent_id} vectors explicitly. The vectors \code{id} and

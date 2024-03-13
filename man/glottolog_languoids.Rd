@@ -3,20 +3,20 @@
 \docType{data}
 \name{glottolog_languoids}
 \alias{glottolog_languoids}
-\title{Glottolog languoid taxonomy, Version 4.8}
+\title{Glottolog languoid taxonomy, Version 5.0}
 \source{
-Glottolog, Version 4.8
+Glottolog, Version 5.0
 }
 \description{
-This dataset is the languoid.csv file from Glottolog, Version 4.8. It can be used as \code{taxonomy} argument for the
+This dataset is the languoid.csv file from Glottolog, Version 5.0. It can be used as \code{taxonomy} argument for the
 \link{densify} function if your dataset uses glottocodes and you want to perform taxonomy-aware data pruning.
 }
 \references{
 \itemize{
 \item Hammarström, Harald & Forkel, Robert & Haspelmath, Martin & Bank, Sebastian. 2023.
-Glottolog 4.8.
+Glottolog 5.0.
 Leipzig: Max Planck Institute for Evolutionary Anthropology.
-https://doi.org/10.5281/zenodo.8131084
-(Available online at http://glottolog.org, Accessed on 2023-09-05.)
+https://doi.org/10.5281/zenodo.10804357
+(Available online at http://glottolog.org, Accessed on 2024-03-13.)
 }
 }

@@ -5,6 +5,7 @@
 #' quality score formula in `score`, which can use any statistics provided in a [densify_result] tibble.
 #'
 #' @param x a [densify_result] object
+#' @param ... other arguments passed to methods
 #' @param score an expression that computes a densification quality score. Default score aims to maximize both
 #'   the number of data points and the coding density. See [densify_result] for available statistics that can
 #'   be used to compute a suitable score
@@ -19,6 +20,8 @@ visualize.densify_result <- function(x, ..., score = n_data_points * coding_dens
       i = "please install {.pkg ggplot2} using {.code install.packages('ggplot2')}"
     ))
 
+  n_data_points <- coding_density <- step <- NULL
+
   score <- eval_densify_results_quality_score(x, (score_quo <- enquo(score)), .caller = "visualize")
 
   if (all(is.na(score))) {
@@ -29,7 +32,6 @@ visualize.densify_result <- function(x, ..., score = n_data_points * coding_dens
 
     return(NULL)
   }
-
 
   # visualization frame
   frame <- data_frame(idx = seq_len(nrow(x)), step = x$.step, score = score)

@@ -1,9 +1,7 @@
 #' Flatten a taxonomy and encode it as a matrix with one column per taxonomic level
 #'
-#' @details
-#'
 #' This function converts a taxonomy tree (a phylo object or an adjacency table) into a flat
-#' representation. This is used internally by [densify_steps] to traverse the taxonomy tree. The
+#' representation. This is used internally by [densify] to traverse the taxonomy tree. The
 #' package user does not need to invoke this function directly, but we chose to expose it since it
 #' can be useful for advanced applications.
 #'
@@ -46,13 +44,13 @@
 #'   time as `x`.
 #'
 #' @param .x Optional label for the argument `x` to use in error messages
-#
+#'
 #' @return A data frame with one row per node id and as many columns as there are levels in the tree.
 #'
 #' @export
-as_flat_taxonomy_matrix <- function(x, ..., id, parent_id, .x = rlang::caller_arg(x)) {
+as_flat_taxonomy_matrix <- function(x, id, parent_id, .x = rlang::caller_arg(x)) {
   # process the arguments
-  x <- check_as_flat_taxonomy_matrix_args(x, ..., id = id, parent_id = parent_id, .x = .x)
+  x <- check_as_flat_taxonomy_matrix_args(x, id = id, parent_id = parent_id, .x = .x)
 
   id <- x$id
   parent_id <- x$parent_id
@@ -108,8 +106,7 @@ as_flat_taxonomy_matrix <- function(x, ..., id, parent_id, .x = rlang::caller_ar
 }
 
 # helper fucntion for parsing and checking the arguments to as_flat_taxonomy_matrix
-check_as_flat_taxonomy_matrix_args <- function(x, ..., id, parent_id, .x = rlang::caller_arg(x)) {
-  rlang::check_dots_empty()
+check_as_flat_taxonomy_matrix_args <- function(x, id, parent_id, .x = rlang::caller_arg(x)) {
 
   # check arguments
   (missing(x) != any(missing(id), missing(parent_id))) &&

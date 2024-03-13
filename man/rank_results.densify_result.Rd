@@ -4,14 +4,16 @@
 \alias{rank_results.densify_result}
 \title{Densify results ranking based on a quality score}
 \usage{
-\method{rank_results}{densify_result}(object, ..., score = n_data_points * coding_density)
+\method{rank_results}{densify_result}(x, ..., score = n_data_points * coding_density)
 }
 \arguments{
+\item{x}{a \link{densify_result} object}
+
+\item{...}{other arguments passed to methods}
+
 \item{score}{an expression that computes a densification quality score. Default score aims to maximize the product of
 the number of data points and the coding density. See \link{densify_result} for available statistics that can
 be used to compute a suitable score}
-
-\item{x}{a \link{densify_result} object}
 }
 \value{
 an integer vector of ranks corresponding to the densify iterations

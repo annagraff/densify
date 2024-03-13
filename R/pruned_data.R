@@ -8,6 +8,8 @@
 make_pruned_data_factory <- function(data) {
   parent_env <- new_environment(list(.data = data), parent = baseenv())
 
+  .rows <- .cols <- NULL
+
   function(rows, cols) {
     promise <- new_environment(list(.rows = rows, .cols = cols), parent = parent_env)
     env_bind_lazy(promise, data = vctrs::vec_slice(.data[.cols], .rows), .eval_env = promise)

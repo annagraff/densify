@@ -4,6 +4,7 @@
 #' quality score formula in `score`, which can use any statistics provided in a [densify_result] tibble.
 #'
 #' @param x a [densify_result] object
+#' @param ... other arguments passed to methods
 #' @param score an expression that computes a densification quality score. Default score aims to maximize the product of
 #'   the number of data points and the coding density. See [densify_result] for available statistics that can
 #'   be used to compute a suitable score
@@ -12,8 +13,10 @@
 #'
 #' @importFrom generics rank_results
 #' @export
-rank_results.densify_result <- function(object, ..., score = n_data_points * coding_density) {
+rank_results.densify_result <- function(x, ..., score = n_data_points * coding_density) {
   check_dots_unnamed()
+
+  n_data_points <- coding_density <- NULL
 
   score_quo <- enquo(score)
 
@@ -24,12 +27,11 @@ rank_results.densify_result <- function(object, ..., score = n_data_points * cod
     list(score_quo)
   }
 
-
   scores <- numeric()
 
   # evaluate the ranking scores
   for (quo in score_quo) {
-    score <- eval_densify_results_quality_score(object, quo, .caller = "rank_results")
+    score <- eval_densify_results_quality_score(x, quo, .caller = "rank_results")
     scores <- cbind(scores, score)
   }
 
@@ -46,7 +48,8 @@ generics::rank_results
 #' first result is returned. The user can provide their own quality score formula in `score`, which can use any statistics
 #' provided in a [densify_result] tibble.
 #'
-#' @param x a [densify_result] object
+#' @param tree a [densify_result] object
+#' @param ... other arguments passed to methods
 #' @param score an expression that computes a densification quality score. Default score aims to maximize the product of
 #'   the number of data points and the coding density. See [densify_result] for available statistics that can
 #'   be used to compute a suitable score
@@ -55,10 +58,12 @@ generics::rank_results
 #'
 #' @importFrom generics prune
 #' @export
-prune.densify_result <- function(object, ..., score = n_data_points * coding_density) {
+prune.densify_result <- function(tree, ..., score = n_data_points * coding_density) {
   check_dots_unnamed()
 
-  ranks <- rank_results(object, score = {{score}})
+  n_data_points <- coding_density <- NULL
+
+  ranks <- rank_results(tree, score = {{score}})
 
   # chose the highest ranked result
   best <- which(ranks == 1L)
@@ -70,7 +75,7 @@ prune.densify_result <- function(object, ..., score = n_data_points * coding_den
   }
 
   # return the pruned data set
-  data <- as.data.frame(object$data[[best]])
+  data <- as.data.frame(tree$data[[best]])
   if (nrow(data) == 0L) {
     cli::cli_warn("in {.fn prune}: returning empty data frame")
   }

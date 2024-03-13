@@ -43,7 +43,6 @@
 densify <- function(
   data,
   cols,
-  ...,
   taxonomy,
   taxon_id,
   scoring = c("log_odds", "arithmetic", "geometric"),
@@ -52,7 +51,6 @@ densify <- function(
   scoring_weights = list(coding = 1, taxonomy = 1)
 ) {
   # argument validation and processing
-  check_dots_empty()
 
   data <- check_data(data)
   taxonomy <- check_taxonomy(taxonomy)

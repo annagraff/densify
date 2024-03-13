@@ -12,6 +12,8 @@
 \arguments{
 \item{x}{a \link{densify_result} object}
 
+\item{...}{other arguments passed to methods}
+
 \item{score}{an expression that computes a densification quality score. Default score aims to maximize both
 the number of data points and the coding density. See \link{densify_result} for available statistics that can
 be used to compute a suitable score}
