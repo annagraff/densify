@@ -6,7 +6,7 @@ tags:
 - linguistic data
 - diversity samples
 - R
-date: "8 February 2024"
+date: "13 March 2024"
 output: pdf_document
 citation_author: Graff et al.
 authors:
@@ -41,14 +41,9 @@ affiliations:
   index: 4
 ---
 
-<!--General comment: I am not familiar with the journal but I wonder whether we shouldn't explain a bit more what linguistic typological data is? Perhaps given an example and illustrate the problem? 
-
-RF: yes. probably better. at least much better than to include detailed list of arguments. Even if we are slightly above the 1000 word limit. See also comments below.
--->
-
 # Summary
 
-The R package `densify` provides a procedure to prune input data frames containing empty cells (or cells with values {?} or {NA}) to denser sub-matrices with fewer rows, columns and empty cells. The pruning process, split into three functions, trades off a series of variably weighted concerns, including data retention, coding density (proportion of non-empty cells) and taxonomic diversity of rows (if the entities are represented in a taxonomic structure). Users can adapt the relative weights given to these concerns through various parameters for the densification process to best fit their needs. As such, the software is useful for several purposes, including the densification of sparse input matrices and the subsampling of large input matrices according to a procedure that is sensitive to taxonomic structure.
+The R package `densify` provides a procedure to prune input data frames containing empty cells (or cells with values {?} or {NA}) to denser sub-matrices with fewer rows, columns and empty cells. The pruning process trades off a series of variably weighted concerns, including data retention, coding density (proportion of non-empty cells) and taxonomic diversity of rows (if the entities are represented in a taxonomic structure). Users can adapt the relative weights given to these concerns through various parameters for the densification process to best fit their needs. As such, the software is useful for several purposes, including the densification of sparse input matrices and the subsampling of large input matrices according to a procedure that is sensitive to taxonomic structure.
 
 # Statement of Need
 
