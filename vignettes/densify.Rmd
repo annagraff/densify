@@ -23,7 +23,7 @@ knitr::opts_chunk$set(
 
 The `densify` package provides a procedure to generate denser subsets of input data frames according to varying user-defined parameters. The densification process is split up into two main functions `densify()` and `prune()`. This tutorial guides users through all functions and parameters to demonstrate their effect on densification to help users select settings according to their needs.
 
-The data used in this tutorial are the default data provided in the package: the language-variable matrix `WALS` obtained from WALS, the World Atlas of Language Structures [@wals], and the language taxonomy `glottolog_languoids` provided by Glottolog, Version 4.8 [@glottolog].
+The data used in this tutorial are the default data provided in the package: the language-variable matrix `WALS` obtained from WALS, the World Atlas of Language Structures [@wals], and the language taxonomy `glottolog_languoids` provided by Glottolog, Version 5.0 [@glottolog].
 
 # Matrix densification
 ## Preparing input
@@ -216,7 +216,7 @@ values <- data.frame(x_values = x_values,
                      one_half = rep(1/2,1001))
 ```
 
-```{r mean-comp-plot, echo=F, fig.show="hold", fig.width=7.5, fig.height=4, fig.cap = "Illustrating different mean types (top), different coding weights for the geometric mean (middle), and different coding weights for the LOM (bottom)."}
+```{r mean-comp-plot, echo=F, fig.show="hold", fig.width=6, fig.height=4, fig.cap = "Illustrating different mean types (top), different coding weights for the geometric mean (middle), and different coding weights for the LOM (bottom)."}
 par(mar = c(4, 4, .1, .1))
 
 # create first plot:
@@ -493,22 +493,22 @@ dr_lom_taxfalse_075 <-
 
 ```{r densify read in iteration_logs, eval = TRUE, echo = FALSE}
 # to not rerun all densify() runs, read in the stored iteration_log files
-load("vignette-densify-results/dr_arith_taxtrue.RData")
-load("vignette-densify-results/dr_arith_taxfalse.RData")
-load("vignette-densify-results/dr_geom_taxtrue.RData")
-load("vignette-densify-results/dr_geom_taxfalse.RData")
-load("vignette-densify-results/dr_lom_taxtrue_11.RData")
-load("vignette-densify-results/dr_lom_taxtrue_099099.RData")
-load("vignette-densify-results/dr_lom_taxtrue_095095.RData")
-load("vignette-densify-results/dr_lom_taxtrue_090090.RData")
-load("vignette-densify-results/dr_lom_taxtrue_050050.RData")
-load("vignette-densify-results/dr_lom_taxtrue_1095.RData")
-load("vignette-densify-results/dr_lom_taxtrue_0951.RData")
-load("vignette-densify-results/dr_lom_taxtrue_1090.RData")
-load("vignette-densify-results/dr_lom_taxtrue_0901.RData")
-load("vignette-densify-results/dr_lom_taxfalse_1.RData")
-load("vignette-densify-results/dr_lom_taxfalse_095.RData")
-load("vignette-densify-results/dr_lom_taxfalse_075.RData")
+load("vignette-densify-results/dr_arith_taxtrue.rda")
+load("vignette-densify-results/dr_arith_taxfalse.rda")
+load("vignette-densify-results/dr_geom_taxtrue.rda")
+load("vignette-densify-results/dr_geom_taxfalse.rda")
+load("vignette-densify-results/dr_lom_taxtrue_11.rda")
+load("vignette-densify-results/dr_lom_taxtrue_099099.rda")
+load("vignette-densify-results/dr_lom_taxtrue_095095.rda")
+load("vignette-densify-results/dr_lom_taxtrue_090090.rda")
+load("vignette-densify-results/dr_lom_taxtrue_050050.rda")
+load("vignette-densify-results/dr_lom_taxtrue_1095.rda")
+load("vignette-densify-results/dr_lom_taxtrue_0951.rda")
+load("vignette-densify-results/dr_lom_taxtrue_1090.rda")
+load("vignette-densify-results/dr_lom_taxtrue_0901.rda")
+load("vignette-densify-results/dr_lom_taxfalse_1.rda")
+load("vignette-densify-results/dr_lom_taxfalse_095.rda")
+load("vignette-densify-results/dr_lom_taxfalse_075.rda")
 ```
 
 ### Objects of type `densify_result`, the outputs of `densify()`
@@ -546,7 +546,7 @@ The functions `rank_results()`, `prune()` and `visualize()` thus take the output
 
 Using the function `rank_results()`, users can rank all sub-matrices with respect to the score they specify (returning a vector indicating the rank of each sub-matrix), while `prune()` identifies and retrieves the sub-matrix for which the score is maximized (selecting the earlier iteration in the unlikely case of ties). The function `visualize()` plots the quality score for all sub-matrices and also indicates the optimum.
 
-```{r densify-result illustration, eval = TRUE, echo = TRUE, warning = FALSE, fig.align = 'center', fig.height=6, fig.width=8}
+```{r densify-result illustration, eval = TRUE, echo = TRUE, warning = FALSE, fig.align = 'center', fig.height=6, fig.width=6, fig.cap = 'Quality score plot for `score = n_data_points * coding_density` on the densify result object obtained from an implementation of `densify()` using the settings `scoring = "arithmetic"`, considering taxonomic diversity.'}
 # rank results
 head(rank_results(dr_arith_taxtrue, score = n_data_points * coding_density))
 
@@ -568,7 +568,7 @@ In another example, coding densities may be high and roughly even across rows an
 
 To appreciate the effect of the `score` argument , compare the following quality score plots (see Figure \@ref(fig:score-1-0)) using different scores on the same iteration log file (obtained from an implementation of `densify()` using the settings `scoring = "arithmetic", consider_taxonomic_diversity = TRUE`. Observe how the quality score per iteration and the optimum sub-matrix varies drastically depending on the score function. Accordingly, so do the optima.
 <!-- pls label the sub-plots -->
-```{r score-1-0, echo = TRUE, warning = FALSE, fig.show="hold", fig.align = 'center', fig.width=8, fig.height=6, warning = FALSE, fig.cap = 'Quality score plots for four different quality score definitions on the iteration log obtained from an implementation of `densify()` using the settings `scoring = "arithmetic", consider_taxonomic_diversity = TRUE`. Topmost: `score = n_data_points * coding_density`. Second from top: `score = n_data_points * coding_density * row_coding_density_min * col_coding_density_min * taxonomic_index`. Second from bottom: `score = n_data_points * coding_density * taxonomic_index`. Bottommost: `score = n_data_points * coding_density * row_coding_density_min* taxonomic_index`.'}
+```{r score-1-0, echo = TRUE, warning = FALSE, fig.show="hold", fig.align = 'center', fig.width=6, fig.height=6, warning = FALSE, fig.cap = 'Quality score plots for four different quality score definitions on the iteration log obtained from an implementation of `densify()` using the settings `scoring = "arithmetic", consider_taxonomic_diversity = TRUE`. Topmost: `score = n_data_points * coding_density`. Second from top: `score = n_data_points * coding_density * row_coding_density_min * col_coding_density_min * taxonomic_index`. Second from bottom: `score = n_data_points * coding_density * taxonomic_index`. Bottommost: `score = n_data_points * coding_density * row_coding_density_min* taxonomic_index`.'}
 visualize(dr_arith_taxtrue, score = n_data_points * coding_density)
 
 visualize(dr_arith_taxtrue, score = n_data_points * coding_density * row_coding_density_min * 
@@ -581,7 +581,7 @@ visualize(dr_arith_taxtrue, score = n_data_points * coding_density * row_coding_
 ```
 Optima also change by weighting particular concerns using exponents (see Figure \@ref(fig:score-2-0)):
 
-```{r score-2-0, echo = TRUE, warning = FALSE, fig.show="hold", fig.align = 'center', fig.width=8, fig.height=6, warning = FALSE, fig.cap = 'Quality score plots varying the basic trade-off of available data points and coding density in an implementation of `densify()` using the settings `scoring = "arithmetic", consider_taxonomic_diversity = TRUE`. Topmost: `score = n_data_points * coding_density^2`. Second from top: `score = n_data_points * coding_density^3`. Second from bottom: `score = n_data_points^2 * coding_density`. Bottommost: `score = n_data_points^3 * coding_density`.'}
+```{r score-2-0, echo = TRUE, warning = FALSE, fig.show="hold", fig.align = 'center', fig.width=6, fig.height=6, warning = FALSE, fig.cap = 'Quality score plots varying the basic trade-off of available data points and coding density in an implementation of `densify()` using the settings `scoring = "arithmetic"`, considering taxonomic diversity. Topmost: `score = n_data_points * coding_density^2`. Second from top: `score = n_data_points * coding_density^3`. Second from bottom: `score = n_data_points^2 * coding_density`. Bottommost: `score = n_data_points^3 * coding_density`.'}
 visualize(dr_arith_taxtrue, score = n_data_points * coding_density^2)
 
 visualize(dr_arith_taxtrue, score = n_data_points * coding_density^3)
@@ -614,7 +614,7 @@ sum(!is.na(data_1))/(ncol(data_1)*nrow(data_1))
 
 Note how both language and variable coding densities have become substantially higher (see Figure \@ref(fig:prune-plots-1)) as compared to the input matrix (see Figure \@ref(fig:patchy-coding-for-languages-and-variables)), and how the inclusion of taxonomic diversity in both `densify()` and the `score` argument of `prune()` result in the inclusion of a number of languages that are not densely coded, but strongly contribute to taxonomic diversity and are thus kept.
 
-```{r prune-plots-1, echo = FALSE, warning=FALSE, fig.show = "hold", out.width = "40%", fig.width = 5, fig.height = 3, fig.cap = 'Coding density for the pruned `WALS` data frame, using the settings `mean = "arithmetic", consider_taxonomic_diversity = TRUE` and `score = n_data_points * coding_density * taxonomic_index` (left languages, right variables)'}
+```{r prune-plots-1, echo = FALSE, warning=FALSE, fig.show = "hold", out.width = "40%", fig.width = 5, fig.height = 3, fig.cap = 'Coding density for the pruned `WALS` data frame, using the settings `mean = "arithmetic"`, considering taxonomic diversity, using `score = n_data_points * coding_density * taxonomic_index` (left languages, right variables)'}
 par(mar = c(4, 4, .1, .1))
 
 ggplot(data.frame(density=apply(data_1, 1, function(x) (length(na.omit(x))))/ncol(data_1)), aes(x=density))+
@@ -654,7 +654,7 @@ sum(!is.na(data_2))/(ncol(data_2)*nrow(data_2))
 Additionally including `row_coding_density_min` and `col_coding_density_min` in the `score` argument thus results in a much denser matrix with extremely well-coded rows and columns (see Figure \@ref(fig:prune-plots-2)).
 
 
-```{r prune-plots-2, echo = FALSE, warning = FALSE, fig.show = "hold", out.width = "40%", fig.width = 5, fig.height = 3, fig.cap = 'Coding density for the pruned `WALS` data frame, using the settings `mean = "arithmetic", consider_taxonomic_diversity = TRUE` and `score = n_data_points * coding_density * row_coding_density_min * col_coding_density_min * taxonomic_index` (left languages, right variables)'}
+```{r prune-plots-2, echo = FALSE, warning = FALSE, fig.show = "hold", out.width = "40%", fig.width = 5, fig.height = 3, fig.cap = 'Coding density for the pruned `WALS` data frame, using the settings `mean = "arithmetic"`, considering taxonomic diversity and with `score = n_data_points * coding_density * row_coding_density_min * col_coding_density_min * taxonomic_index` (left languages, right variables)'}
 par(mar = c(4, 4, .1, .1))
 
 ggplot(data.frame(density=apply(data_2, 1, function(x) (length(na.omit(x))))/ncol(data_2)), aes(x=density))+

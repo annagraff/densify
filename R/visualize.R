@@ -39,26 +39,20 @@ visualize.densify_result <- function(x, ..., score = n_data_points * coding_dens
   best_score <- frame$score[best]
   best_step <- frame$step[best]
 
-
-  score_label <- cli::format_inline(
-    "  max score is {prettyNum(best_score)}\n",
-    "  step {best_step}\n",
-    "  data frame [{x$n_rows[best_step]}, {x$n_cols[best_step]}]"
-  )
+  score_label <- paste("max score is ", round(best_score,2), "  \nstep ", best_step, "  \ndata frame [",x$n_rows[best_step],",", x$n_cols[best_step],"]", sep="")
 
   cli::cli_alert_info("use {.code tibble::as_tibble({caller_arg(x)}$data[[{frame$idx[[best]]}]])} to obtain the pruned data frame")
 
-
-  ggplot2::ggplot(vec_slice(frame, vec_detect_complete(frame)), ggplot2::aes(x = step, y = score, color = score)) +
-    ggplot2::geom_path() +
+  ggplot2::ggplot(vec_slice(frame, vec_detect_complete(frame)), ggplot2::aes(x = step, y = score)) +
+    ggplot2::geom_path(col="steelblue") +
     ggplot2::geom_vline(ggplot2::aes(xintercept = best_step), linetype = "dashed", col = "goldenrod1") +
     ggplot2::ylab(as_label(score_quo)) +
-    ggplot2::geom_text(ggplot2::aes(x = best_step, y = best_score, label = score_label), hjust = "inward", family = "sans", size = 3, fontface = "plain") +
-    ggplot2::guides(color = ggplot2::guide_colourbar(title = "")) +
-    ggplot2::scale_x_continuous(n.breaks = 20L, limits = range(frame$step)) +
+    ggplot2::scale_x_continuous(limits=range(frame$step), expand = c(0,0)) +
+    ggplot2::annotate("text", x = best_step, y = best_score, label = score_label, hjust = "inward", size = 3) +
     ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45)) +
     ggplot2::theme_bw()
-  }
+}
+
 
 #' @rdname visualize.densify_result
 #' @export

@@ -57,11 +57,11 @@ While certain packages exist to generate sub-matrices from varying input matrice
 
 # Usage
 
-The package `densify` provides the data from The World Atlas of Language Structures (WALS) [@wals] and the language taxonomy provided by Glottolog v. 4.8 [@glottolog] as example data. The accompanying package vignette features a detailed demonstration of the utility and flexibility of `densify` to subsample an input matrix according to varying needs, using this data.
+The package `densify` provides the data from The World Atlas of Language Structures (WALS) [@wals] and the language taxonomy provided by Glottolog v. 5.0 [@glottolog] as example data. The accompanying package vignette features a detailed demonstration of the utility and flexibility of `densify` to subsample an input matrix according to varying needs, using this data.
 
 ## Preparing input
 
-The data frame that requires subsetting must have rows representing taxa or observations (with taxon names provided in a dedicated column) and columns representing variables (and variable names as column names). Any cells with empty entries, not applicable or question marks must be coded as NA. If matrix densification should be sensitive to taxonomic structure, a taxonomy must be provided as a `phylo` object [cf. @R-ape] or as an adjacency table (i.e. a data frame containing columns `id` and `parent_id`, with each row encoding one parent-child relationship). Every taxon in the input data frame must be included in the taxonomy (as a tip or node). If a language taxonomy is to be provided, glottolog (`glottolog_languoids`) can be used directly.
+The data frame that requires subsetting must have rows representing taxa or observations (with taxon names provided in a dedicated column) and columns representing variables (and variable names as column names). Any cells with empty entries, not applicable or question marks must be coded as NA. If matrix densification should be sensitive to taxonomic structure, a taxonomy must be provided as a `phylo` object [cf. @R-ape] or as an adjacency table (i.e. a data frame containing columns `id` and `parent_id`, with each row encoding one parent-child relationship). Every taxon in the input data frame must be included in the taxonomy (as a tip or node). If a language taxonomy is to be provided, Glottolog (`glottolog_languoids`) can be used directly.
 
 ``` r
 install.packages("densify")
@@ -88,10 +88,10 @@ Iterative pruning of the input matrix is performed by the `densify()` function, 
 -->
 
 -   The original data frame with observations in rows and variables in columns (`data`). No default.
--	  A specification of which columns should be densified (`cols`). Default: all columns densified.
+-   A specification of which columns should be densified (`cols`). Default: all columns densified.
 -   A taxonomy tree as a phylo object or a data frame with columns `id` and `parent_id` (`taxonomy`). No default.
--	  The name fo the column identifying taxa (`taxon_id`).
--	  A string specifying the scoring type used for calculating row-wise importance weights (`scoring`). Possible values are `"arithmetic"`, `"geometric"`, `"log_odds"`. Default: `"log_odds"`.
+-   The name fo the column identifying taxa (`taxon_id`).
+-   A string specifying the scoring type used for calculating row-wise importance weights (`scoring`). Possible values are `"arithmetic"`, `"geometric"`, `"log_odds"`. Default: `"log_odds"`.
 -   An optional integer specifying the threshold for variability in variables (`min_variability`). Default: `1`.
 -   An optional list denoting conditions for densification to end (`limits`). Available conditions are `min_coding_density` (denoting target matrix coding density), `min_prop_rows` (denoting the minimal proportion of rows that have to be retained in the data) and `min_prop_cols` (denoting the minimal proportion of columns that have to be retained in the data). Default: `min_coding_density = 1`.
 -   An optional list denoting additional weighting factors during importance score calculation. Available parameters are `coding` and `taxonomy`, $\in [0, 1]$. They tweak the relative importance of coding density and taxonomic diversity in the pruning process. Setting the value to 0, `NA` or `NULL` disables the corresponding weight calculation. Default: `coding = 1, taxonomy = 1`.
