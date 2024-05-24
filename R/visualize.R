@@ -6,7 +6,7 @@
 #'
 #' @param x a [densify_result] object
 #' @param ... other arguments passed to methods
-#' @param score an expression that computes a densification quality score. Default score aims to maximize both
+#' @param score an expression that computes a densification quality score. Default score aims to maximize the product of
 #'   the number of data points and the coding density. See [densify_result] for available statistics that can
 #'   be used to compute a suitable score
 #'

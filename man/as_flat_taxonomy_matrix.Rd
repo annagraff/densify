@@ -9,11 +9,11 @@ as_flat_taxonomy_matrix(x, id, parent_id, .x = rlang::caller_arg(x))
 }
 \arguments{
 \item{x}{An object of class \code{phylo} (e.g. result of \link[ape:read.tree]{ape::read.tree}) or a data frame with
-columns \code{id} and \code{parent_id}.}
+columns \code{id} and \code{parent_id} (adjacency table).}
 
-\item{id}{Character vector of node ids. This cannot be supplied at the same time as \code{x}.}
+\item{id}{Character vector of node identifiers. This cannot be supplied at the same time as \code{x}.}
 
-\item{parent_id}{Character vector of node parent ids. This cannot be supplied at the same
+\item{parent_id}{Character vector of node parent identifiers. This cannot be supplied at the same
 time as \code{x}.}
 
 \item{.x}{Optional label for the argument \code{x} to use in error messages}
@@ -25,7 +25,7 @@ A data frame with one row per node id and as many columns as there are levels in
 This function converts a taxonomy tree (a phylo object or an adjacency table) into a flat
 representation. This is used internally by \link{densify} to traverse the taxonomy tree. The
 package user does not need to invoke this function directly, but we chose to expose it since it
-can be useful for advanced applications.
+can be useful for other applications.
 }
 \details{
 The input taxonomy can be provided either as a \code{phylo} object (e.g. via \link[ape:read.nexus]{ape::read.nexus}), as a
@@ -33,18 +33,18 @@ data frame that contains columns \code{id} and \code{parent_id} (each row encode
 relationship), or by passing in \code{id} and \code{parent_id} vectors explicitly. The vectors \code{id} and
 \code{parent_id} must be of type character.
 
-A taxonomy tree is said to be "flattened" if the depth of each of it's leaf nodes is equal to the
-tree height. Such tree can be constructed by injecting dummy nodes where appropriate. Example:
+A taxonomy tree is said to be "flattened" if the depth of each of its leaves is equal to the
+tree height. Such a tree can be constructed by injecting dummy nodes where appropriate. Example:
 
 \preformatted{
    A                              A      F''     level 1
   / \         dummy nodes        / \     |
   B  \       ------------->      B  E'   F'      level 2
  / \  \                         / \  \   |
- C  D  E  F                     C  D  E  F       leaf level
+C   D  E  F                    C   D  E  F       leaf level
 }
 
-A flat taxonomy can be trivially encoded in a tabular format as it has full set of nodes at every
+A flat taxonomy can be trivially encoded in a tabular format as it has the full set of nodes at every
 level. Each column encodes a taxonomic level. The main purpose of this representation is the
 ability to find the parent of every leaf at every level in O(1).
 

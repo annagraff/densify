@@ -10,7 +10,7 @@
 #'   columns). Columns not specified here will be preserved during densification.
 #'
 #' @param taxonomy A taxonomy tree, which can be a `phylo` object (e.g. result of [ape::read.tree] or a data frame with columns `id` and `parent_id`
-#'   (such as [glottolog_languoids]). A taxonomy must be provided as a named argument if you want to consider the taxonomic diversity for densification.
+#'   (such as [glottolog_languoids]). The taxonomy must be provided as a named argument.
 #'
 #' @param taxon_id  The name of the column with taxa identifiers. The `data` must contain such a column if a taxonomy is supplied. If not supplied,
 #'   the function will try to make an educated guess based on the column contents.
@@ -18,14 +18,14 @@
 #' @param scoring A character string specifying the type of scoring used for calculating the importance weights. Possible values are are "arithmetic",
 #'   "geometric", or "log_odds". Default is "log_odds".
 #'
-#' @param min_variability An integer specifying the minimal threshold of the second-most-frequent state of any variable. Variables below this threshold
-#'   will be discarded. Supply `NA` to disable variability pruning. Default is `1`.
+#' @param min_variability An integer specifying the minimal count of the second-most-frequent state of any variable. Variables below this threshold
+#'   will be discarded. Supply `NA` to allow any variability, including none (all rows have the same value). Default is `1`.
 #'
-#' @param limits A named list specifying the limit conditions for the densification process termination. Available limit conditions are
+#' @param limits A named list specifying the conditions for terminating densification. Available limit conditions are
 #'   `min_coding_density` (a number between 0 and 1 specifying the target coding density), `min_prop_rows` (a number between 0 and 1 specifying the
 #'   minimal proportion of rows that have to be retained in the data), and `min_prop_cols` (a number between 0 and 1 specifying the
 #'   minimal proportion of variable columns that have to be retained in the data). More then one condition can be specified simultaneously, `densify()`
-#'   will stop if any condition is reached.
+#'   will stop if at least one of the condition is reached.
 #'
 #' @param scoring_weights A named list specifying additional weighting factors to be applied during importance score calculation. Supported parameters
 #'   are `coding` and `taxonomy`, which apply to coding and taxonomic importance weights, respectively. The values for these parameters must be a

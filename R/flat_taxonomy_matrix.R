@@ -3,7 +3,7 @@
 #' This function converts a taxonomy tree (a phylo object or an adjacency table) into a flat
 #' representation. This is used internally by [densify] to traverse the taxonomy tree. The
 #' package user does not need to invoke this function directly, but we chose to expose it since it
-#' can be useful for advanced applications.
+#' can be useful for other applications.
 #'
 #' The input taxonomy can be provided either as a `phylo` object (e.g. via [ape::read.nexus]), as a
 #' data frame that contains columns `id` and `parent_id` (each row encodes one parent-child
@@ -18,10 +18,10 @@
 #'   / \         dummy nodes        / \     |
 #'   B  \       ------------->      B  E'   F'      level 2
 #'  / \  \                         / \  \   |
-#'  C  D  E  F                     C  D  E  F       leaf level
+#' C   D  E  F                    C   D  E  F       leaf level
 #' }
 #'
-#' A flat taxonomy can be trivially encoded in a tabular format as it has full set of nodes at every
+#' A flat taxonomy can be trivially encoded in a tabular format as it has the full set of nodes at every
 #' level. Each column encodes a taxonomic level. The main purpose of this representation is the
 #' ability to find the parent of every leaf at every level in O(1).
 #'
@@ -38,9 +38,9 @@
 #' @param x An object of class `phylo` (e.g. result of [ape::read.tree]) or a data frame with
 #'   columns `id` and `parent_id`.
 #'
-#' @param id Character vector of node ids. This cannot be supplied at the same time as `x`.
+#' @param id Character vector of node identifiers. This cannot be supplied at the same time as `x`.
 #'
-#' @param parent_id Character vector of node parent ids. This cannot be supplied at the same
+#' @param parent_id Character vector of parent identifiers. This cannot be supplied at the same
 #'   time as `x`.
 #'
 #' @param .x Optional label for the argument `x` to use in error messages
