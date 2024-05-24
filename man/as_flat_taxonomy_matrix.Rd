@@ -13,7 +13,7 @@ columns \code{id} and \code{parent_id} (adjacency table).}
 
 \item{id}{Character vector of node identifiers. This cannot be supplied at the same time as \code{x}.}
 
-\item{parent_id}{Character vector of node parent identifiers. This cannot be supplied at the same
+\item{parent_id}{Character vector of parent identifiers. This cannot be supplied at the same
 time as \code{x}.}
 
 \item{.x}{Optional label for the argument \code{x} to use in error messages}

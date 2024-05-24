@@ -9,10 +9,10 @@ densify(
   cols,
   taxonomy,
   taxon_id,
-  scoring = c("log_odds", "arithmetic", "geometric"),
+  density_mean = c("log_odds", "arithmetic", "geometric"),
   min_variability = 1,
   limits = list(min_coding_density = 1, min_prop_rows = NA, min_prop_cols = NA),
-  scoring_weights = list(coding = 1, taxonomy = 1)
+  density_mean_weights = list(coding = 1, taxonomy = 1)
 )
 }
 \arguments{
@@ -22,28 +22,28 @@ densify(
 columns). Columns not specified here will be preserved during densification.}
 
 \item{taxonomy}{A taxonomy tree, which can be a \code{phylo} object (e.g. result of \link[ape:read.tree]{ape::read.tree} or a data frame with columns \code{id} and \code{parent_id}
-(such as \link{glottolog_languoids}). A taxonomy must be provided as a named argument if you want to consider the taxonomic diversity for densification.}
+(such as \link{glottolog_languoids}). The taxonomy must be provided as a named argument.}
 
 \item{taxon_id}{The name of the column with taxa identifiers. The \code{data} must contain such a column if a taxonomy is supplied. If not supplied,
 the function will try to make an educated guess based on the column contents.}
 
-\item{scoring}{A character string specifying the type of scoring used for calculating the importance weights. Possible values are are "arithmetic",
-"geometric", or "log_odds". Default is "log_odds".}
+\item{density_mean}{A character string specifying how row-wise densities are averaged. Possible values are are "arithmetic", "geometric", or "log_odds".
+Default is "log_odds", which is is based on the mean of logit-transformed proportions.}
 
-\item{min_variability}{An integer specifying the minimal threshold of the second-most-frequent state of any variable. Variables below this threshold
-will be discarded. Supply \code{NA} to disable variability pruning. Default is \code{1}.}
+\item{min_variability}{An integer specifying the minimal count of the second-most-frequent state of any variable. Variables below this threshold
+will be discarded. Supply \code{NA} to allow any variability, including none (all rows have the same value). Default is \code{1}.}
 
-\item{limits}{A named list specifying the limit conditions for the densification process termination. Available limit conditions are
+\item{limits}{A named list specifying the conditions for terminating densification. Available limit conditions are
 \code{min_coding_density} (a number between 0 and 1 specifying the target coding density), \code{min_prop_rows} (a number between 0 and 1 specifying the
 minimal proportion of rows that have to be retained in the data), and \code{min_prop_cols} (a number between 0 and 1 specifying the
 minimal proportion of variable columns that have to be retained in the data). More then one condition can be specified simultaneously, \code{densify()}
-will stop if any condition is reached.}
+will stop if at least one of the condition is reached.}
 
-\item{scoring_weights}{A named list specifying additional weighting factors to be applied during importance score calculation. Supported parameters
+\item{density_mean_weights}{A named list specifying additional weighting factors to be applied during importance score calculation. Supported parameters
 are \code{coding} and \code{taxonomy}, which apply to coding and taxonomic importance weights, respectively. The values for these parameters must be a
 number between 0 and 1. Specify 0 (or \code{NULL}, or \code{NA}) to disable the respective weight calculation. Use these parameters to tweak the relative
 importance between the available coding and taxonomic diversity. Note: the weighting factor is applied before the scoring function, experimentation
-will be required to find a good balance of parameters for \code{scoring = "log_odds"}. See the vignette for more details.}
+will be required to find a good balance of parameters for \code{density_mean = "log_odds"}. See the vignette for more details.}
 }
 \value{
 A specially formatted tibble of iterative densification results, \link{densify_result}

@@ -10,8 +10,8 @@
 #' relationship), or by passing in `id` and `parent_id` vectors explicitly. The vectors `id` and
 #' `parent_id` must be of type character.
 #'
-#' A taxonomy tree is said to be "flattened" if the depth of each of it's leaf nodes is equal to the
-#' tree height. Such tree can be constructed by injecting dummy nodes where appropriate. Example:
+#' A taxonomy tree is said to be "flattened" if the depth of each of its leaves is equal to the
+#' tree height. Such a tree can be constructed by injecting dummy nodes where appropriate. Example:
 #'
 #' \preformatted{
 #'    A                              A      F''     level 1
@@ -36,7 +36,7 @@
 #' as_flat_taxonomy_matrix(glottolog_languoids)
 #'
 #' @param x An object of class `phylo` (e.g. result of [ape::read.tree]) or a data frame with
-#'   columns `id` and `parent_id`.
+#'   columns `id` and `parent_id` (adjacency table).
 #'
 #' @param id Character vector of node identifiers. This cannot be supplied at the same time as `x`.
 #'

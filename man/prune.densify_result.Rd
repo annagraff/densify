@@ -2,24 +2,24 @@
 % Please edit documentation in R/rank.R
 \name{prune.densify_result}
 \alias{prune.densify_result}
-\title{Obtain densified data frame that maximizes a quality score}
+\title{Obtain densified data frame that maximizes a quality scoring function}
 \usage{
-\method{prune}{densify_result}(tree, ..., score = n_data_points * coding_density)
+\method{prune}{densify_result}(tree, ..., scoring_function = n_data_points * coding_density)
 }
 \arguments{
 \item{tree}{a \link{densify_result} object}
 
 \item{...}{other arguments passed to methods}
 
-\item{score}{an expression that computes a densification quality score. Default score aims to maximize the product of
+\item{scoring_function}{an expression that computes a densification quality score. The default maximizes the product of
 the number of data points and the coding density. See \link{densify_result} for available statistics that can
-be used to compute a suitable score}
+be used to compute a suitable scoring_function}
 }
 \value{
 the densified data frame
 }
 \description{
-Returns the densified data frame from the densify iteration step that maximizes a quality score. In case of ties,
-first result is returned. The user can provide their own quality score formula in \code{score}, which can use any statistics
+Returns the densified data frame from the densify iteration step that maximizes a quality scoring function. In case of ties,
+first result is returned. The user can provide their own quality score formula in \code{scoring_function}, which can use any statistics
 provided in a \link{densify_result} tibble.
 }

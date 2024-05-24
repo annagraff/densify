@@ -1,6 +1,6 @@
 ---
 title: "Tutorial for densify"
-author: "Anna Graff"
+author: "Anna Graff, Marc Lischka, Taras Zakharko, Reinhard Furrer, Balthasar Bickel"
 date: "`r Sys.Date()`"
 output: 
   bookdown::html_document2:
@@ -32,7 +32,7 @@ and `prune()`. This tutorial guides users through all functions and
 parameters to demonstrate their effect on densification.
 
 The data used in this tutorial are the default data provided in the
-package: the language-variable matrix `WALS` obtained from WALS, the
+package: the language-feature matrix `WALS` obtained from WALS, the
 World Atlas of Language Structures [@wals], and the language taxonomy
 `glottolog_languoids` provided by Glottolog, Version 5.0 [@glottolog].
 
@@ -42,12 +42,11 @@ World Atlas of Language Structures [@wals], and the language taxonomy
 
 The input for densification is a data frame with rows representing
 observations or taxa (e.g., languages) and columns representing
-variables (in linguistic typological databases, these are also often
-referred to as "features", "characters" or "parameters").
-<!--again, check whether we shouldn't globally use "feature"--> The data
+features (in linguistic typological databases, these are also often
+referred to as "features", "characters" or "parameters"). The data
 frame requires taxa to be expressed in rows, with taxon names specified
 in a column (e.g., a column called "Glottocodes"). Columns can denote
-meta-data (such as taxon names) or variables. Variable names must
+meta-data (such as taxon names) or features. feature names must
 thereby be set as the column names. Any cells with empty or unwanted
 (e.g. `?`) entries must be coded as `NA`.
 
@@ -59,8 +58,6 @@ input taxonomy can have two forms: it can be a `phylo` object (e.g. via
 columns `id` and `parent_id`, with each row encoding one parent-child
 relationship). To generate a language taxonomy, the data from Glottolog,
 accessible as `data(glottolog_languoids)`, can be used directly.
-
-<!-- I see only data/glottolog_languoids.rda Please check, or make clear that the df can be loaded with data()-->
 
 The taxonomic input is parsed internally by the function `densify()` to
 generate a flattened taxonomic representation and then used for
@@ -90,31 +87,29 @@ flat_taxonomy_matrix <- as_flat_taxonomy_matrix(glottolog_languoids)
 ```
 
 The initial (full) dataset provided by WALS encompasses data on
-`r ncol(WALS[,-which(names(WALS)=="Glottocode")])` linguistic variables,
+`r ncol(WALS[,-which(names(WALS)=="Glottocode")])` linguistic features,
 coded for `r nrow(WALS)` languages (representing
 `r flat_taxonomy_matrix %>% filter(id %in% WALS$Glottocode) %>% select(level1) %>% unique() %>% nrow()`
 families) that are attributable to Glottolog.
 
-```{r unpruned WALS summary statistics, echo = TRUE}
+```{r raw WALS summary statistics, echo = TRUE}
 languages <- WALS$Glottocode
 data <- WALS %>% select(-Glottocode)
 # number of languages
 length(languages) 
 # number of families
 flat_taxonomy_matrix %>% filter(id %in% languages) %>% select(level1) %>% unique() %>% nrow()
-# number of variables
+# number of features
 ncol(data)
 ```
 
-In this data matrix each variable is coded for a distinct set of
+In this matrix each feature is coded for a distinct set of
 languages, such that the **coding density**, which we define as the
 proportion of non-empty cells, is patchy for both languages and
-variables (see Figure
-\@ref(fig:patchy-coding-for-languages-and-variables)).
+features (see Figure
+\@ref(fig:patchy-coding-for-languages-and-features)).
 
-<!--"unpruned" is not so common I think. Perhaps better "raw", like in the directory?-->
-
-```{r patchy-coding-for-languages-and-variables, echo=FALSE, warning = FALSE, fig.show="hold", out.width="40%", fig.width=4.5, fig.height=3, fig.cap = "Coding density for the `WALS` data frame (left languages, right variables)"}
+```{r patchy-coding-for-languages-and-features, echo=FALSE, warning = FALSE, fig.show="hold", out.width="40%", fig.width=4.5, fig.height=3, fig.cap = "Coding density for the `WALS` data frame (left languages, right features)"}
 par(mar = c(4, 4, .1, .1))
 
 # Coding density per row (language)
@@ -123,29 +118,27 @@ ggplot(data.frame(density=apply(data, 1, function(x) mean(!is.na(x)))), aes(x=de
   theme_bw()+
   theme(plot.title = element_text(hjust = 0.5))+
   xlim(c(-0.1,1.1))+
-  labs(title="Unpruned WALS", 
+  labs(title="Raw WALS", 
        x="coding density per row (language)",
        y="frequency")
 
-# Coding density per column (variable)
+# Coding density per column (feature)
 ggplot(data.frame(density=apply(data, 2, function(x) mean(!is.na(x)))), aes(x=density))+
   geom_histogram(color="black", fill="forestgreen", bins=20)+
   theme_bw()+
   theme(plot.title = element_text(hjust = 0.5))+
   xlim(c(-0.1,1.1))+
-  labs(title="Unpruned WALS",
-       x="coding density per column (variable)",
+  labs(title="Raw WALS",
+       x="coding density per column (feature)",
        y="frequency")
 ```
 
 The overall coding density of the input data frame is
-`r round(sum(!is.na(data))/(ncol(data)*nrow(data)),2)`%.
+`r round(mean(!is.na(data)),2)`%.
 
 ```{r overall coding density input data frame, echo = TRUE}
-sum(!is.na(data))/(ncol(data)*nrow(data))
+mean(!is.na(data))
 ```
-
-<!-- simpler and easier: mean(!is.na(data)) or is the more complex code on purpose? -->
 
 ## Iterative matrix densification using `densify()`
 
@@ -155,10 +148,8 @@ below a given threshold. However, removing a row subtly changes all
 column densities and vice versa, so a more cautious method is to
 iteratively remove rows and columns and to update, after each removal,
 the coding densities of all remaining rows and columns. The function
-`densify()` accomplishes this: It takes the original data matrix,
-<!--pls be consistent: either always frame or always matrix; I'd go for matrix throughout as data frame is an R-specific tech term-->
+`densify()` accomplishes this: It takes the original matrix,
 iteratively removes rows and columns according to specifiable parameters
-<!--pls make sure you are consistent wrt "parameters" vs "settings"-->
 (described below), and logs the characteristics of the matrix after each
 iteration. The output of the function is a `densify_result` object,
 which is parsed by `prune()`, `rank_results()` or `visualize()` (see
@@ -169,9 +160,9 @@ user-specified criteria post-hoc.
 
 Based on the sparsely encoded data frame provided by the user,
 `densify()` defines an **encoding matrix** of the same dimensions,
-containing zeroes for NAs and ones elsewhere. Using this encoding
-matrix, it computes a **importance score for each row and each column**
-according to user-specifiable settings, identifies the row and/or column
+containing zeroes for `NA`s and ones elsewhere. Using this encoding
+matrix, it computes an **importance score for each row and each column**
+according to user-specifiable parameters, identifies the row and/or column
 with the lowest importance score (randomly sampling one row or column if
 there are ties) and removes it. After the first row or column is
 removed, the function re-computes the importance scores of the resulting
@@ -200,7 +191,7 @@ respectively) coded for the same proportion of columns (or rows,
 respectively), the ones coded for less well-coded columns are removed
 first (**weighted coding density**).
 
-Thus, to determine the importance score of a column (variable),
+Thus, to determine the importance score of a column (feature),
 `densify()` computes the weighted column coding density. To determine
 the importance score of a row (language), one of three possible **types
 of mean** (described in detail below) are used, taking into to account
@@ -219,14 +210,14 @@ matrix more strongly.
 
 Removing rows can have effects not only on coding densities of columns,
 but also on their informativeness: It is possible for the iterative
-removal of rows to slowly deplete a variable state, such that a variable
+removal of rows to slowly deplete a feature state, such that a feature
 (column) no longer displays sufficient or any variability (i.e., a
 column may still be coded for a substantial number of rows but all
 remaining coded rows might have the value `FALSE`, because all rows with
 the value `TRUE` have been pruned away). Thus, after each row removal,
-`densify()` assesses whether any variables have become uninformative
+`densify()` assesses whether any features have become uninformative
 according to a user-defined threshold denoting how many observations
-must be present in the second-largest variable state, and removes any
+must be present in the second-largest feature state, and removes any
 such column(s) alongside the row in the same iteration.
 
 Conversely, it is possible that the removal of a specific column results
@@ -246,7 +237,7 @@ parameters available to fine-tune the densification process.
 
 -   `data`: The data frame to be pruned, in the format described above.
 
--   `cols`: A specification of which variable columns to densify. The
+-   `cols`: A specification of which feature columns to densify. The
     default is to include all columns for densification.
 
 -   `taxonomy`: A taxonomic tree encompassing all taxa represented in
@@ -258,15 +249,16 @@ parameters available to fine-tune the densification process.
     is not specified, `densify()` will attempt to guess which column
     denotes taxa based on column contents.
 
--   `scoring`: This parameter specifies how the measure denoting row
+-   `density_mean`: This parameter specifies how the measure denoting row
     importance is computed. It can be one of the following three
     mean-types: `"arithmetic"`, `"geometric"`, `"log_odds"`. See below
-    for more details. The default setting is `"log_odds"`.
+    for more details. The default value is `"log_odds"`, which is is based 
+    on the mean of logit-transformed proportions.
 
 -   `min_variability`: An integer specifying how many observations/taxa
-    the second-most-frequent variable state of any variable must contain
-    for the variable to be maintained in the matrix. The default set to
-    `1`, guaranteeing that a variable must display at least minimal
+    the second-most-frequent feature state of any feature must contain
+    for the feature to be maintained in the matrix. The default is set to
+    `1`, guaranteeing that a feature must display at least minimal
     variability: at least one observation must be different from all
     others. Value `NA` disables pruning according to this principle.
 
@@ -276,13 +268,13 @@ parameters available to fine-tune the densification process.
     coding density), `min_prop_rows` (a number between 0 and 1
     specifying the minimal proportion of rows that have to be retained
     in the data), and `min_prop_cols` (a number between 0 and 1
-    specifying the minimal proportion of variable columns that have to
+    specifying the minimal proportion of feature columns that have to
     be retained in the data). More then one condition can be specified
     simultaneously. `densify()` will stop if any condition is reached.
     The default limit is `min_coding_density = 1`, i.e. densification
     ends once the matrix is fully dense, i.e. there are no `NA`s left.
 
--   `scoring_weights`: A named list specifying weighting factors applied
+-   `density_mean_weights`: A named list specifying weighting factors applied
     during importance score computation. Available parameters are
     `coding` and `taxonomy`, applied to coding density and taxonomic
     diversity values respectively and thus tweaking the relative
@@ -290,8 +282,8 @@ parameters available to fine-tune the densification process.
     pruning process. Both values must be integers $\in [0,1]$. Setting a
     parameter to `0` (or `NA`, or `NULL`) disables the contribution of
     the respective values to the computed row importance score and hence
-    the pruning process. The default setting is
-    `scoring_weights = list(coding = 1, taxonomy = 1)`.
+    the pruning process. The default value is
+    `density_mean_weights = list(coding = 1, taxonomy = 1)`.
 
 While it is possible to run `densify()` with several parameter settings
 on the same input data frame, we strongly recommend motivating parameter
@@ -323,7 +315,7 @@ adjacency table (i.e., a data frame containing columns `id` and
 `parent_id`, with each row encoding one parent-child relationship, like
 `glottolog_languoids`).
 
-#### Parameters `scoring` and `scoring_weights`
+#### Parameters `density_mean` and `density_mean_weights`
 
 `densify()` offers three methods of computing the mean of row-wise
 absolute and weighted coding densities as well as taxonomic diversity of
@@ -342,7 +334,6 @@ to taxonomic diversity of the sample are computed for each row.
 To illustrate the different effects of the three scoring types
 available, the left panel below in Figure \@ref(fig:mean-comp-plot)
 traces the mean of a constant 0.5 and a coding density
-<!--Pls double check. I tried to make this more transparent but I hope I didn't misunderstand!-->
 x between 0 and 1, with mean types `"arithmetic"`, `"geometric"` and
 `"log_odds"`. Note how the log odds mean strongly skews towards 0 and 1
 once x approaches the extremes: once one of the densities is
@@ -367,13 +358,12 @@ in maintaining rows with extremely high densities.
 `densify()` also provides users with the option of modulating the
 weights of the components of which the `"arithmetic"`, `"geometric"`, or
 `"log_odds"` mean score is computed. This is achieved by a separate
-setting `scoring_weights`, where weights can be specified for `coding`
-and `taxonomy`. These are factors $\in [0,1]$, defaulting to `1`.
-<!-- \in [0,1] suggests a continuous value, so not a factor... Perhaps use 'multiplier' or 'weight'?-->
+parameter `density_mean_weights`, where weights can be specified for `coding`
+and `taxonomy`. These are multipliers $\in [0,1]$, defaulting to `1`.
 The `coding` weight specifies the value by which the absolute and the
 weighted coding densities are multiplied prior to importance score
-computation, and the `taxonomy` weight specifies the factor by which the
-taxonomic diversity score is multiplied by. If set to different values,
+computation, and the `taxonomy` weight specifies the value by which the
+taxonomic diversity score is multiplied. If set to different values,
 these weight factors thus allow users to bias the weight of taxonomic
 diversity relative to the weight of coding density in the computation of
 the row scores and ultimately in the iterative pruning process. To show
@@ -387,7 +377,7 @@ By setting the `taxonomy` weight to `0`, `NA` or `NULL`, the pruning
 process ignores taxonomic structure. If a taxonomy is provided in the
 data, a taxonomic diversity score (the Shannon entropy of the highest
 taxonomic level in the taxonomy) will nonetheless be computed and logged
-for each sub-matrix in the `densify\_result` output produced by
+for each sub-matrix in the `densify_result` output produced by
 `densify()`. This way, ignoring taxonomic diversity in the pruning
 process does not preclude taxonomic diversity from being considered for
 identifying the optimal number of iterations using `rank_results()`,
@@ -525,103 +515,80 @@ ggplot(values, aes(x = x_values)) +
   labs(x = "x", y = "LOM", color = "Values")
 ```
 
-In summary, the parameters `scoring` and `scoring_weights` modulate the
+In summary, the parameters `density_mean` and `density_mean_weights` modulate the
 pruning process and can (and should) be adjusted to meet the needs of
-the user. It may be necessary to experiment with different settings to
+the user. It may be necessary to experiment with different values to
 find a good balance of parameters.
 
 #### Parameter `min_variability`
 
-While it is conceivable that one might want to include variables in a
+While it is conceivable that one might want to include features in a
 dataset displaying no variability whatsoever among the coded
-taxa/observations (`min_variability = NA`), such variables are
+taxa/observations (`min_variability = NA`), such features are
 uninteresting for most statistical purposes.
 
 The parameter `min_variability` specifies how many taxa the
-second-most-frequent variable state of any variable must contain for the
-variable to be maintained in the matrix. The default is `1`, i.e. there
-must be at least one language that has a value different from all
-others. This will remove variables with only one state -- whether they
-are present in the input data matrix or whether they result from
+second-most-frequent feature state of any feature must contain for the
+feature to be maintained in the matrix. The default is `1`, i.e. there
+must be at least one language that has a state different from all
+others. This will remove features with only one state -- whether they
+are present in the input matrix or whether they result from
 removing rows. For certain comparative analyses, it may be reasonable to
 set the threshold to an integer larger $n > 1$. This ensures that each
-variable contains at least two values and that the second-most frequent
+feature contains at least two values and that the second-most frequent
 values is present in $n$ taxa/observations.
 
 Consider the following example:
 
 ```{r variability, echo = TRUE}
-example <- data.frame(A=c("present","absent","absent","absent","absent","absent","absent"), 
-                      B=c("present","present","absent","absent","absent","absent","absent"), 
-                      C=c("type1","type1","type1","type1","type1","type2","type3"),
-                      D=c("type1","type1","type1","type1","type2","type2","type3"),
-                      E=c("type1","type1","type1","type1","type2","type3","type4"),
-                      F=c("type1","type1","type1","type1","type1","type1","type1"))
+example <- data.frame(feature.A=c("present","absent","absent","absent","absent","absent","absent"), 
+                      feature.B=c("present","present","absent","absent","absent","absent","absent"), 
+                      feature.C=c("type1","type1","type1","type1","type1","type2","type3"),
+                      feature.D=c("type1","type1","type1","type1","type2","type2","type3"),
+                      feature.E=c("type1","type1","type1","type1","type2","type3","type4"),
+                      feature.F=c("type1","type1","type1","type1","type1","type1","type1"))
 
-table(example$A)
-table(example$B)
-table(example$C)
-table(example$D)
-table(example$E)
-table(example$F)
+table(example$feature.A)
+table(example$feature.B)
+table(example$feature.C)
+table(example$feature.D)
+table(example$feature.E)
+table(example$feature.F)
 ```
 
-In this data frame, variables `A` and `B` each have two states, `absent`
-and `present`, but variable `B` exhibits more variation than variable
+In this data frame, features `A` and `B` each have two states, `absent`
+and `present`, but feature `B` exhibits more variation than feature
 `A`: The rarer state `present` counts two observations, whereas it
-counts only one observation in variable `A`. Variables `C` and `D` each
-have three states, `type1`, `type2` and `type3`, but variable `D`
-exhibits more variation than variable `C`: The second-most-frequent
-state `type2` counts two observations instead of just one (variable
+counts only one observation in feature `A`. Features `C` and `D` each
+have three states, `type1`, `type2` and `type3`, but feature `D`
+exhibits more variation than feature `C`: The second-most-frequent
+state `type2` counts two observations instead of just one (feature
 `C`).
 
-Different settings `min_variability` on this data have the following
+Different values for `min_variability` on this data have the following
 effect:
 
--   `min_variability = NA`: All variables are retained, including
-    variable `F`, which displays no variability among observations.
+-   `min_variability = NA`: All features are retained, including
+    feature `F`, which displays no variability among observations.
 
--   `min_variability = 1`: Variables `A`, `B`, `C`, `D` and `E` are
+-   `min_variability = 1`: Features `A`, `B`, `C`, `D` and `E` are
     retained, because each of them contains at least one observation in
-    the second-most-frequent state. Variable `F` is removed, because it
+    the second-most-frequent state. Feature `F` is removed, because it
     only includes one state.
 
--   `min_variability = 2`: Variables `B` and `D` are retained, because
+-   `min_variability = 2`: Features `B` and `D` are retained, because
     both of them contain at least two observations in the
-    second-most-frequent state. Variables `A`, `C`, `E` and `F` are
+    second-most-frequent state. Features `A`, `C`, `E` and `F` are
     removed because they either have only one observation in their
     second-most-frequent state or because they are invariate.
 
-```{=html}
-<!--# BB:please explain up front what the numbers stand for, it sounds like it's the number of types/values. If so say so; if not, make sure readers won't misunderstand:: ANNA Has this become clearer now?
-RF: no. Maybe:
-
-While it is logically conceivable that one might want to include variables in a dataset displaying no variability whatsoever among the coded taxa/observations, such variables are uninteresting for most analyses. 
-the parameter `min_variability` specifies how many different states the second-most-frequent variable state of any variable must contain for the variable to be maintained in the matrix.
-The default is one (indicating one difference, i.e. two states) and ensures that variables with a unique value only are immediately removed in the pruning process. 
-For certain comparative analyses, it may be reasonable to set the threshold to an integer larger than one.
-
-BB: I like the suggested rewrite but wonder whether things wouldn't be much easier if the parameter was named `min_number_states`, defined internally as min_variability+1 ?
-
-AG: Reinhard's conception of what this captures was correct, while Balthasar misunderstood. I have tried to make this clearer with the example.
--->
-```
 ### Preparing examples with varying parameters
 
 The following 16 implementations of `densify()` take `WALS` as an input
 data frame with `min_variability = 3` and vary the following parameters
-discussed above: `scoring` and `scoring_weights`. Their outputs as well
+discussed above: `density_mean` and `density_mean_weights`. Their outputs as well
 as their effect on the densification process will be illustrated below.
 
-```{=html}
-<!-- 
-A few comments:
-- I strongly recommend to shorten the variable names. 
-- use a single seed. This implies that the differences are method and approach based and not seed.
-
-BB: I fully agree! Why vary the seed?
--->
-```
 ```{r densify generate iteration_logs, eval = FALSE}
 # arithmetic mean, including and excluding taxonomic diversity
 set.seed(2023)
@@ -630,34 +597,34 @@ dr_arith_taxtrue <-
   densify(data = WALS, 
           taxonomy = glottolog_languoids,
           taxon_id = "Glottocode",
-          scoring = "arithmetic", 
+          density_mean = "arithmetic", 
           min_variability = 3,
-          scoring_weights = list(coding = 1, taxonomy = 1))
+          density_mean_weights = list(coding = 1, taxonomy = 1))
 
 dr_arith_taxfalse <- 
     densify(data = WALS, 
           taxonomy = glottolog_languoids,
           taxon_id = "Glottocode",
-          scoring = "arithmetic", 
+          density_mean = "arithmetic", 
           min_variability = 3,
-          scoring_weights = list(coding = 1, taxonomy = 0))
+          density_mean_weights = list(coding = 1, taxonomy = 0))
 
 # geometric mean, including and excluding taxonomic diversity
 dr_geom_taxtrue <- 
   densify(data = WALS, 
           taxonomy = glottolog_languoids,
           taxon_id = "Glottocode",
-          scoring = "geometric", 
+          density_mean = "geometric", 
           min_variability = 3,
-          scoring_weights = list(coding = 1, taxonomy = 1))
+          density_mean_weights = list(coding = 1, taxonomy = 1))
 
 dr_geom_taxfalse <- 
     densify(data = WALS, 
             taxonomy = glottolog_languoids,
             taxon_id = "Glottocode",
-            scoring = "geometric", 
+            density_mean = "geometric", 
             min_variability = 3,
-          scoring_weights = list(coding = 1, taxonomy = 0))
+            density_mean_weights = list(coding = 1, taxonomy = 0))
 
 # log_odds mean, including and excluding taxonomic diversity
 # varying weights when taxonomic diversity included
@@ -665,97 +632,97 @@ dr_lom_taxtrue_11 <-
   densify(data = WALS, 
           taxonomy = glottolog_languoids,
           taxon_id = "Glottocode",
-          scoring = "log_odds", 
+          density_mean = "log_odds", 
           min_variability = 3,
-          scoring_weights = list(coding = 1, taxonomy = 1))
+          density_mean_weights = list(coding = 1, taxonomy = 1))
 
 dr_lom_taxtrue_099099 <-
   densify(data = WALS, 
           taxonomy = glottolog_languoids,
           taxon_id = "Glottocode",
-          scoring = "log_odds", 
+          density_mean = "log_odds", 
           min_variability = 3,
-          scoring_weights = list(coding = 0.99, taxonomy = 0.99))
+          density_mean_weights = list(coding = 0.99, taxonomy = 0.99))
 
 dr_lom_taxtrue_095095 <-
   densify(data = WALS, 
           taxonomy = glottolog_languoids,
           taxon_id = "Glottocode",
-          scoring = "log_odds", 
+          density_mean = "log_odds", 
           min_variability = 3,
-          scoring_weights = list(coding = 0.95, taxonomy = 0.95))
+          density_mean_weights = list(coding = 0.95, taxonomy = 0.95))
 
 dr_lom_taxtrue_090090 <-
     densify(data = WALS,
           taxonomy = glottolog_languoids,
           taxon_id = "Glottocode",
-          scoring = "log_odds",
+          density_mean = "log_odds",
           min_variability = 3,
-          scoring_weights = list(coding = 0.90, taxonomy = 0.90))
+          density_mean_weights = list(coding = 0.90, taxonomy = 0.90))
 
 dr_lom_taxtrue_050050 <-
     densify(data = WALS,
           taxonomy = glottolog_languoids,
           taxon_id = "Glottocode",
-          scoring = "log_odds",
+          density_mean = "log_odds",
           min_variability = 3,
-          scoring_weights = list(coding = 0.50, taxonomy = 0.50))
+          density_mean_weights = list(coding = 0.50, taxonomy = 0.50))
 
 dr_lom_taxtrue_1095 <-
     densify(data = WALS,
           taxonomy = glottolog_languoids,
           taxon_id = "Glottocode",
-          scoring = "log_odds",
+          density_mean = "log_odds",
           min_variability = 3,
-          scoring_weights = list(coding = 1, taxonomy = 0.95))
+          density_mean_weights = list(coding = 1, taxonomy = 0.95))
 
 dr_lom_taxtrue_0951 <-
     densify(data = WALS,
           taxonomy = glottolog_languoids,
           taxon_id = "Glottocode",
-          scoring = "log_odds",
+          density_mean = "log_odds",
           min_variability = 3,
-          scoring_weights = list(coding = 0.95, taxonomy = 1))
+          density_mean_weights = list(coding = 0.95, taxonomy = 1))
 
 dr_lom_taxtrue_1090 <-
     densify(data = WALS,
           taxonomy = glottolog_languoids,
           taxon_id = "Glottocode",
-          scoring = "log_odds",
+          density_mean = "log_odds",
           min_variability = 3,
-          scoring_weights = list(coding = 1, taxonomy = 0.90))
+          density_mean_weights = list(coding = 1, taxonomy = 0.90))
 
 dr_lom_taxtrue_0901 <-
     densify(data = WALS,
           taxonomy = glottolog_languoids,
           taxon_id = "Glottocode",
-          scoring = "log_odds",
+          density_mean = "log_odds",
           min_variability = 3,
-          scoring_weights = list(coding = 0.90, taxonomy = 1))
+          density_mean_weights = list(coding = 0.90, taxonomy = 1))
 
 dr_lom_taxfalse_1 <-
   densify(data = WALS,
           taxonomy = glottolog_languoids,
           taxon_id = "Glottocode",
-          scoring = "log_odds",
+          density_mean = "log_odds",
           min_variability = 3,
-          scoring_weights = list(coding = 1, taxonomy = 0))
+          density_mean_weights = list(coding = 1, taxonomy = 0))
 
 dr_lom_taxfalse_095 <-
   densify(data = WALS,
           taxonomy = glottolog_languoids,
           taxon_id = "Glottocode",
-          scoring = "log_odds",
+          density_mean = "log_odds",
           min_variability = 3,
-          scoring_weights = list(coding = 0.95, taxonomy = 0))
+          density_mean_weights = list(coding = 0.95, taxonomy = 0))
 
 dr_lom_taxfalse_075 <-
   densify(data = WALS,
           taxonomy = glottolog_languoids,
           taxon_id = "Glottocode",
-          scoring = "log_odds",
+          density_mean = "log_odds",
           min_variability = 3,
-          scoring_weights = list(coding = 0.75, taxonomy = 0))
+          density_mean_weights = list(coding = 0.75, taxonomy = 0))
 ```
 
 ```{r densify read in iteration_logs, eval = TRUE, echo = FALSE}
@@ -808,7 +775,7 @@ each sub-matrix (row):
     dataset. To retrieve the corresponding object, run
     `as.data.frame(x)`, e.g. `as.data.frame(dr_arith_taxtrue$data[4])`
     for the fourth sub-matrix.
--   `changes`: a tibble listing all pruned taxa and/or variables in the
+-   `changes`: a tibble listing all pruned taxa and/or features in the
     iteration, including the reason for pruning.
 
 ```{r densify-result, eval = TRUE, echo = TRUE}
@@ -818,12 +785,6 @@ head(dr_arith_taxtrue)
 # retrieving a specific sub-matrix
 submatrix <- as.data.frame(dr_arith_taxtrue$data[4])
 ```
-
-<!-- shouldn't the following be true?
-
-mean(!is.na(as.data.frame(dr_lom_taxtrue_11$data[[2440]]))) == dr_lom_taxtrue_11$coding_density[2440]
-
--->
 
 ## Determining the optimal number of iterations using `rank_results()`, `prune()` or `visualize()`
 
@@ -851,34 +812,34 @@ the output from `densify()` as an input and compare the sub-matrices
 resulting from each iteration by computing a **matrix quality score**
 via an intuitively worded formula consisting of one or more summary statistics
 from the `densify_result` object. The formula is specified under the parameter
-`score` (as a standard R expression) and biases the sub-matrix selection in the  way the trade-offs are meant to play out. The default formula used is
-`score = n_data_points * coding_density`, which maximizes the product of
+`scoring_function` (as a standard R expression) and biases the sub-matrix selection in the way the trade-offs
+are meant to play out. The default formula used is
+`scoring_function = n_data_points * coding_density`, which maximizes the product of
 available non-missing data points and the overall matrix coding density.
 
 Using the function `rank_results()`, users can rank all sub-matrices
-with respect to the score they specify (returning a vector indicating
+with respect to the scoring function they specify (returning a vector indicating
 the rank of each sub-matrix), while `prune()` identifies and retrieves
-the sub-matrix for which the score is maximized (selecting the earlier
+the sub-matrix for which the scoring function is maximized (selecting the earlier
 iteration in the unlikely case of ties). The function `visualize()`
 plots the quality score for all sub-matrices and also indicates the
 optimum.
-<!--Perhaps remove the max score print as it has no immediately intuition. Step nr. and df dims are super useful but the score value itself perhaps not as much -->
 
-```{r densify-result illustration, eval = TRUE, echo = TRUE, warning = FALSE, fig.align = 'center', fig.height=6, fig.width=6, fig.cap = 'Quality score plot for `score = n_data_points * coding_density` on the densify result object obtained from an implementation of `densify()` using the settings `scoring = "arithmetic"`, considering taxonomic diversity.'}
+```{r densify-result illustration, eval = TRUE, echo = TRUE, warning = FALSE, fig.align = 'center', fig.height=6, fig.width=6, fig.cap = 'Quality score plot for `scoring_function = n_data_points * coding_density` on the densify result object obtained from an implementation of `densify()` using the values `density_mean = "arithmetic"`, considering taxonomic diversity.'}
 # rank results
-head(rank_results(dr_arith_taxtrue, score = n_data_points * coding_density))
+head(rank_results(dr_arith_taxtrue, scoring_function = n_data_points * coding_density))
 
 # prune matrix
-pruned <- prune(dr_arith_taxtrue, score = n_data_points * coding_density)
+pruned <- prune(dr_arith_taxtrue, scoring_function = n_data_points * coding_density)
 dim(pruned)
 
 # visualize quality score
-visualize(dr_arith_taxtrue, score = n_data_points * coding_density)
+visualize(dr_arith_taxtrue, scoring_function = n_data_points * coding_density)
 ```
 
 Users can run `rank_results()`, `prune()` or `visualize()` multiple
-times on the same densification output using scores to fine-tune the
-settings according to their needs. We recommend the choice of the score
+times on the same densification output using different scoring functions to fine-tune the
+settings according to their needs. We recommend the choice of the scoring
 function to be motivated by characteristics of the input data frame as
 well as the desired characteristics of the output data frame in mind.
 
@@ -886,17 +847,17 @@ For instance, if coding sparsity of the input matrix mainly manifests
 itself in rows but not columns, and an output matrix with low row coding
 density is undesirable, this should be expressed by including the
 summary statistic `row_coding_density_min` (e.g.,
-`score = n_data_points * coding_density * row_coding_density_min`). If
+`scoring_function = n_data_points * coding_density * row_coding_density_min`). If
 this concern is strong, the importance of `row_coding_density_min` can
 be increased by an exponent (e.g.,
-`score = n_data_points * coding_density * row_coding_density_min^2`).
+`scoring_function = n_data_points * coding_density * row_coding_density_min^2`).
 
 Other users may have an extremely sparse matrix and merely seek to
 strongly densify it, irrespective of taxonomic structure in rows. They
 would seek to include both `row_coding_density_min` and
 `col_coding_density_min`, possibly even increasing `coding_density`
 relative to `n_data_points` (e.g.,
-`score = n_data_points * coding_density^2 * row_coding_density_min * col_coding_density_min`).
+`scoring_function = n_data_points * coding_density^2 * row_coding_density_min * col_coding_density_min`).
 
 In another example, coding densities may be high and roughly even across
 rows and columns, and the motivation for pruning resides mainly in
@@ -904,62 +865,64 @@ selecting a taxonomically diverse sub-sample for an analysis. In such a
 case, the summary statistic `taxonomic_index` would be included in the
 score, and the user may even consider to lower the parameter
 `n_data_points` relative to `coding_density` (e.g.,
-`score = n_data_points^0.5 * coding_density * taxonomic_index`).
+`scoring_function = n_data_points^0.5 * coding_density * taxonomic_index`).
 
-To appreciate the effect of the `score` argument , compare the following
+To appreciate the effect of the `scoring_function` argument , compare the following
 quality score plots (see Figure \@ref(fig:score-1-0)) using different
-scores on the same iteration log (obtained from an implementation
-of `densify()` using the settings
-`scoring = "arithmetic", consider_taxonomic_diversity = TRUE`.) The quality score per iteration and the optimum sub-matrix vary
-drammatically depending on the score function. Accordingly, so do the
+scoring functions on the same iteration log (obtained from an implementation
+of `densify()` using the values
+`density_mean = "arithmetic", consider_taxonomic_diversity = TRUE`.) The quality score per iteration and the optimum sub-matrix vary
+dramatically depending on the score function. Accordingly, so do the
 optima. <!-- pls label the sub-plots -->
 
-```{r score-1-0, echo = TRUE, warning = FALSE, fig.show="hold", fig.align = 'center', fig.width=6, fig.height=6, warning = FALSE, fig.cap = 'Quality score plots for four different quality score definitions on the iteration log obtained from an implementation of `densify()` using the settings `scoring = "arithmetic", consider_taxonomic_diversity = TRUE`. Topmost: `score = n_data_points * coding_density`. Second from top: `score = n_data_points * coding_density * row_coding_density_min * col_coding_density_min * taxonomic_index`. Second from bottom: `score = n_data_points * coding_density * taxonomic_index`. Bottommost: `score = n_data_points * coding_density * row_coding_density_min* taxonomic_index`.'}
-visualize(dr_arith_taxtrue, score = n_data_points * coding_density)
+```{r score-1-0, echo = TRUE, warning = FALSE, fig.show="hold", fig.align = 'center', fig.width=6, fig.height=6, warning = FALSE, fig.cap = 'Quality score plots for four different scoring functions on the iteration log obtained from an implementation of `densify()` using the values `density_mean = "arithmetic", consider_taxonomic_diversity = TRUE`. Topmost: `scoring_function = n_data_points * coding_density`. Second from top: `scoring_function = n_data_points * coding_density * row_coding_density_min * col_coding_density_min * taxonomic_index`. Second from bottom: `scoring_function = n_data_points * coding_density * taxonomic_index`. Bottommost: `scoring_function = n_data_points * coding_density * row_coding_density_min* taxonomic_index`.'}
+visualize(dr_arith_taxtrue, scoring_function = n_data_points * coding_density)
 
-visualize(dr_arith_taxtrue, score = n_data_points * coding_density * row_coding_density_min * 
-            col_coding_density_min * taxonomic_index)
+visualize(dr_arith_taxtrue, scoring_function = n_data_points * coding_density 
+          * row_coding_density_min * col_coding_density_min * taxonomic_index)
 
-visualize(dr_arith_taxtrue, score = n_data_points * coding_density * taxonomic_index)
+visualize(dr_arith_taxtrue, scoring_function = n_data_points * coding_density 
+          * taxonomic_index)
 
-visualize(dr_arith_taxtrue, score = n_data_points * coding_density * row_coding_density_min * 
-            taxonomic_index)
+visualize(dr_arith_taxtrue, scoring_function = n_data_points * coding_density 
+          * row_coding_density_min * taxonomic_index)
 ```
 
 Optima also change by weighting particular concerns using exponents (see
 Figure \@ref(fig:score-2-0)):
 
-```{r score-2-0, echo = TRUE, warning = FALSE, fig.show="hold", fig.align = 'center', fig.width=6, fig.height=6, warning = FALSE, fig.cap = 'Quality score plots varying the basic trade-off of available data points and coding density in an implementation of `densify()` using the settings `scoring = "arithmetic"`, considering taxonomic diversity. Topmost: `score = n_data_points * coding_density^2`. Second from top: `score = n_data_points * coding_density^3`. Second from bottom: `score = n_data_points^2 * coding_density`. Bottommost: `score = n_data_points^3 * coding_density`.'}
-visualize(dr_arith_taxtrue, score = n_data_points * coding_density^2)
+```{r score-2-0, echo = TRUE, warning = FALSE, fig.show="hold", fig.align = 'center', fig.width=6, fig.height=6, warning = FALSE, fig.cap = 'Quality score plots varying the basic trade-off of available data points and coding density in an implementation of `densify()` using the values `density_mean = "arithmetic"`, considering taxonomic diversity. Topmost: `scoring_function = n_data_points * coding_density^2`. Second from top: `scoring_function = n_data_points * coding_density^3`. Second from bottom: `scoring_function = n_data_points^2 * coding_density`. Bottommost: `scoring_function = n_data_points^3 * coding_density`.'}
+visualize(dr_arith_taxtrue, scoring_function = n_data_points * coding_density^2)
 
-visualize(dr_arith_taxtrue, score = n_data_points * coding_density^3)
+visualize(dr_arith_taxtrue, scoring_function = n_data_points * coding_density^3)
 
-visualize(dr_arith_taxtrue, score = n_data_points^2 * coding_density)
+visualize(dr_arith_taxtrue, scoring_function = n_data_points^2 * coding_density)
 
-visualize(dr_arith_taxtrue, score = n_data_points^3 * coding_density)
+visualize(dr_arith_taxtrue, scoring_function = n_data_points^3 * coding_density)
 ```
 
 In what follows we compare some of the densified sub-matrices.
 
 ```{r prune, echo = TRUE, warning = FALSE}
-pruned_1 <- prune(dr_arith_taxtrue, score = n_data_points * coding_density * taxonomic_index)
-pruned_2 <- prune(dr_arith_taxtrue, score = n_data_points * coding_density * row_coding_density_min 
-                  * col_coding_density_min * taxonomic_index)
+pruned_1 <- prune(dr_arith_taxtrue, scoring_function = n_data_points * coding_density 
+                  * taxonomic_index)
+pruned_2 <- prune(dr_arith_taxtrue, scoring_function = n_data_points * coding_density 
+                  * row_coding_density_min * col_coding_density_min * taxonomic_index)
 ```
 
 The densified matrix resulting from defining:
-`score = n_data_points * coding_density * taxonomic_index` encompasses
+`scoring_function = n_data_points * coding_density * taxonomic_index` encompasses
 `r nrow(pruned_1)` languages in
 `r flat_taxonomy_matrix %>% filter(id %in% pruned_1$Glottocode) %>% select(level1) %>% unique() %>% nrow()`
 families coded for
-`r ncol(pruned_1[,-which(names(pruned_1)=="Glottocode")])` variables at
+`r ncol(pruned_1[,-which(names(pruned_1)=="Glottocode")])` features at
 an overall coding density of
 `r round(sum(!is.na(pruned_1[,-which(names(pruned_1)=="Glottocode")]))/(ncol(pruned_1[,-which(names(pruned_1)=="Glottocode")])*nrow(pruned_1[,-which(names(pruned_1)=="Glottocode")])),2)`%.
 
 ```{r prune comparison 1, echo = TRUE}
 languages_1 <- pruned_1$Glottocode
 data_1 <- pruned_1 %>% select(-Glottocode)
-# number of languages, families and variables, overall coding density for pruned_1
+# number of languages, families and features, overall coding density for pruned_1
 length(languages_1) 
 flat_taxonomy_matrix %>% filter(id %in% languages_1) %>% 
   select(level1) %>% unique() %>% nrow()
@@ -967,16 +930,16 @@ ncol(data_1)
 sum(!is.na(data_1))/(ncol(data_1)*nrow(data_1))
 ```
 
-Both language and variable coding densities have become
+Both language and feature coding densities have become
 substantially higher (see Figure \@ref(fig:prune-plots-1)) as compared
 to the input matrix (see Figure
-\@ref(fig:patchy-coding-for-languages-and-variables)), and how the
-inclusion of taxonomic diversity in both `densify()` and the `score`
+\@ref(fig:patchy-coding-for-languages-and-features)), and how the
+inclusion of taxonomic diversity in both `densify()` and the `scoring_function`
 argument of `prune()` result in the inclusion of a number of languages
 that are not densely coded, but strongly contribute to taxonomic
 diversity and are thus kept.
 
-```{r prune-plots-1, echo = FALSE, warning=FALSE, fig.show = "hold", out.width = "40%", fig.width = 5, fig.height = 3, fig.cap = 'Coding density for the pruned `WALS` data frame, using the settings `mean = "arithmetic"`, considering taxonomic diversity, using `score = n_data_points * coding_density * taxonomic_index` (left languages, right variables)'}
+```{r prune-plots-1, echo = FALSE, warning=FALSE, fig.show = "hold", out.width = "40%", fig.width = 5, fig.height = 3, fig.cap = 'Coding density for the pruned `WALS` data frame, using the values `density_mean = "arithmetic"`, considering taxonomic diversity, using `scoring_function = n_data_points * coding_density * taxonomic_index` (left languages, right features)'}
 par(mar = c(4, 4, .1, .1))
 
 ggplot(data.frame(density=apply(data_1, 1, function(x) (length(na.omit(x))))/ncol(data_1)), aes(x=density))+
@@ -985,7 +948,7 @@ ggplot(data.frame(density=apply(data_1, 1, function(x) (length(na.omit(x))))/nco
   theme(plot.title = element_text(hjust = 0.5))+
   xlim(c(-0.1,1.1))+
   labs(title="Pruned WALS, arithmetic, coding and taxonomy weight = 1", 
-       subtitle = "score = n_data_points * coding_density * taxonomic_index",
+       subtitle = "scoring_function = n_data_points * coding_density * taxonomic_index",
        x="coding density per row (language)",
        y="frequency")
 
@@ -995,24 +958,24 @@ ggplot(data.frame(density=apply(pruned_1[,-which(names(pruned_1)=="Glottocode")]
   xlim(c(-0.1,1.1))+
   theme(plot.title = element_text(hjust = 0.5))+
   labs(title="Pruned WALS, arithmetic, coding and taxonomy weight = 1", 
-       subtitle = "score = n_data_points * coding_density * taxonomic_index",
-       x="coding density per column (variable)",
+       subtitle = "scoring_function = n_data_points * coding_density * taxonomic_index",
+       x="coding density per column (feature)",
        y="frequency")
 ```
 
 The densified sub-matrix resulting from defining:
-`score = n_data_points * coding_density * row_coding_density_min * col_coding_density_min * taxonomic_index`
+`scoring_function = n_data_points * coding_density * row_coding_density_min * col_coding_density_min * taxonomic_index`
 encompasses `r nrow(pruned_2)` languages in
 `r flat_taxonomy_matrix %>% filter(id %in% pruned_2$Glottocode) %>% select(level1) %>% unique() %>% nrow()`
 families coded for
-`r ncol(pruned_2[,-which(names(pruned_2)=="Glottocode")])` variables at
+`r ncol(pruned_2[,-which(names(pruned_2)=="Glottocode")])` features at
 an overall coding density of
 `r round(sum(!is.na(pruned_2[,-which(names(pruned_2)=="Glottocode")]))/(ncol(pruned_2[,-which(names(pruned_2)=="Glottocode")])*nrow(pruned_1[,-which(names(pruned_2)=="Glottocode")])),2)`%.
 
 ```{r prune comparison 2, echo = TRUE}
 languages_2 <- pruned_2$Glottocode
 data_2 <- pruned_2 %>% select(-Glottocode)
-# number of languages, families and variables, overall coding density for pruned_2
+# number of languages, families and features, overall coding density for pruned_2
 length(languages_2) 
 flat_taxonomy_matrix %>% filter(id %in% languages_2) %>% 
   select(level1) %>% unique() %>% nrow()
@@ -1021,11 +984,11 @@ sum(!is.na(data_2))/(ncol(data_2)*nrow(data_2))
 ```
 
 Additionally including `row_coding_density_min` and
-`col_coding_density_min` in the `score` argument thus results in a much
+`col_coding_density_min` in the `scoring_function` argument thus results in a much
 denser matrix with extremely well-coded rows and columns (see Figure
 \@ref(fig:prune-plots-2)).
 
-```{r prune-plots-2, echo = FALSE, warning = FALSE, fig.show = "hold", out.width = "40%", fig.width = 5, fig.height = 3, fig.cap = 'Coding density for the pruned `WALS` data frame, using the settings `mean = "arithmetic"`, considering taxonomic diversity and with `score = n_data_points * coding_density * row_coding_density_min * col_coding_density_min * taxonomic_index` (left languages, right variables)'}
+```{r prune-plots-2, echo = FALSE, warning = FALSE, fig.show = "hold", out.width = "40%", fig.width = 5, fig.height = 3, fig.cap = 'Coding density for the pruned `WALS` data frame, using the values `density_mean = "arithmetic"`, considering taxonomic diversity and with `scoring_function = n_data_points * coding_density * row_coding_density_min * col_coding_density_min * taxonomic_index` (left languages, right features)'}
 par(mar = c(4, 4, .1, .1))
 
 ggplot(data.frame(density=apply(data_2, 1, function(x) (length(na.omit(x))))/ncol(data_2)), aes(x=density))+
@@ -1034,7 +997,7 @@ ggplot(data.frame(density=apply(data_2, 1, function(x) (length(na.omit(x))))/nco
   theme(plot.title = element_text(hjust = 0.5))+
   xlim(c(-0.1,1.1))+
   labs(title="Pruned WALS, arithmetic, coding and taxonomy weight = 1",
-       subtitle = "score = n_data_points * coding_density * row_coding_density_min *\n             col_coding_density_min * taxonomic_index", 
+       subtitle = "scoring_function = n_data_points * coding_density * row_coding_density_min *\n             col_coding_density_min * taxonomic_index", 
        x="coding density per row (language)",
        y="frequency")
 
@@ -1044,20 +1007,20 @@ ggplot(data.frame(density=apply(data_2, 2, function(x) (length(na.omit(x))))/nro
   theme(plot.title = element_text(hjust = 0.5))+
   xlim(c(-0.1,1.1))+
   labs(title="Pruned WALS, arithmetic, coding and taxonomy weight = 1",
-       subtitle = "score = n_data_points * coding_density * row_coding_density_min *\n             col_coding_density_min * taxonomic_index", 
-       x="coding density per column (variable)",
+       subtitle = "scoring_function = n_data_points * coding_density * row_coding_density_min *\n             col_coding_density_min * taxonomic_index", 
+       x="coding density per column (feature)",
        y="frequency")
 ```
 
 # Comparing outputs using varying parameters
 
 To illustrate in more detail the effects of varying parameters in
-`densify()` and the `score` parameter in `rank_results()`, `prune()` and
-`visualize()`, we set 10 different `score` definitions in `prune()` for
+`densify()` and the `scoring_function` parameter in `rank_results()`, `prune()` and
+`visualize()`, we set 10 different `scoring_function` definitions in `prune()` for
 each of the 16 parameter settings specified above for `densify()` and
 log for each of the resulting matrices the overall coding density of the
 matrix as well as the number of languages, the number of families and
-the number of variables maintained. Each of these values are compared to
+the number of features maintained. Each of these values are compared to
 the values of the original data frame. The full log-file is stored as a
 separate file (varying_parameters.RData) and can guide users to explore
 the effects of varying parameters on this dataset.
@@ -1113,7 +1076,7 @@ full_n_lg = nrow(WALS)
 full_n_fam = flat_taxonomy_matrix %>% filter(id %in% WALS$Glottocode) %>% select(level1) %>% unique() %>% nrow()
 full_n_var = ncol(WALS[,-which(names(WALS)=="Glottocode")])
 
-logfile <- data.frame(scoring_type = "original", min_variability = NA, seed = NA, taxonomy_weight = NA, coding_weight = NA, iteration_log_id = NA, score = NA, full_coding_proprotion = round(full_coding_proprotion,3), number_languages = full_n_lg, number_families = full_n_fam, number_variables = full_n_var, increase_factor_coding_proportion = 1, proportion_languages_kept = 1, proportion_families_kept = 1, proportion_variables_kept = 1)
+logfile <- data.frame(density_mean = "original", min_variability = NA, seed = NA, taxonomy_weight = NA, coding_weight = NA, iteration_log_id = NA, scoring_function = NA, full_coding_proprotion = round(full_coding_proprotion,3), number_languages = full_n_lg, number_families = full_n_fam, number_features = full_n_var, increase_factor_coding_proportion = 1, proportion_languages_kept = 1, proportion_families_kept = 1, proportion_features_kept = 1)
 
 for (i in 1:length(iteration_log_files)){
   
@@ -1126,28 +1089,28 @@ for (i in 1:length(iteration_log_files)){
   cwf <- codingwf[i]
   
   for (k in 1:length(scores)){
-    score <- scores[k]
+    scoring_function <- scores[k]
 
     if(k==1){
-      pruning <- prune(df, score = n_data_points * coding_density)
+      pruning <- prune(df, scoring_function = n_data_points * coding_density)
     } else if(k==2){
-      pruning <- prune(df, score = n_data_points * coding_density * row_coding_density_min * col_coding_density_min * taxonomic_index)
+      pruning <- prune(df, scoring_function = n_data_points * coding_density * row_coding_density_min * col_coding_density_min * taxonomic_index)
     } else if(k==3){
-      pruning <- prune(df, score = n_data_points * coding_density * taxonomic_index)
+      pruning <- prune(df, scoring_function = n_data_points * coding_density * taxonomic_index)
     } else if(k==4){
-      pruning <- prune(df, score = n_data_points * coding_density * row_coding_density_min * taxonomic_index)
+      pruning <- prune(df, scoring_function = n_data_points * coding_density * row_coding_density_min * taxonomic_index)
     } else if(k==5){
-      pruning <- prune(df, score = n_data_points * coding_density * row_coding_density_min)
+      pruning <- prune(df, scoring_function = n_data_points * coding_density * row_coding_density_min)
     } else if(k==6){
-      pruning <- prune(df, score = n_data_points^0.5 * coding_density)
+      pruning <- prune(df, scoring_function = n_data_points^0.5 * coding_density)
     } else if(k==7){
-      pruning <- prune(df, score = n_data_points^0.5 * coding_density * taxonomic_index^0.5)
+      pruning <- prune(df, scoring_function = n_data_points^0.5 * coding_density * taxonomic_index^0.5)
     } else if(k==8){
-      pruning <- prune(df, score = n_data_points^0.5 * coding_density * taxonomic_index)
+      pruning <- prune(df, scoring_function = n_data_points^0.5 * coding_density * taxonomic_index)
     } else if(k==9){
-      pruning <- prune(df, score = n_data_points^0.5 * coding_density^0.5 * taxonomic_index)
+      pruning <- prune(df, scoring_function = n_data_points^0.5 * coding_density^0.5 * taxonomic_index)
     } else if(k==10){
-      pruning <- prune(df, score = n_data_points^0.5 * coding_density^0.5 * row_coding_density_min^0.5 * taxonomic_index)
+      pruning <- prune(df, scoring_function = n_data_points^0.5 * coding_density^0.5 * row_coding_density_min^0.5 * taxonomic_index)
     }
     
     lgs <- pruning$Glottocode
@@ -1159,7 +1122,7 @@ for (i in 1:length(iteration_log_files)){
     nvar <- ncol(pruning)
     
     logfile <- rbind(logfile,c(mn, min_variability, seed, twf, cwf, docname,
-                             score, round(cprop,3), nlg, nfam, nvar, round(cprop/full_coding_proprotion,3), round(nlg/full_n_lg,3), round(nfam/full_n_fam,3), round(nvar/full_n_var,3)))
+                             scoring_function, round(cprop,3), nlg, nfam, nvar, round(cprop/full_coding_proprotion,3), round(nlg/full_n_lg,3), round(nfam/full_n_fam,3), round(nvar/full_n_var,3)))
   }
 }
 

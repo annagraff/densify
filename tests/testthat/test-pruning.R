@@ -15,12 +15,12 @@ test_that("init_pruning_state initializes correctly", {
   ids <- c("taxon1", "taxon2", "taxon3", "taxon4")
 
   state <- init_pruning_state(
-    data, 
-    vars, 
-    ids, 
-    taxonomy, 
-    scoring_fn = rowSums, 
-    scoring_weights = list(coding = 1, taxonomy = 0)
+    data,
+    vars,
+    ids,
+    taxonomy,
+    scoring_fn = rowSums,
+    density_mean_weights = list(coding = 1, taxonomy = 0)
   )
 
 
@@ -82,12 +82,12 @@ test_that("prune_indices prunes rows and columns correctly", {
   ids <- c("taxon1", "taxon2", "taxon3", "taxon4")
 
   state <- init_pruning_state(
-    data, 
-    vars, 
-    ids, 
-    taxonomy, 
-    scoring_fn = rowSums, 
-    scoring_weights = list(coding = 1, taxonomy = 0)
+    data,
+    vars,
+    ids,
+    taxonomy,
+    scoring_fn = rowSums,
+    density_mean_weights = list(coding = 1, taxonomy = 0)
   )
 
   # Prune rows and columns
@@ -121,12 +121,12 @@ test_that("prune_non_informative_data prunes correctly", {
   ids <- c("taxon1", "taxon2", "taxon3", "taxon4")
 
   state <- init_pruning_state(
-    data, 
-    vars, 
-    ids, 
-    taxonomy, 
-    scoring_fn = rowSums, 
-    scoring_weights = list(coding = 1, taxonomy = 0)
+    data,
+    vars,
+    ids,
+    taxonomy,
+    scoring_fn = rowSums,
+    density_mean_weights = list(coding = 1, taxonomy = 0)
   )
 
   # Prune non-informative data

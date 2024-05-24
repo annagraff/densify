@@ -2,23 +2,23 @@
 % Please edit documentation in R/rank.R
 \name{rank_results.densify_result}
 \alias{rank_results.densify_result}
-\title{Densify results ranking based on a quality score}
+\title{Densify results ranking based on a quality scoring function}
 \usage{
-\method{rank_results}{densify_result}(x, ..., score = n_data_points * coding_density)
+\method{rank_results}{densify_result}(x, ..., scoring_function = n_data_points * coding_density)
 }
 \arguments{
 \item{x}{a \link{densify_result} object}
 
 \item{...}{other arguments passed to methods}
 
-\item{score}{an expression that computes a densification quality score. Default score aims to maximize the product of
+\item{scoring_function}{an expression that computes a densification quality score. The default maximizes the product of
 the number of data points and the coding density. See \link{densify_result} for available statistics that can
-be used to compute a suitable score}
+be used to compute a suitable scoring_function}
 }
 \value{
 an integer vector of ranks corresponding to the densify iterations
 }
 \description{
-Ranks densify results by a quality score from lowest to highest. Ties receive the same rank. The user can provide their own
-quality score formula in \code{score}, which can use any statistics provided in a \link{densify_result} tibble.
+Ranks densify results by a quality scoring function from lowest to highest. Ties receive the same rank. The user can provide their own
+quality scoring formula in \code{scoring_function}, which can use any statistics provided in a \link{densify_result} tibble.
 }

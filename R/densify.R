@@ -15,8 +15,8 @@
 #' @param taxon_id  The name of the column with taxa identifiers. The `data` must contain such a column if a taxonomy is supplied. If not supplied,
 #'   the function will try to make an educated guess based on the column contents.
 #'
-#' @param scoring A character string specifying the type of scoring used for calculating the importance weights. Possible values are are "arithmetic",
-#'   "geometric", or "log_odds". Default is "log_odds".
+#' @param density_mean A character string specifying how row-wise densities are averaged. Possible values are are "arithmetic", "geometric", or "log_odds".
+#' Default is "log_odds", which is is based on the mean of logit-transformed proportions.
 #'
 #' @param min_variability An integer specifying the minimal count of the second-most-frequent state of any variable. Variables below this threshold
 #'   will be discarded. Supply `NA` to allow any variability, including none (all rows have the same value). Default is `1`.
@@ -27,11 +27,11 @@
 #'   minimal proportion of variable columns that have to be retained in the data). More then one condition can be specified simultaneously, `densify()`
 #'   will stop if at least one of the condition is reached.
 #'
-#' @param scoring_weights A named list specifying additional weighting factors to be applied during importance score calculation. Supported parameters
+#' @param density_mean_weights A named list specifying additional weighting factors to be applied during importance score calculation. Supported parameters
 #'   are `coding` and `taxonomy`, which apply to coding and taxonomic importance weights, respectively. The values for these parameters must be a
 #'   number between 0 and 1. Specify 0 (or `NULL`, or `NA`) to disable the respective weight calculation. Use these parameters to tweak the relative
 #'   importance between the available coding and taxonomic diversity. Note: the weighting factor is applied before the scoring function, experimentation
-#'   will be required to find a good balance of parameters for `scoring = "log_odds"`. See the vignette for more details.
+#'   will be required to find a good balance of parameters for `density_mean = "log_odds"`. See the vignette for more details.
 #'
 #' @return A specially formatted tibble of iterative densification results, [densify_result]
 #'
@@ -45,10 +45,10 @@ densify <- function(
   cols,
   taxonomy,
   taxon_id,
-  scoring = c("log_odds", "arithmetic", "geometric"),
+  density_mean = c("log_odds", "arithmetic", "geometric"),
   min_variability = 1,
   limits = list(min_coding_density = 1, min_prop_rows = NA, min_prop_cols = NA),
-  scoring_weights = list(coding = 1, taxonomy = 1)
+  density_mean_weights = list(coding = 1, taxonomy = 1)
 ) {
   # argument validation and processing
 
@@ -56,9 +56,9 @@ densify <- function(
   taxonomy <- check_taxonomy(taxonomy)
   taxon_id <- check_taxon_id(taxon_id, data, taxonomy)
   vars <- check_variables(data, enquo(cols), taxon_id, .arg = "cols")
-  scoring_fn <- get_scoring_function(arg_match(scoring))
+  scoring_fn <- get_scoring_function(arg_match(density_mean))
   limits <- check_limits(limits, nrow(data), length(vars))
-  weights <- check_scoring_weights(scoring_weights, !is.null(taxonomy))
+  weights <- check_scoring_weights(density_mean_weights, !is.null(taxonomy))
 
   # match taxonomy and data by taxon
   if (!is_null(taxonomy)) taxonomy <- match_taxa(data, taxonomy, taxon_id)
@@ -70,7 +70,7 @@ densify <- function(
     ids = if(!is.null(taxon_id)) data[[taxon_id]],
     taxonomy = taxonomy,
     scoring_fn = scoring_fn,
-    scoring_weights = weights
+    density_mean_weights = weights
   )
 
   # factory for pruned data promise creation

@@ -1,4 +1,4 @@
-"","scoring_type","min_variability","seed","taxonomy_weight","coding_weight","iteration_log_id","score","full_coding_proprotion","number_languages","number_families","number_variables","increase_factor_coding_proportion","proportion_languages_kept","proportion_families_kept","proportion_variables_kept"
+"","density_mean","min_variability","seed","taxonomy_weight","coding_weight","iteration_log_id","scoring_function","full_coding_proprotion","number_languages","number_families","number_features","increase_factor_coding_proportion","proportion_languages_kept","proportion_families_kept","proportion_features_kept"
 "1","original",NA,NA,NA,NA,NA,NA,"0.157","2496","318","192","1","1","1","1"
 "2","arithmetic","3","2023","0","1","dr_arith_taxfalse","n_data_points * coding_density","0.411","974","207","134","2.621","0.39","0.651","0.698"
 "3","arithmetic","3","2023","0","1","dr_arith_taxfalse","n_data_points * coding_density * row_coding_density_min * col_coding_density_min * taxonomic_index","0.937","159","93","86","5.974","0.064","0.292","0.448"

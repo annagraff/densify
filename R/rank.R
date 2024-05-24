@@ -1,24 +1,24 @@
-#' Densify results ranking based on a quality score
+#' Densify results ranking based on a quality scoring function
 #'
-#' Ranks densify results by a quality score from lowest to highest. Ties receive the same rank. The user can provide their own
-#' quality score formula in `score`, which can use any statistics provided in a [densify_result] tibble.
+#' Ranks densify results by a quality scoring function from lowest to highest. Ties receive the same rank. The user can provide their own
+#' quality scoring formula in `scoring_function`, which can use any statistics provided in a [densify_result] tibble.
 #'
 #' @param x a [densify_result] object
 #' @param ... other arguments passed to methods
-#' @param score an expression that computes a densification quality score. Default score aims to maximize the product of
+#' @param scoring_function an expression that computes a densification quality score. The default maximizes the product of
 #'   the number of data points and the coding density. See [densify_result] for available statistics that can
-#'   be used to compute a suitable score
+#'   be used to compute a suitable scoring_function
 #'
 #' @return an integer vector of ranks corresponding to the densify iterations
 #'
 #' @importFrom generics rank_results
 #' @export
-rank_results.densify_result <- function(x, ..., score = n_data_points * coding_density) {
+rank_results.densify_result <- function(x, ..., scoring_function = n_data_points * coding_density) {
   check_dots_unnamed()
 
   n_data_points <- coding_density <- NULL
 
-  score_quo <- enquo(score)
+  score_quo <- enquo(scoring_function)
 
   # turn `list(...)` into list(`..1`, `.2`, ...)
   score_quo <- if (quo_is_call(score_quo, "list")) {
@@ -31,8 +31,8 @@ rank_results.densify_result <- function(x, ..., score = n_data_points * coding_d
 
   # evaluate the ranking scores
   for (quo in score_quo) {
-    score <- eval_densify_results_quality_score(x, quo, .caller = "rank_results")
-    scores <- cbind(scores, score)
+    scoring_function <- eval_densify_results_quality_score(x, quo, .caller = "rank_results")
+    scores <- cbind(scores, scoring_function)
   }
 
   vec_rank(scores, direction = "desc", incomplete = "na", ties = "min")
@@ -42,28 +42,28 @@ rank_results.densify_result <- function(x, ..., score = n_data_points * coding_d
 #' @export
 generics::rank_results
 
-#' Obtain densified data frame that maximizes a quality score
+#' Obtain densified data frame that maximizes a quality scoring function
 #'
-#' Returns the densified data frame from the densify iteration step that maximizes a quality score. In case of ties,
-#' first result is returned. The user can provide their own quality score formula in `score`, which can use any statistics
+#' Returns the densified data frame from the densify iteration step that maximizes a quality scoring function. In case of ties,
+#' first result is returned. The user can provide their own quality score formula in `scoring_function`, which can use any statistics
 #' provided in a [densify_result] tibble.
 #'
 #' @param tree a [densify_result] object
 #' @param ... other arguments passed to methods
-#' @param score an expression that computes a densification quality score. The default is `n_data_points * coding_density`, which maximize the product of
+#' @param scoring_function an expression that computes a densification quality score. The default maximizes the product of
 #'   the number of data points and the coding density. See [densify_result] for available statistics that can
-#'   enter the expression.
+#'   be used to compute a suitable scoring_function
 #'
 #' @return the densified data frame
 #'
 #' @importFrom generics prune
 #' @export
-prune.densify_result <- function(tree, ..., score = n_data_points * coding_density) {
+prune.densify_result <- function(tree, ..., scoring_function = n_data_points * coding_density) {
   check_dots_unnamed()
 
   n_data_points <- coding_density <- NULL
 
-  ranks <- rank_results(tree, score = {{score}})
+  ranks <- rank_results(tree, scoring_function = {{scoring_function}})
 
   # chose the highest ranked result
   best <- which(ranks == 1L)
@@ -96,11 +96,11 @@ eval_densify_results_quality_score <- function(densify_results, quo, ..., .calle
   expr <- quo_get_expr(quo)
 
   # evaluate the measure
-  score <- eval_tidy(quo, stats)
+  scoring_function <- eval_tidy(quo, stats)
 
-  is_bare_numeric(score, nrow(stats)) || cli::cli_abort(c(
+  is_bare_numeric(scoring_function, nrow(stats)) || cli::cli_abort(c(
     "invalid expression {.code {as_label(score_expr)}}",
-    i = "expression result must be a numeric vector of length {nrow(stats)}, got {pillar::obj_sum(score)}"
+    i = "expression result must be a numeric vector of length {nrow(stats)}, got {pillar::obj_sum(scoring_function)}"
   ))
 
   # check that it uses variables correctly
@@ -115,7 +115,7 @@ eval_densify_results_quality_score <- function(densify_results, quo, ..., .calle
     ))
   }
 
-  score
+  scoring_function
 }
 
 

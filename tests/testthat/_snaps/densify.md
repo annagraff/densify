@@ -45,6 +45,6 @@
       result <- densify(WALS, c(no_such_column1, no_such_column2))
     Condition
       Error in `densify()`:
-      ! Can't subset columns that don't exist.
+      ! Can't select columns that don't exist.
       x Column `no_such_column1` doesn't exist.
 

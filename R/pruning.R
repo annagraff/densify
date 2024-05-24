@@ -4,7 +4,7 @@
 #
 # - data and taxonomy are matched by rows (i.e. i-th row in the data describes the
 # i-th taxon in the taxonomy)
-init_pruning_state <- function(data, vars, ids, taxonomy, ..., scoring_fn, scoring_weights) {
+init_pruning_state <- function(data, vars, ids, taxonomy, ..., scoring_fn, density_mean_weights) {
   # build a data frame that only contains variables
   # row names track taxa ids
   var_frame <- new_data_frame(unclass(data)[vars])
@@ -23,7 +23,7 @@ init_pruning_state <- function(data, vars, ids, taxonomy, ..., scoring_fn, scori
     # parameters
     params = list(
       scoring_fn = scoring_fn,
-      scoring_weights = scoring_weights
+      density_mean_weights = density_mean_weights
     )
   )
 
@@ -184,7 +184,7 @@ update_importance_weights_for_pruning_state <- function(weights, state, updated_
   col_weighted <- (t(row_weighted) %*% m)/sum(row_weighted)
 
   # taxonomic weights are only computed if needed
-  row_taxonomic <- if (state$params$scoring_weights$taxonomy > 0) {
+  row_taxonomic <- if (state$params$density_mean_weights$taxonomy > 0) {
     # previous weights
     prev_weights <- if(!is.null(weights)) weights$rows$weights[, 3L, drop = TRUE]
 
@@ -213,9 +213,9 @@ update_importance_weights_for_pruning_state <- function(weights, state, updated_
   }
 
   # scale the weights
-  row_absolute  <- row_absolute*state$params$scoring_weights$coding
-  row_weighted  <- row_weighted*state$params$scoring_weights$coding
-  row_taxonomic <- row_taxonomic*state$params$scoring_weights$taxonomy
+  row_absolute  <- row_absolute*state$params$density_mean_weights$coding
+  row_weighted  <- row_weighted*state$params$density_mean_weights$coding
+  row_taxonomic <- row_taxonomic*state$params$density_mean_weights$taxonomy
 
   # new weights
   row_weights <- cbind(as.vector(row_absolute), as.vector(row_weighted), as.vector(row_taxonomic), deparse.level = 0L)
