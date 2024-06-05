@@ -137,6 +137,6 @@ Additional examples and usage details are found in the vignette hosted in the so
 
 # Acknowledgements
 
-The authors declare that there are no conflicts of interest. 
+The authors declare that there are no conflicts of interest.
 
 # References
