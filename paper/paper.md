@@ -108,26 +108,28 @@ The function `prune()` thereby retrieves the optimal sub-matrix, while `rank_res
 # use prune() to obtain the optimum submatrix
 # with the default scoring function
 example_optimum_1 <- prune(example_result, 
-                           scoring_function = n_data_points*coding_density)
+                     scoring_function = n_data_points*coding_density)
                            
 # with a scoring function that gives high weight to taxonomic diversity:
 example_optimum_2 <- prune(example_result, 
-                           scoring_function = n_data_points*coding_density*taxonomic_index^3)
+                     scoring_function = n_data_points*coding_density*taxonomic_index^3)
 
 # use rank_results() to obtain a vector indicating the rank of each sub-matrix
 example_ranks_1 <- rank_results(example_result, 
-                                scoring_function = n_data_points*coding_density)
+                   scoring_function = n_data_points*coding_density)
                                 
 example_ranks_2 <- rank_results(example_result, 
-                                scoring_function = n_data_points*coding_density*taxonomic_index^3)
+                   scoring_function = n_data_points*coding_density*taxonomic_index^3)
 ```
 
 The relative ranking of sub-matrices given the specified scoring function can also be visualized using `visualize()`, an alias of `plot()`.
 
 ``` r
 # use visualize() to illustrate quality scores and optimum 
-visualize(example_result, scoring_function = n_data_points*coding_density)
-visualize(example_result, scoring_function = n_data_points*coding_density*taxonomic_index^3)
+visualize(example_result, 
+          scoring_function = n_data_points*coding_density)
+visualize(example_result, 
+          scoring_function = n_data_points*coding_density*taxonomic_index^3)
 ```
 
 # Conclusions
