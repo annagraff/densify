@@ -4,17 +4,19 @@ densify ist an R package for densifying (sparse) matrices.
 
 # Installation (for users)
 
-To install densify from CRAN, run the following code in R:
+To install densify, run the following code in R:
 
 ~~~~
-install.packages("densify")
+install.packages("devtools")
+library("devtools")
+install_github('annagraff/densify', build_vignettes = T)
 ~~~~
 
 # How to perform matrix densification with densify
 
 For details on each function, refer to the help page (see below) and/or resort to the publication paper and vignette. 
 ~~~~
-library("densify")
+library(densify)
 
 ?densify
 ?visualize

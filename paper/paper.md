@@ -6,13 +6,12 @@ tags:
 - linguistic data
 - diversity samples
 - R
-date: "24 May 2024"
+date: "5 June 2024"
 output: pdf_document
 citation_author: Graff et al.
 authors:
 - name: Anna Graff
   orcid: "0000-0002-7703-3471"
-  equal-contrib: yes
   corresponding: yes
   affiliation: 1, 2, 3
 - name: Marc Lischka
@@ -64,7 +63,9 @@ The package `densify` provides the data from The World Atlas of Language Structu
 The data frame that requires subsetting must have rows representing taxa or observations (with taxon names provided in a dedicated column) and columns representing variables (and variable names as column names). Any cells with empty entries, not applicable or question marks must be coded as `NA`. If matrix densification should be sensitive to taxonomic structure, a taxonomy must be provided as (i) a `phylo` object [cf. @R-ape], (ii) as an adjacency table (i.e. a data frame containing columns `id` and `parent_id`, with each row encoding one parent-child relationship), or (iii) the `glottolog_languoids` dataframe provided by the package. Every taxon in the input data frame must be included in the taxonomy (as a tip or node). 
 
 ``` r
-install.packages("densify")
+install.packages("devtools")
+library("devtools")
+install_github('annagraff/densify', build_vignettes = T)
 library(densify)
 
 # prepare data: WALS and Glottolog
