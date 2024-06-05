@@ -1,4 +1,6 @@
-name: Draft PDF
+              - name: Open Journals PDF Generator
+                uses: openjournals/openjournals-draft-action@v.1.0
+            
 on:
   push:
     paths:
