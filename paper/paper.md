@@ -90,6 +90,7 @@ The output of the function is a `densify_result` object, documenting several sum
 ``` r
 set.seed(2024)
 example_result <- densify(data = WALS, 
+                          cols = !Glottocode,
                           taxonomy = glottolog_languoids, 
                           taxon_id = "Glottocode", 
                           density_mean = "log_odds", 
