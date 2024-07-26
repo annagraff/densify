@@ -69,7 +69,8 @@ other applications.
 ```{r packages, echo = TRUE, warnings = FALSE, message = FALSE}
 # load packages
 library(densify)
-library(tidyverse)
+library(ggplot2)
+library(dplyr)
 ```
 
 ```{r taxonomy, echo = TRUE}
