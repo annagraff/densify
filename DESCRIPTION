@@ -1,5 +1,5 @@
 Package: densify
-Title: Densifying Input Data Frame
+Title: Densifying sparse data frames of typological linguistic data
 Version: 0.0.0.9000
 Authors@R: 
     c(
@@ -22,8 +22,8 @@ Authors@R:
             role = c("aut")
         )
     )
-Description: This package provides functions to densify data frames with missing values.
-License: MIT + file LICENSE
+Description: This package provides functions to densify data frames of typological linguistic data containing empty cells to sub-matrices with fewer empty cells. Users can trade off the relative weight given to a series of concerns in this process, including data retention, proportion of non-empty cells and taxonomic diversity of rows. The package therefore allows to densify sparse matrices and to subsample large input matrices in a taxonomy-sensitive procedure.
+License: AGPL + file LICENSE
 Depends: R (>= 3.5.0)
 Imports: 
     vctrs (>= 0.6.4),
@@ -33,8 +33,8 @@ Imports:
     generics (>= 0.1.3),
     cli (>= 3.6.0),
     tibble,
-    bookdown,
-    stats
+    stats,
+    dpylr
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.1
@@ -44,6 +44,7 @@ Suggests:
     knitr,
     rmarkdown,
     testthat (>= 3.0.0),
-    tidyverse
+    bookdown,
+    ape
 VignetteBuilder: knitr
 Config/testthat/edition: 3
