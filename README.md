@@ -86,4 +86,8 @@ For more details on each function, refer to the help pages (see below) and/or re
 
 ## Contributing
 
-For suggestions how `densify` could be improved or to report bugs, open an issue on GitHub. 
+To report bugs, seek support or suggest improvements (e.g. additional functionalities or changes to functionality or API arguments), please open an issue on GitHub. Similarly, to make direct package contributions, please open an issue on GitHub for discussion before submitting a merge request.
+
+### Code of Conduct
+
+Please note that `densify` is released with a Contributor Code of Conduct. By contributing to this project, you agree to abide by its terms.
