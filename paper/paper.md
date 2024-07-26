@@ -57,85 +57,15 @@ The software therefore addresses recurring problems researchers face when workin
 
 The package `densify` provides the data from The World Atlas of Language Structures (WALS) [@wals] and the language taxonomy provided by Glottolog v. 5.0 [@glottolog] as example data. The accompanying package vignette features a detailed demonstration of the utility and flexibility of `densify` to subsample an input matrix according to varying needs, using this data.
 
-## Preparing input
+Input data must be prepared in a dataframe with rows representing taxa or observations with taxon names specified in a dedicated column, and columns representing variables with variable names as column names. Cells that are empty or contain non-applicable or question mark entries must be coded as `NA`. If densification should be sensitive to taxonomic structure, a taxonomy must be provided as (i) a `phylo` object [cf. @R-ape], (ii) as an adjacency table (i.e. a data frame containing columns `id` and `parent_id`, with each row encoding one parent-child relationship), or (iii) by the `glottolog_languoids` dataframe provided by the package. Every taxon in the input data frame must be included in the taxonomy (as a tip or node). 
 
-The data frame that requires subsetting must have rows representing taxa or observations (with taxon names provided in a dedicated column) and columns representing variables (and variable names as column names). Any cells with empty entries, not applicable or question marks must be coded as `NA`. If matrix densification should be sensitive to taxonomic structure, a taxonomy must be provided as (i) a `phylo` object [cf. @R-ape], (ii) as an adjacency table (i.e. a data frame containing columns `id` and `parent_id`, with each row encoding one parent-child relationship), or (iii) the `glottolog_languoids` dataframe provided by the package. Every taxon in the input data frame must be included in the taxonomy (as a tip or node). 
-
-``` r
-install.packages("devtools")
-library("devtools")
-install_github('annagraff/densify', build_vignettes = T)
-library(densify)
-
-# prepare data: WALS and Glottolog
-data(WALS)
-data(glottolog_languoids)
-
-# any question marks, empty entries, "NA"s must be coded as NA
-WALS[WALS=="?"] <- NA
-WALS[WALS=="NA"] <- NA
-head(WALS)
-
-# all taxa must be present in the taxonomy used for pruning
-WALS <- WALS[which(WALS$Glottocode %in% glottolog_languoids$id), ]
-```
-
-## Pruning
-
-Iterative pruning of the input matrix is performed by the `densify()` function, which can be modulated by several parameters to, among others: specify to what extent taxonomic diversity of the sample should weigh in the pruning process; choose among various methods to calculate importance weights (e.g. via arithmetic or logit-transformed means of row-wise coding density); and choose the minimum variation required for a feature to be retained (e.g. constant variables might be of no interest). For a detailed discussion of the parameters, refer to the function documentation or to the vignette hosted in the software repository.
-
-The output of the function is a `densify_result` object, documenting several summary statistics of all resulting sub-matrices. These include the number of available data points, the overall proportion of coded data in the matrix, the coding densities of the least well-coded taxon and variable, the coding densities of the most well-coded taxon and variable, the median coding densities of the all taxa and variables, and a taxonomic diversity index (Shannon diversity of the highest taxonomic level).
-
-``` r
-set.seed(2024)
-example_result <- densify(data = WALS, 
-                          cols = !Glottocode,
-                          taxonomy = glottolog_languoids, 
-                          taxon_id = "Glottocode", 
-                          density_mean = "log_odds", 
-                          min_variability = 3,
-                          limits = list(min_coding_density = 1),
-                          density_mean_weights = list(coding = 1, taxonomy = 1))
-head(example_result)
-```
-## Finding the optimal number of iterations and producing the sub-matrix
-
-The functions `prune()` and `rank_results()` identify the optimal sub-matrix via a quality score, computed via a user-defined scoring function composed of any combination of available statistics from the `densify_result` object. The default scoring function maximizes the product of the number of available data points and the overall coding density.
-
-The function `prune()` thereby retrieves the optimal sub-matrix, while `rank_results()` returns the relative ranks of all generated sub-matrices given the scoring function, the optimal sub-matrix receiving rank 1.
-
-``` r
-# use prune() to obtain the optimum submatrix
-# with the default scoring function
-example_optimum_1 <- prune(example_result, 
-                     scoring_function = n_data_points*coding_density)
-                           
-# with a scoring function that gives high weight to taxonomic diversity:
-example_optimum_2 <- prune(example_result, 
-                     scoring_function = n_data_points*coding_density*taxonomic_index^3)
-
-# use rank_results() to obtain a vector indicating the rank of each sub-matrix
-example_ranks_1 <- rank_results(example_result, 
-                   scoring_function = n_data_points*coding_density)
-                                
-example_ranks_2 <- rank_results(example_result, 
-                   scoring_function = n_data_points*coding_density*taxonomic_index^3)
-```
-
-The relative ranking of sub-matrices given the specified scoring function can also be visualized using `visualize()`, an alias of `plot()`.
-
-``` r
-# use visualize() to illustrate quality scores and optimum 
-visualize(example_result, 
-          scoring_function = n_data_points*coding_density)
-visualize(example_result, 
-          scoring_function = n_data_points*coding_density*taxonomic_index^3)
-```
+Iterative pruning of the input matrix is performed by the `densify()` function, which can be modulated by several parameters (described in detail in the function documentation and the vignette). It returns a specially formatted tibble (a `densify_result` object), which describes the result of each densification step alongside some summary statistics. The function `rank_results()` ranks the densify results accoring to a specifiable, subjectively useful scoring function that recruits these summary statistics. The optimal sub-matrix according to the scoring function receives rank 1 and can be directly retrieved by the function `prune()`. `visualize()`, an alias of `plot()`, visually compares the quality scores between different pruning steps. The default scoring function used by `rank_results()`, `prune()` and `visualize()` maximizes the product of the number of available data points and the overall coding density, but it can be adjusted to include other measures and trade off their relative weight.
 
 # Conclusions
 
-The R package `densify` provides users with a flexible and explicit method to generate sub-matrices from an input matrix in a mathematically principled way. This paper shows case examples using a standard sparse linguistic dataset (WALS) and the standard linguistic taxonomy provided by Glottolog.
-Additional examples and usage details are found in the vignette hosted in the software repository on GitHub.
+The R package `densify` provides users with a flexible and explicit method to generate sub-matrices from an input matrix in a mathematically principled way. The package documents case examples using a standard sparse linguistic dataset (WALS) and the standard linguistic taxonomy provided by Glottolog.
+
+Examples and further usage details for this software are found in the vignette hosted in the software repository on GitHub.
 
 # Acknowledgements
 
