@@ -23,7 +23,7 @@ Authors@R:
         )
     )
 Description: This package provides functions to densify data frames with missing values.
-License: MIT + file LICENSE
+License: GNU + file LICENSE
 Depends: R (>= 3.5.0)
 Imports: 
     vctrs (>= 0.6.4),
