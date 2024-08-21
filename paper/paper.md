@@ -1,12 +1,12 @@
 ---
-title: 'densify: An R package to prune sparse data frames of typological linguistic data'
+title: 'densify: An R package to reduce empty cells in data frames of typological linguistic data'
 tags:
 - sparse matrices
 - "sub-sampling"
 - linguistic data
 - diversity samples
 - R
-date: "5 June 2024"
+date: "21 August 2024"
 output: pdf_document
 citation_author: Graff et al.
 authors:
