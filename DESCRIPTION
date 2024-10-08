@@ -46,7 +46,7 @@ Imports:
     cli (>= 3.6.0),
     tibble,
     stats,
-    dpylr
+    dplyr
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.1
