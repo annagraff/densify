@@ -3,9 +3,9 @@
 \docType{package}
 \name{densify-package}
 \alias{densify-package}
-\title{densify: Densifying Input Data Frame}
+\title{densify: Reducing empty cells data frames of typological linguistic data}
 \description{
-This package provides functions to densify data frames with missing values.
+This package provides functions to densify data frames of typological linguistic data containing empty cells to sub-matrices with a smaller proportion of empty cells. Users can trade off the relative weight given to a series of concerns in this process, including data retention, proportion of non-empty cells and taxonomic diversity of rows. The package therefore allows to densify sparse matrices and to subsample large input matrices in a taxonomy-sensitive procedure.
 }
 \author{
 \strong{Maintainer}: Anna Graff \email{anna.graff@uzh.ch}
@@ -13,7 +13,9 @@ This package provides functions to densify data frames with missing values.
 Authors:
 \itemize{
   \item Marc Lischka \email{marc.lischka@math.uzh.ch}
-  \item Taras Zaharko \email{taras.zakharko@uzh.ch}
+  \item Taras Zakharko \email{taras.zakharko@uzh.ch}
+  \item Reinhard Furrer \email{reinhard.furrer@uzh.ch}
+  \item Balthasar Bickel \email{balthasar.bickel@uzh.ch}
 }
 
 }

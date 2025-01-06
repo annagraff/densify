@@ -3,17 +3,28 @@
 \docType{data}
 \name{glottolog_languoids}
 \alias{glottolog_languoids}
-\title{Glottolog languoid taxonomy, Version 5.0}
+\title{Glottolog Languoid Taxonomy, Version 5.0}
 \source{
 Glottolog, Version 5.0
 }
 \description{
-This dataset is the languoid.csv file from Glottolog, Version 5.0. It can be used as \code{taxonomy} argument for the
-\link{densify} function if your dataset uses glottocodes and you want to perform taxonomy-aware data pruning.
+Glottolog Languoid Taxonomy, Version 5.0
+}
+\details{
+A data frame containing linguistic taxonomic information from Glottolog version 5.0.
+You can use this dataset as the \code{taxonomy} argument for the \code{\link[=densify]{densify()}} function if your
+data relies on glottocodes and you wish to perform taxonomy-aware data pruning.
+
+The dataset was extracted from the official Glottolog CLDF release and converted into a
+wide tabular representation. Each row describes a single variety (Glottolog languoid).
+The columns \code{id}, \code{parent_id}, and \code{family_id} correspond to the Glottolog code of the
+languoid, its parent, and its root node, respectively. The \code{level} column denotes the
+languoid classification (e.g., dialect, language, or family). Singletons and top-level
+families have \code{parent_id} set to \code{NA}.
 }
 \references{
 \itemize{
-\item Hammarström, Harald & Forkel, Robert & Haspelmath, Martin & Bank, Sebastian. 2023.
+\item Hammarström, Harald & Forkel, Robert & Haspelmath, Martin & Bank, Sebastian. 2024.
 Glottolog 5.0.
 Leipzig: Max Planck Institute for Evolutionary Anthropology.
 https://doi.org/10.5281/zenodo.10804357

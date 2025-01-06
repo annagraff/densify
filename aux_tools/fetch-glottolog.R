@@ -21,6 +21,7 @@ glottolog_languoids <- filter(values, Parameter_ID %in% c("level", "classificati
     family_id = str_remove(classification, "/.+$"),
     parent_id = str_remove(classification, "^.+/")
   ) |>
-  select(id, parent_id, family_id, level)
+  select(id, parent_id, family_id, level) |> arrange(id)
 
   save(glottolog_languoids, file='data/glottolog_languoids.rda')
+
