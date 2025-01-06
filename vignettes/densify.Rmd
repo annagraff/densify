@@ -9,7 +9,7 @@ bibliography: sources.bib
 vignette: >
   %\VignetteIndexEntry{Tutorial for densify}
   %\VignetteEncoding{UTF-8}
-  %\VignetteDepends{tidyverse} 
+  %\VignetteDepends{dplyr} 
   %\VignetteEngine{knitr::rmarkdown}
 editor_options: 
   markdown: 
