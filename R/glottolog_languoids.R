@@ -18,10 +18,10 @@
 #' @docType data
 #' @source Glottolog, Version 5.0
 #' @references
-#' - Hammarström, Harald & Forkel, Robert & Haspelmath, Martin & Bank, Sebastian. 2023.
+#' - Hammarström, Harald & Forkel, Robert & Haspelmath, Martin & Bank, Sebastian. 2024.
 #' Glottolog 5.0.
 #' Leipzig: Max Planck Institute for Evolutionary Anthropology.
 #' https://doi.org/10.5281/zenodo.10804357
-#' (Available online at http://glottolog.org, Accessed on 2023-03-13.)
+#' (Available online at http://glottolog.org, Accessed on 2024-03-13.)
 #'
 NULL
