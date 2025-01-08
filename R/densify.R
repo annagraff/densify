@@ -254,7 +254,7 @@ check_data <- function(data, ..., .arg = caller_arg(data)) {
   local_error_call(caller_env())
   .arg <- .arg
 
-  is.data.frame(data) || cli::cli_abort(c(
+  tibble::is_tibble(data) || identical(class(data)[[1L]], "data.frame") || cli::cli_abort(c(
     "{.arg {(.arg)}} must be a data frame",
     i = "got {.code {as_label(data)}}")
   )
@@ -533,4 +533,3 @@ check_densify_limit_condition <- function(result, limits) {
     na.rm = TRUE
   )
 }
-
