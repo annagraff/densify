@@ -1,17 +1,22 @@
 # utility to fetch the latest Glottolog taxonomy from the CLDF dataset
 library(tidyverse)
 
-# download the Glottolog data from Zenodo
+# 1. query API endpoint
+o <- jsonlite::fromJSON('https://zenodo.org/api/records/14006636')
+
+# 2. get url
+latest_url <- o$files[1,]$links$self
+
+# 3. download
 glottolog_zipfile <- tempfile()
-on.exit(unlink(glottolog_zipfile))
-download.file("https://zenodo.org/records/10804582/files/glottolog/glottolog-cldf-v5.0.zip", glottolog_zipfile)
+download.file(latest_url, glottolog_zipfile, method="curl", extra='-L')
 
+# 4. find values.csv
+valuefile <- grep('values.csv$', unzip(glottolog_zipfile, list=TRUE)$Name, ignore.case=TRUE, value=TRUE)
 
+# 5. get file
 # the hierarchy data is encoded in the Values table of the CLDF dataset
-values <- read_csv(unz(
-  glottolog_zipfile,
-  filename = "glottolog-glottolog-cldf-4dbf078/cldf/values.csv",
-))
+values <- readr::read_csv(unz(glottolog_zipfile, filename = valuefile))
 
 # extract the languoid classification
 glottolog_languoids <- filter(values, Parameter_ID %in% c("level", "classification")) |>
