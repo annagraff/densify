@@ -53,13 +53,15 @@ generics::rank_results
 #' @param scoring_function an expression that computes a densification quality score. The default maximizes the product of
 #'   the number of data points and the coding density. See [densify_result] for available statistics that can
 #'   be used to compute a suitable scoring_function
+#' @param multiple how to resolve equal scores
 #'
 #' @return the densified data frame
 #'
 #' @importFrom generics prune
 #' @export
-prune.densify_result <- function(tree, ..., scoring_function = n_data_points * coding_density) {
-  check_dots_unnamed()
+prune.densify_result <- function(tree, ..., scoring_function = n_data_points * coding_density, multiple = c("warn", "first", "random")) {
+  check_dots_empty()
+  multiple <- arg_match(multiple)
 
   n_data_points <- coding_density <- NULL
 
@@ -70,8 +72,11 @@ prune.densify_result <- function(tree, ..., scoring_function = n_data_points * c
   length(best) > 0L || cli::cli_abort("no ranking can be established, aborting")
 
   if (length(best) > 0) {
-    best <- best[[1L]]
-    cli::cli_warn("in {.fn prune}: multiple best matches, returning the first one at index {.field {best}}")
+    best <- if (multiple == "random") sample(best, 1L) else best[[1]]
+
+    if (multiple == "warn") cli::cli_warn(
+      "in {.fn prune}: multiple best matches, returning the first one at index {.field {best}}"
+    )
   }
 
   # return the pruned data set
