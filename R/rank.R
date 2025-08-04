@@ -101,26 +101,26 @@ eval_densify_results_quality_score <- function(densify_results, quo, ..., .calle
   expr <- quo_get_expr(quo)
 
   # evaluate the measure
-  scoring_function <- eval_tidy(quo, stats)
+  score <- eval_tidy(quo, stats)
 
-  is_bare_numeric(scoring_function, nrow(stats)) || cli::cli_abort(c(
-    "invalid expression {.code {as_label(score_expr)}}",
+  is_bare_numeric(score, nrow(stats)) || cli::cli_abort(c(
+    "invalid expression {.code {as_label(expr)}}",
     i = "expression result must be a numeric vector of length {nrow(stats)}, got {pillar::obj_sum(scoring_function)}"
   ))
 
   # check that it uses variables correctly
-  if(!any(extract_symbols(expr) %in% names(stats))) {
+  if(!any(extract_symbols(expr) %in% c(".data", names(stats)))) {
     known_stats <- sprintf("{.field %s}", names(stats))
     names(known_stats) <- rep_along(known_stats, "*")
 
     cli::cli_warn(c(
-      "in {.fn {(.caller)}}: expression {.code {as_label(score_expr)}} does not appear to use any known densify stats",
+      "in {.fn {(.caller)}}: expression {.code {as_label(expr)}} does not appear to use any known densify stats",
       i = "available stats are:",
       known_stats
     ))
   }
 
-  scoring_function
+  score
 }
 
 
