@@ -4,7 +4,12 @@
 \alias{prune.densify_result}
 \title{Obtain densified data frame that maximizes a quality scoring function}
 \usage{
-\method{prune}{densify_result}(tree, ..., scoring_function = n_data_points * coding_density)
+\method{prune}{densify_result}(
+  tree,
+  ...,
+  scoring_function = n_data_points * coding_density,
+  multiple = c("warn", "first", "random")
+)
 }
 \arguments{
 \item{tree}{a \link{densify_result} object}
@@ -14,6 +19,8 @@
 \item{scoring_function}{an expression that computes a densification quality score. The default maximizes the product of
 the number of data points and the coding density. See \link{densify_result} for available statistics that can
 be used to compute a suitable scoring_function}
+
+\item{multiple}{how to resolve equal scores}
 }
 \value{
 the densified data frame
